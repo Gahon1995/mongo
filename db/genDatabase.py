@@ -124,7 +124,8 @@ def gen_reads():
 
 if __name__ == '__main__':
     from mongoengine import connect
-    connect('mongo', host='192.168.109.128', port=27017)
+    host = '127.0.0.1'
+    connect('mongo', host=host, port=27017)
 
     print('导入user数据...')
     gen_users()
