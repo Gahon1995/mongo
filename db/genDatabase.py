@@ -98,10 +98,16 @@ def gen_an_read(i):
     return read
 
 
+def print_bar(now, total):
+    print('\rprocess:\t {now} / {total}  {rate}%'.format(now=now+1, total=total, rate=round((now + 1)/total * 100, 2)), end='')
+
+
 def gen_users():
     from model.User import User
     User.delete()
     for i in range(USERS_NUM):
+        if i % 100 == 0:
+            print_bar(i, USERS_NUM)
         user = json.dumps(gen_an_user(i))
         User.insert(user)
 
@@ -110,6 +116,8 @@ def gen_articles():
     from model.Article import Article
     Article.delete()
     for i in range(ARTICLES_NUM):
+        if i % 100 == 0:
+            print_bar(i, ARTICLES_NUM)
         article = json.dumps(gen_an_article(i))
         Article.insert(article)
 
@@ -118,6 +126,8 @@ def gen_reads():
     from model.Read import Read
     Read.delete()
     for i in range(READS_NUM):
+        if i % 100 == 0:
+            print_bar(i, READS_NUM)
         read = json.dumps(gen_an_read(i))
         Read.insert(read)
 
@@ -135,6 +145,7 @@ def main():
 
     print('导入read数据...')
     gen_reads()
+
 
 if __name__ == '__main__':
     main()
