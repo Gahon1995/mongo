@@ -122,7 +122,7 @@ def gen_reads():
         Read.insert(read)
 
 
-if __name__ == '__main__':
+def main():
     from mongoengine import connect
     host = '127.0.0.1'
     connect('mongo', host=host, port=27017)
@@ -135,3 +135,6 @@ if __name__ == '__main__':
 
     print('导入read数据...')
     gen_reads()
+
+if __name__ == '__main__':
+    main()
