@@ -4,8 +4,25 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 
+import logging
 
-from db.genDatabase import main
+from db.mongodb import init_connect
+
+import Config
+
+
+def init():
+    init_connect()
+    logging.basicConfig(level=Config.debug_level,
+                        filename=Config.log_file_name if Config.log_in_file else None,
+                        filemode='w',
+                        datefmt='%Y/%m/%d %H:%M:%S',
+                        format='%(asctime)s %(levelname)s %(name)s line_%(lineno)d: %(message)s')
+
+
+def start():
+    init()
+
 
 if __name__ == "__main__":
-    main()
+    start()

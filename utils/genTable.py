@@ -115,4 +115,4 @@ connect('test', host='192.168.109.128', port=27017)
 for i in range(USERS_NUM):
     from model.User import User
     user = json.dumps(gen_an_user(i))
-    User.insert(user)
+    User.insert_one(user)

@@ -1,16 +1,17 @@
 from mongoengine import *
 from db.mongodb import BaseDB
+from datetime import datetime
 
 
 class Article(BaseDB):
-    timestamp = StringField()
-    aid = IntField()
-    title = StringField()
-    category = StringField()
-    abstract = StringField()
-    articleTags = StringField()
-    authors = StringField()
-    language = StringField()
-    text = StringField()
-    image = StringField()
-    video = StringField()
+    aid = IntField(required=True, unique=True)
+    title = StringField(required=True)
+    category = StringField(required=True)
+    abstract = StringField(required=True)
+    articleTags = StringField(required=True)
+    authors = StringField(required=True)
+    language = StringField(required=True)
+    text = StringField(default='')
+    image = StringField(default='')
+    video = StringField(default='')
+    timestamp = StringField(required=True, default=str(int(datetime.now().timestamp() * 1000)))

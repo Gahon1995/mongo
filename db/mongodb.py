@@ -1,4 +1,4 @@
-from mongoengine import Document
+from mongoengine import Document, connect, DoesNotExist
 
 
 class BaseDB(Document):
@@ -10,21 +10,116 @@ class BaseDB(Document):
         return self.to_json()
 
     @classmethod
+    def list_by_page(cls, page_num=1, page_size=20, **kwargs):
+        """
+            分页数据查询
+
+        :param page_num: 查询的页码，默认第一页
+        :param page_size: 每一页显示的数量
+        :param kwargs: 查询的条件
+        :return: 符合条件的分页数后据
+        """
+        offset = (page_num - 1) * page_size
+        return cls.objects(**kwargs).skip(offset).limit(page_size)
+
+    @classmethod
+    def get_size(cls, **kwargs):
+        """
+
+        :return: 当前数据的总量
+        """
+        return cls.objects(**kwargs).count()
+
+    @classmethod
     def find(cls, **kwargs):
+        """
+            查询所有数据（未分页）
+        :param kwargs: 查询条件
+        :return:
+        """
         return cls.objects(**kwargs)
 
     @classmethod
     def find_one(cls, **kwargs):
+        """
+        返回符合条件的所有值的第一个
+
+        :param kwargs: 查询条件
+        :return:
+        """
         return cls.objects(**kwargs).first()
 
     @classmethod
-    def insert(cls, data):
-        return cls.from_json(data).save()
+    def get(cls, **kwargs):
+        """
+        获取一个unique的项
 
-    # @classmethod
-    # def update(cls, filters, data):
-    #     return cls.objects(filters)
+        :param kwargs: 查询条件
+        :return:
+        """
+        try:
+            user = cls.objects(**kwargs).get()
+            return user
+        except DoesNotExist:
+            return None
 
     @classmethod
-    def delete(cls, **kwargs):
+    def insert_one(cls, data: str):
+        """
+            插入一条数据
+
+        :param data: 插入的数据类容，需要符合cls的类型
+        :return:
+        """
+        return cls.from_json(data).save()
+
+    @classmethod
+    def insert_many(cls, data: list):
+        """
+            插入数据需要为list，否则报错
+
+        :param data:
+        :return:
+        """
+        if isinstance(data, list):
+            for d in data:
+                cls.from_json(d).save()
+            return True
+        else:
+            raise BaseException('data type error, should be a list')
+
+    @classmethod
+    def delete_by(cls, **kwargs):
+        """
+            删除符合条件的数据
+        :param kwargs:
+        :return:
+        """
         return cls.objects(**kwargs).delete()
+
+    @classmethod
+    def get_id(cls, _id: str):
+        """
+            查询当前最大的id
+
+        :param _id: 当前class 的id 名称
+        :return:
+        """
+        return int(cls.objects().order_by('-' + _id).limit(1).first().__getattribute__(_id)) + 1
+
+
+def init_connect(db=None, host=None, port=None):
+    """
+        初始化mongo连接， 不传参数则从Config文件中读取
+
+    :param db:
+    :param host:
+    :param port:
+    :return:
+    """
+    if db is None:
+        from Config import mongo_db_name, mongo_host, mongo_port
+        db = mongo_db_name
+        host = mongo_host
+        port = mongo_port
+    connect(db, host=host, port=port)

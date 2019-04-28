@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # pull镜像
 docker pull mongo
 

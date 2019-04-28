@@ -99,37 +99,38 @@ def gen_an_read(i):
 
 
 def print_bar(now, total):
-    print('\rprocess:\t {now} / {total}  {rate}%'.format(now=now+1, total=total, rate=round((now + 1)/total * 100, 2)), end='')
+    print('\rprocess:\t {now} / {total}  {rate}%'.format(now=now + 1, total=total,
+                                                         rate=round((now + 1) / total * 100, 2)), end='')
 
 
 def gen_users():
     from model.User import User
-    User.delete()
+    User.delete_by()
     for i in range(USERS_NUM):
         if i % 100 == 0:
             print_bar(i, USERS_NUM)
         user = json.dumps(gen_an_user(i))
-        User.insert(user)
+        User.insert_one(user)
 
 
 def gen_articles():
     from model.Article import Article
-    Article.delete()
+    Article.delete_by()
     for i in range(ARTICLES_NUM):
         if i % 100 == 0:
             print_bar(i, ARTICLES_NUM)
         article = json.dumps(gen_an_article(i))
-        Article.insert(article)
+        Article.insert_one(article)
 
 
 def gen_reads():
     from model.Read import Read
-    Read.delete()
+    Read.delete_by()
     for i in range(READS_NUM):
         if i % 100 == 0:
             print_bar(i, READS_NUM)
         read = json.dumps(gen_an_read(i))
-        Read.insert(read)
+        Read.insert_one(read)
 
 
 def main():
@@ -137,13 +138,13 @@ def main():
     host = '127.0.0.1'
     connect('mongo', host=host, port=27017)
 
-    print('导入user数据...')
+    print('\n导入user数据...')
     gen_users()
 
-    print('导入article数据...')
+    print('\n导入article数据...')
     gen_articles()
 
-    print('导入read数据...')
+    print('\n导入read数据...')
     gen_reads()
 
 
