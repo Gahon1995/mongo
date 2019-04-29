@@ -9,6 +9,10 @@ from model.Read import Read
 class ReadService(object):
 
     @staticmethod
+    def save_new_read(new_read):
+        new_read.save()
+
+    @staticmethod
     def reads_list(page_num=1, page_size=20, **kwargs):
         return Read.list_by_page(page_num, page_size, **kwargs)
 

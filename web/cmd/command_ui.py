@@ -7,6 +7,7 @@ from web.cmd.admin import login_by_admin
 from web.cmd.user import login_by_user
 
 
+# TODO 检查所有的输入操作是否都有正常输入，或者说输入是否合法
 def menu():
     print("=" * 20)
     print("欢迎使用信息查询系统")
@@ -16,16 +17,17 @@ def menu():
     mode = input("选择：")
 
     if mode == '1':
-        login_by_admin()
-
+        username = input("请输入用户名：")
+        password = input("请输入密 码： ")
+        login_by_admin(username, password)
     elif mode == '2':
-        login_by_user()
-        menu()
+        username = input("请输入用户名：")
+        password = input("请输入密 码： ")
+        login_by_user(username, password)
     elif mode == '3':
         return None
     else:
         print("输入错误请重新输入！\n")
-
     return menu()
 
 
