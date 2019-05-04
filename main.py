@@ -13,7 +13,7 @@ import Config
 
 
 def init():
-    # init_connect()
+    init_connect()
     logging.basicConfig(level=Config.debug_level,
                         filename=Config.log_file_name if Config.log_in_file else None,
                         filemode='w',

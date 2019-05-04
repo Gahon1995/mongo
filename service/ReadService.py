@@ -14,9 +14,9 @@ class ReadService(object):
 
     @staticmethod
     def save_new_read(new_read):
+        logger.info('save read:{}'.format(new_read))
         new_read.save()
         BeRead.add_read_record(new_read)
-        logger.info('save read id:{}'.format(new_read.aid.title))
 
     @staticmethod
     def reads_list(page_num=1, page_size=20, **kwargs):

@@ -8,7 +8,7 @@ import logging
 
 # logging 配置
 debug_level = logging.DEBUG
-log_in_file = True
+log_in_file = False
 log_file_name = './mongo.log'
 
 #  MongoDB 相关配置

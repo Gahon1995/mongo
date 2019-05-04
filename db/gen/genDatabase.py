@@ -134,19 +134,15 @@ def gen_articles():
 
 def gen_reads():
     from model.Read import Read
+    from model.BeRead import BeRead
     Read.delete_by()
+    BeRead.delete_by()
     for i in range(READS_NUM):
         print_bar(i, READS_NUM)
         data = gen_an_read(i)
         article = ArticleService.get_an_article(title='title' + data['aid'])
-        if article is None:
-            print('title: {} 不存在'.format(data['aid']))
-            continue
-        name = 'user' + data['uid'] if data['uid'] != 0 else 'admin'
+        name = 'user' + data['uid'] if data['uid'] != '0' else 'admin'
         user = UserService.get_an_user(name=name)
-        if article is None:
-            print('user: {} 不存在'.format(name))
-            continue
         new_read = Read()
         new_read.aid = article
         new_read.uid = user
@@ -162,9 +158,9 @@ def gen_reads():
 
 
 def main():
-    from mongoengine import connect
-    host = '127.0.0.1'
-    connect('mongo-new', host=host, port=27017)
+    # from mongoengine import connect
+    # host = '127.0.0.1'
+    # connect('mongo-new', host=host, port=27017)
 
     print('\n导入user数据...')
     gen_users()
@@ -177,4 +173,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    pass
