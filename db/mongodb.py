@@ -1,8 +1,5 @@
 from mongoengine import Document, connect, DoesNotExist
-from bson import ObjectId
-import json
-from datetime import datetime, date
-from utils.func import convert_mongo_2_json
+from utils.func import convert_mongo_2_json, utc_2_local
 
 
 class BaseDB(Document):
@@ -28,7 +25,7 @@ class BaseDB(Document):
     def get_create_time(self):
         if self.id is None:
             return None
-        return self.id.generation_time.now()
+        return self.id.generation_time
 
     @classmethod
     def list_by_page(cls, page_num=1, page_size=20, **kwargs):
@@ -150,4 +147,5 @@ def init_connect(db=None, host=None, port=None):
         db = mongo_db_name
         host = mongo_host
         port = mongo_port
-    connect(db, host=host, port=port)
+    # tz_aware=True 设置时区修正，mongoDB的时区默认为UTC0，需要加上这个加入时区信息
+    connect(db, host=host, port=port, tz_aware=True)

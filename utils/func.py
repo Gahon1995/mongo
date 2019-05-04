@@ -6,18 +6,25 @@
 
 
 import json
+import pytz
 from datetime import datetime, date
 
 from mongoengine.base import BaseDocument
+
+tz = pytz.timezone("Asia/Shanghai")
+
+
+def utc_2_local(t):
+    return t.astimezone()
 
 
 # 使json能够转化datetime对象
 class DateEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime):
-            return obj.now().strftime('%Y-%m-%d %H:%M:%S')
+            return utc_2_local(obj).strftime('%Y-%m-%d %H:%M:%S')
         elif isinstance(obj, date):
-            return obj.today().strftime("%Y-%m-%d")
+            return obj.strftime("%Y-%m-%d")
         else:
             return json.JSONEncoder.default(self, obj)
 

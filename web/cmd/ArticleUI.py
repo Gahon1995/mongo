@@ -99,12 +99,27 @@ def articles_query_all(page_num=1, page_size=20, **kwargs):
 
 
 def choices_article(user):
-    aid = int(input("请输入要阅读的文章aid： "))
-    article = ArticleService.get_an_article(aid=aid)
-    if article is None:
-        print("文章不存在")
+    from prettytable import PrettyTable
+    keyword = input("请输入要阅读的文章部分标题： ")
+    articles = ArticleService.search_by_title(keyword)
+    if len(articles) == 0:
+        print("未找到相关文章")
+        return
 
-    read_an_article(user, article)
+    x = PrettyTable()
+    x.field_names = ("num", "title", "authors", "abstract")
+    for index, article in enumerate(articles):
+        x.add_row([index, article.title, article.authors, article.abstract])
+    print(x)
+    while True:
+        index = int(input("请选择要阅读的序号（ -1 退出）： "))
+        if 0 <= index < len(articles):
+            read_an_article(user, articles[index])
+            break
+        elif index == -1:
+            break
+        else:
+            print("输入错误，请重新输入")
 
 
 def read_an_article(user, article):
@@ -145,20 +160,19 @@ def read_an_article(user, article):
 
 
 def print_an_article(article):
-    print("\n" + "=" * 40)
-    print("Title: {title:<13}   Aid: {aid:<8}  Category: {category:<10}"
+    print("\n" + "=" * 50)
+    print("Title: {title:<13}  Category: {category:<10}"
           .format(title=article.title,
-                  aid=article.aid,
                   category=article.category))
     print("Authors: {authors:<13} Tags: {tags:<8} Language: {language:<10}"
           .format(authors=article.authors,
                   tags=article.articleTags,
                   language=article.language))
-    print("time: {0}".format(article.timestamp))
+    print("time: {0}".format(article.update_time.astimezone()))
     print("abstract: {0}".format(article.abstract))
-    print("=" * 15 + "content" + "=" * 15)
+    print("=" * 22 + "content" + "=" * 22)
     print(article.text)
-    print("\n" + "=" * 40)
+    print("\n" + "=" * 50)
     pass
 
 
@@ -216,3 +230,4 @@ if __name__ == '__main__':
     from service.UserService import UserService
 
     _user = UserService.get_an_user('admin')
+    choices_article(_user)

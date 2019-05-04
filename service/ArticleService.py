@@ -17,6 +17,11 @@ class ArticleService(object):
         return Article.count(**kwargs)
 
     @staticmethod
+    def search_by_title(name):
+        # TODO 测试该方法是否有用
+        return Article.objects(title__contains=name)
+
+    @staticmethod
     def add_an_article(title, authors, category, abstract, articleTags, language, text, image=None, video=None):
         article = Article()
         article.title = title
@@ -73,16 +78,22 @@ class ArticleService(object):
     @staticmethod
     def pretty_articles(articles: list):
         from prettytable import PrettyTable
+        from datetime import datetime
 
         x = PrettyTable()
 
         if not isinstance(articles, list):
             articles = list(articles)
         field_names = (
-            'aid', 'title', 'category', 'abstract', 'articleTags', 'authors', 'language', 'create_time', 'update_time')
+            'id', 'title', 'category', 'abstract', 'articleTags', 'authors', 'language', 'create_time', 'update_time')
         x.field_names = field_names
         for article in articles:
-            x.add_row(list(article.__getattribute__(key) for key in field_names))
+            # 需要对时间进行时区转换
+            x.add_row(list(article.__getattribute__(key).astimezone()
+                           if isinstance(article.__getattribute__(key), datetime)
+                           else article.__getattribute__(key)
+                           for key in field_names
+                           ))
 
         print(x)
         pass

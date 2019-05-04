@@ -34,8 +34,3 @@ class Article(BaseDB):
         return self.get_create_time()
 
     # timestamp = DateTimeField(default=datetime.now)
-
-    @classmethod
-    def search_by_title(cls, name):
-        # TODO 测试该方法是否有用
-        return cls.objects(title_contains=name)
