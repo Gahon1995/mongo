@@ -1,13 +1,13 @@
 import json
 from random import random
 
-USERS_NUM = 10000
-ARTICLES_NUM = 200000
-READS_NUM = 1000000
+# USERS_NUM = 10000
+# ARTICLES_NUM = 200000
+# READS_NUM = 1000000
 
-# USERS_NUM = 100
-# ARTICLES_NUM = 200
-# READS_NUM = 100
+USERS_NUM = 100
+ARTICLES_NUM = 200
+READS_NUM = 1000
 
 uid_region = {}
 aid_lang = {}
@@ -26,6 +26,7 @@ def gen_an_user(i):
     user["timestamp"] = str(timeBegin + i)
     user["uid"] = str(i)
     user["name"] = "user%d" % i
+    user["pwd"] = 'password'
     user["gender"] = "male" if random() > 0.33 else "female"
     user["email"] = "email%d" % i
     user["phone"] = "phone%d" % i
@@ -54,7 +55,7 @@ def gen_an_article(i):
     article["category"] = "science" if random() > 0.55 else "technology"
     article["abstract"] = "abstract of article %d" % i
     article["articleTags"] = "tags%d" % int(random() * 50)
-    article["authors"] = "author%d" % int(random() * 2000)
+    article["authors"] = "author%d" % int(random() * 2000) if random() > 0.7 else "user%d" % int(random() * USERS_NUM)
     article["language"] = "en" if random() > 0.5 else "zh"
     article["text"] = "text %d's location on hdfs" % i
     article["image"] = "image %d's location on hdfs" % i
@@ -98,55 +99,17 @@ def gen_an_read(i):
     return read
 
 
-def print_bar(now, total):
-    print('\rprocess:\t {now} / {total}  {rate}%'.format(now=now + 1, total=total,
-                                                         rate=round((now + 1) / total * 100, 2)), end='')
-
-
-def gen_users():
-    from model.User import User
-    User.delete_by()
+with open("user.dat", "w") as f:
     for i in range(USERS_NUM):
-        if i % 100 == 0:
-            print_bar(i, USERS_NUM)
-        user = json.dumps(gen_an_user(i))
-        User.insert_one(user)
+        json.dump(gen_an_user(i), f)
+        f.write("\n")
 
-
-def gen_articles():
-    from model.Article import Article
-    Article.delete_by()
+with open("article.dat", "w") as f:
     for i in range(ARTICLES_NUM):
-        if i % 100 == 0:
-            print_bar(i, ARTICLES_NUM)
-        article = json.dumps(gen_an_article(i))
-        Article.insert_one(article)
+        json.dump(gen_an_article(i), f)
+        f.write("\n")
 
-
-def gen_reads():
-    from model.Read import Read
-    Read.delete_by()
+with open("read.dat", "w") as f:
     for i in range(READS_NUM):
-        if i % 100 == 0:
-            print_bar(i, READS_NUM)
-        read = json.dumps(gen_an_read(i))
-        Read.insert_one(read)
-
-
-def main():
-    from mongoengine import connect
-    host = '127.0.0.1'
-    connect('mongo', host=host, port=27017)
-
-    print('\n导入user数据...')
-    gen_users()
-
-    print('\n导入article数据...')
-    gen_articles()
-
-    print('\n导入read数据...')
-    gen_reads()
-
-
-if __name__ == '__main__':
-    main()
+        json.dump(gen_an_read(i), f)
+        f.write("\n")

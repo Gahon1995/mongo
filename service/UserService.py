@@ -20,8 +20,8 @@ class UserService(object):
         return User.list_by_page(page_num, page_size, **kwargs)
 
     @staticmethod
-    def get_size(**kwargs):
-        return User.get_size(**kwargs)
+    def count(**kwargs):
+        return User.count(**kwargs)
 
     @staticmethod
     def get_an_user(name):
@@ -31,15 +31,15 @@ class UserService(object):
     def login(name, password):
         user = User.get(name=name)
         if user is not None and user.pwd == password:
-            logger.debug("用户 {} 登录成功".format(name))
+            logger.info("用户 {} 登录成功".format(name))
             return user
         else:
-            logger.debug("用户名或者密码错误")
+            logger.info("用户名或者密码错误")
         return None
 
     @staticmethod
     def logout(name):
-        logger.debug('用户 {} 退出登录'.format(name))
+        logger.info('用户 {} 退出登录'.format(name))
         return True
 
     @staticmethod
@@ -47,12 +47,13 @@ class UserService(object):
                  obtainedCredits: int):
         user = User.get(name=name)
         if user is not None:
-            logger.debug('用户名已存在')
+            logger.info('用户名已存在')
             return False
 
         user = User(name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
                     obtainedCredits)
         if user.save() is not None:
+            logger.info('用户：{} 注册成功'.format(name))
             return True
         return False
 
@@ -61,7 +62,7 @@ class UserService(object):
         forbid = ('name', 'uid', '_id')
         user = User.get(name=name)
         if user is None:
-            logger.debug("用户名不存在")
+            logger.info("用户{}不存在".format(name))
             return False
 
         for key in kwargs:
@@ -76,7 +77,7 @@ class UserService(object):
     def update_user(user, **kwargs):
         forbid = ('name', 'uid', '_id')
         if user is None:
-            logger.debug("用户名不存在")
+            logger.info("用户名不存在")
             return False
 
         for key in kwargs:
@@ -92,7 +93,7 @@ class UserService(object):
         forbid = ('name', 'uid', '_id')
         user = User.get(name=name)
         if user is None:
-            logger.debug("用户名不存在")
+            logger.info("用户名不存在")
             return False
 
         # TODO 添加管理员能够更改用户名的功能
@@ -132,11 +133,11 @@ class UserService(object):
         from prettytable import PrettyTable
 
         x = PrettyTable()
-        field_names = ['uid', 'name', 'pwd', 'gender', 'email', 'phone', 'dept', 'grade',
-                       'language', 'region', 'role', 'preferTags', 'obtainedCredits', 'timestamp']
+        field_names = ['id', 'name', 'pwd', 'gender', 'email', 'phone', 'dept', 'grade',
+                       'language', 'region', 'role', 'preferTags', 'obtainedCredits', 'create_time']
         x.field_names = field_names
         for user in users:
-            x.add_row(list(user[key] for key in field_names))
+            x.add_row(list(user.__getattribute__(key) for key in field_names))
 
             # data = json.loads(user.__str__())
             # data.pop('_id')

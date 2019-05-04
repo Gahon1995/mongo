@@ -7,8 +7,20 @@ from .Article import Article
 
 
 class Read(BaseDB):
-    uid = ReferenceField(User, required=True)
-    aid = ReferenceField(Article, required=True)
+    meta = {
+        'indexes': [
+            'uid',
+            'aid',
+            ('aid', 'uid'),
+            ('aid', 'readOrNot'),
+            ('aid', 'agreeOrNot'),
+            ('aid', 'commentOrNot'),
+            ('aid', 'shareOrNot'),
+        ]
+    }
+
+    uid = ReferenceField(User, required=True, reverse_delete_rule=NULLIFY)
+    aid = ReferenceField(Article, required=True, reverse_delete_rule=NULLIFY)
     readOrNot = IntField(default=1)
     readTimeLength = IntField(default=0)
     readSequence = IntField(default=1)
@@ -16,4 +28,9 @@ class Read(BaseDB):
     commentOrNot = IntField(default=0)
     shareOrNot = IntField(default=0)
     commentDetail = StringField(default='')
-    timestamp = StringField(required=True, default=str(int(datetime.now().timestamp() * 1000)))
+
+    # timestamp = DateTimeField(default=datetime.now)
+    @property
+    def create_time(self):
+        # 创建时间
+        return self.get_create_time()

@@ -4,7 +4,13 @@ from datetime import datetime
 
 
 class User(BaseDB):
-    uid = IntField(required=True, unique=True)
+    meta = {
+        'indexes': [
+            # 'uid',
+            'name'
+        ]
+    }
+    # uid = IntField(required=True)
     name = StringField(required=True, unique=True)
     pwd = StringField(required=True)
     gender = StringField(required=True)
@@ -17,13 +23,20 @@ class User(BaseDB):
     role = StringField(required=True)
     preferTags = StringField(required=True)
     obtainedCredits = IntField(default=0)
-    timestamp = StringField(required=True, default=str(int(datetime.now().timestamp() * 1000)))
+
+    # 尝试利用objectid来获取创建时间
+    # timestamp = DateTimeField(default=datetime.now)
+
+    @property
+    def create_time(self):
+        # 创建时间
+        return self.get_create_time()
 
     def __init__(self, name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
-                 obtainedCredits: int, *args, **values):
-        super().__init__(*args, **values)
-        if self.uid is None:
-            self.uid = self.get_id('uid')
+                 obtainedCredits: int, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # if self.uid is None:
+        #     self.uid = self.get_id('uid')
         self.name = name
         self.pwd = pwd
         self.gender = gender

@@ -22,6 +22,8 @@ def init():
 
 def start():
     init()
+    logging.info('start')
+    print('start')
 
 
 if __name__ == "__main__":

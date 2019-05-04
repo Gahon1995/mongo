@@ -16,7 +16,7 @@ class UserUI(object):
 
     @staticmethod
     def user_query_all(page_num=1, page_size=20, **kwargs):
-        total = UserService.get_size(**kwargs)
+        total = UserService.count(**kwargs)
         # total_pages = int((total - 1) / page_size) + 1
         # print("\n" + "=" * 20)
         users = UserService.users_list(page_num, page_size, **kwargs)

@@ -26,7 +26,7 @@ def article_manage(role='user', user=None):
         articles_query_all()
         pass
     elif mode == '2':
-        read_an_article(user)
+        choices_article(user)
         pass
     elif mode == '3':
         show_popular()
@@ -98,14 +98,18 @@ def articles_query_all(page_num=1, page_size=20, **kwargs):
     pass
 
 
-def read_an_article(user):
-    from service.ReadService import Read, ReadService
-    import time
-
+def choices_article(user):
     aid = int(input("请输入要阅读的文章aid： "))
     article = ArticleService.get_an_article(aid=aid)
     if article is None:
         print("文章不存在")
+
+    read_an_article(user, article)
+
+
+def read_an_article(user, article):
+    from service.ReadService import Read, ReadService
+    import time
 
     time_read_start = time.time()
     print_an_article(article)

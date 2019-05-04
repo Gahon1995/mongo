@@ -1,4 +1,8 @@
 from mongoengine import Document, connect, DoesNotExist
+from bson import ObjectId
+import json
+from datetime import datetime, date
+from utils.func import convert_mongo_2_json
 
 
 class BaseDB(Document):
@@ -7,7 +11,24 @@ class BaseDB(Document):
     }
 
     def __str__(self):
-        return self.to_json()
+        #     # 重写str方法， 将ObjectId 和datetime格式正确的输出
+        return convert_mongo_2_json(self)
+
+    #     data = dict()
+    #     for key in self._db_field_map.keys():
+    #         value = self.__getattribute__(key)
+    #         if isinstance(value, ObjectId):
+    #             value = str(value)
+    #         elif isinstance(value, (datetime, date)):
+    #             value = str(value)
+    #         data.setdefault(key, value)
+    #     data['create_time'] = str(self.get_create_time())
+    #     return json.dumps(data)
+
+    def get_create_time(self):
+        if self.id is None:
+            return None
+        return self.id.generation_time.now()
 
     @classmethod
     def list_by_page(cls, page_num=1, page_size=20, **kwargs):
@@ -23,7 +44,7 @@ class BaseDB(Document):
         return cls.objects(**kwargs).skip(offset).limit(page_size)
 
     @classmethod
-    def get_size(cls, **kwargs):
+    def count(cls, **kwargs):
         """
 
         :return: 当前数据的总量
@@ -67,6 +88,8 @@ class BaseDB(Document):
     def insert_one(cls, data: str):
         """
             插入一条数据
+            由于加入了引用，所以该方法使用会出错
+            TODO 去掉该方法以及该方法的相关引用
 
         :param data: 插入的数据类容，需要符合cls的类型
         :return:
@@ -105,7 +128,12 @@ class BaseDB(Document):
         :param _id: 当前class 的id 名称
         :return:
         """
-        return int(cls.objects().order_by('-' + _id).limit(1).first().__getattribute__(_id)) + 1
+
+        obj = cls.objects.order_by('-' + _id).limit(1).first()
+        if obj is None:
+            return 1
+        else:
+            return int(obj.__getattribute__(_id)) + 1
 
 
 def init_connect(db=None, host=None, port=None):
