@@ -104,7 +104,7 @@ def gen_an_read(i):
 
 def print_bar(now, total):
     print('\rprocess:\t {now} / {total}  {rate}%'.format(now=now + 1, total=total,
-                                                         rate=round((now + 1) / total * 100, 2)))
+                                                         rate=round((now + 1) / total * 100, 2)), end='')
     if now == total:
         print()
 
@@ -139,8 +139,14 @@ def gen_reads():
         print_bar(i, READS_NUM)
         data = gen_an_read(i)
         article = ArticleService.get_an_article(title='title' + data['aid'])
+        if article is None:
+            print('title: {} 不存在'.format(data['aid']))
+            continue
         name = 'user' + data['uid'] if data['uid'] != 0 else 'admin'
         user = UserService.get_an_user(name=name)
+        if article is None:
+            print('user: {} 不存在'.format(name))
+            continue
         new_read = Read()
         new_read.aid = article
         new_read.uid = user
@@ -152,6 +158,7 @@ def gen_reads():
         new_read.agreeOrNot = int(data['agreeOrNot'])
         new_read.shareOrNot = int(data['shareOrNot'])
         ReadService.save_new_read(new_read)
+        del new_read
 
 
 def main():

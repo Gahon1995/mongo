@@ -7,12 +7,13 @@
 import logging
 
 from db.mongodb import init_connect
+from db.gen.genDatabase import main
 
 import Config
 
 
 def init():
-    init_connect()
+    # init_connect()
     logging.basicConfig(level=Config.debug_level,
                         filename=Config.log_file_name if Config.log_in_file else None,
                         filemode='w',
@@ -23,7 +24,7 @@ def init():
 def start():
     init()
     logging.info('start')
-    print('start')
+    main()
 
 
 if __name__ == "__main__":
