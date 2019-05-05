@@ -1,8 +1,8 @@
 import json
 from random import random
-from service.UserService import UserService
-from service.ArticleService import ArticleService
-from service.ReadService import ReadService
+from service.user_service import UserService
+from service.article_service import ArticleService
+from service.read_service import ReadService
 
 # USERS_NUM = 10000
 # ARTICLES_NUM = 200000
@@ -110,7 +110,7 @@ def print_bar(now, total):
 
 
 def gen_users():
-    from model.User import User
+    from model.user import User
     User.delete_by()
     for i in range(USERS_NUM):
         print_bar(i, USERS_NUM)
@@ -121,7 +121,7 @@ def gen_users():
 
 
 def gen_articles():
-    from model.Article import Article
+    from model.article import Article
     Article.delete_by()
     for i in range(ARTICLES_NUM):
         print_bar(i, ARTICLES_NUM)
@@ -133,8 +133,8 @@ def gen_articles():
 
 
 def gen_reads():
-    from model.Read import Read
-    from model.BeRead import BeRead
+    from model.read import Read
+    from model.be_read import BeRead
     Read.delete_by()
     BeRead.delete_by()
     for i in range(READS_NUM):

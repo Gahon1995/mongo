@@ -4,12 +4,38 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 
-
+import functools
 import json
 import pytz
 from datetime import datetime, date
 
 from mongoengine.base import BaseDocument
+
+
+def singleton(cls):
+    """
+    将一个类作为单例
+    来自 https://wiki.python.org/moin/PythonDecoratorLibrary#Singleton
+    """
+
+    cls.__new_original__ = cls.__new__
+
+    @functools.wraps(cls.__new__)
+    def singleton_new(cls, *args, **kw):
+        it = cls.__dict__.get('__it__')
+        if it is not None:
+            return it
+
+        cls.__it__ = it = cls.__new_original__(cls, *args, **kw)
+        it.__init_original__(*args, **kw)
+        return it
+
+    cls.__new__ = singleton_new
+    cls.__init_original__ = cls.__init__
+    cls.__init__ = object.__init__
+
+    return cls
+
 
 tz = pytz.timezone("Asia/Shanghai")
 
@@ -67,7 +93,7 @@ def convert_mongo_2_json(o):
     return ret
 
 
-def show_next(page_num, page_size, total, next_func):
+def show_next(page_num, page_size, total, next_func, **kwargs):
     total_pages = int((total - 1) / page_size) + 1
     flag = False
 
@@ -84,16 +110,16 @@ def show_next(page_num, page_size, total, next_func):
             if page_num <= 1:
                 print("当前就在第一页哟")
             else:
-                return next_func(page_num - 1)
+                return next_func(total=total, page_num=page_num - 1, **kwargs)
         elif mode == '2':
             if page_num >= total_pages:
                 print("当前在最后一页哟")
             else:
-                return next_func(page_num + 1)
+                return next_func(total=total, page_num=page_num + 1, **kwargs)
         elif mode == '3':
             num = int(input('请输入跳转页数: '))
             if 0 < num <= total_pages:
-                return next_func(num)
+                return next_func(total=total, page_num=num, **kwargs)
             else:
                 print("输入页码错误")
         elif mode == '4':

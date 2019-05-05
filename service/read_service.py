@@ -3,14 +3,18 @@
 # @Time    : 2019-04-28 20:43
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
-from model.Read import Read
-from model.BeRead import BeRead
+from model.read import Read
+from model.be_read import BeRead
 import logging
 
 logger = logging.getLogger('ReadService')
 
 
 class ReadService(object):
+
+    @staticmethod
+    def get_size(**kwargs):
+        return Read.count(**kwargs)
 
     @staticmethod
     def save_new_read(new_read):
@@ -33,3 +37,7 @@ class ReadService(object):
     @staticmethod
     def read_info(_id):
         return Read.get(id=_id)
+
+    @staticmethod
+    def get_history(user, page_num=1, page_size=20):
+        return Read.list_by_page(page_num, page_size, uid=user)

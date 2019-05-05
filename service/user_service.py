@@ -3,7 +3,7 @@
 # @Time    : 2019-04-28 20:13
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
-from model.User import User
+from model.user import User
 import logging
 
 logger = logging.getLogger('userService')
@@ -28,10 +28,12 @@ class UserService(object):
         return User.get(name=name)
 
     @staticmethod
-    def login(name, password):
-        user = User.get(name=name)
+    def login(username, password):
+        if username is None or password is None:
+            return None
+        user = User.get(name=username)
         if user is not None and user.pwd == password:
-            logger.info("用户 {} 登录成功".format(name))
+            logger.info("用户 {} 登录成功".format(username))
             return user
         else:
             logger.info("用户名或者密码错误")

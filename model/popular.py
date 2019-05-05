@@ -8,7 +8,7 @@ from datetime import datetime
 from mongoengine import *
 
 from db.mongodb import BaseDB
-from model.Article import Article
+from model.article import Article
 
 temporalChoices = ('daily', 'weekly', 'monthly')
 

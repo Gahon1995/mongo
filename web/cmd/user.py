@@ -4,7 +4,7 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 import json
-from service.UserService import UserService
+from service.user_service import UserService
 from web.cmd.ArticleUI import article_manage
 
 
@@ -43,6 +43,7 @@ def user_manage(user):
     elif mode == '6':
         pass
     elif mode == '0':
+        return
         pass
     else:
         print("输入错误")

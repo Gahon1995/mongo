@@ -3,7 +3,7 @@
 # @Time    : 2019-04-29 13:32
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
-from service.UserService import UserService
+from service.user_service import UserService
 from utils.func import show_next
 import json
 
@@ -17,43 +17,11 @@ class UserUI(object):
     @staticmethod
     def user_query_all(page_num=1, page_size=20, **kwargs):
         total = UserService.count(**kwargs)
-        # total_pages = int((total - 1) / page_size) + 1
-        # print("\n" + "=" * 20)
+
         users = UserService.users_list(page_num, page_size, **kwargs)
         UserService.pretty_users(users)
 
-        show_next(page_num=page_num, page_size=page_size, next_func=UserUI.user_query_all, total=total)
-
-        # print("\n\t\t\t\t\t当前第{page_num}页， 总共{total_pages}页，共{total}条数据"
-        #       .format(page_num=page_num,
-        #               total_pages=total_pages,
-        #               total=total))
-        # flag = False
-        # if total_pages > 1:
-        #     flag = True
-        #
-        # while flag:
-        #     print("\t\t1. 上一页\t2. 下一页\t3. 指定页数\t4.返回上一级")
-        #     mode = input("请选择操作： ")
-        #     if mode == '1':
-        #         if page_num <= 1:
-        #             print("当前就在第一页哟")
-        #         else:
-        #             return UserUI.user_query_all(page_num - 1)
-        #     elif mode == '2':
-        #         if page_num >= total_pages:
-        #             print("当前在最后一页哟")
-        #         else:
-        #             return UserUI.user_query_all(page_num + 1)
-        #     elif mode == '3':
-        #         num = int(input('请输入跳转页数: '))
-        #         if 0 < num <= total_pages:
-        #             return UserUI.user_query_all(num)
-        #         else:
-        #             print("输入页码错误")
-        #     elif mode == '4':
-        #         return None
-        # input("\n\t按回车键返回")
+        show_next(page_num=page_num, page_size=page_size, next_func=UserUI.user_query_all, total=total, **kwargs)
 
     @staticmethod
     def user_query_by_name():
@@ -117,7 +85,25 @@ class UserUI(object):
 
     @staticmethod
     def add_user():
-        # TODO 管理员添加用户
+        # TODO 使用选项模式来进行固定项的选择
+
+        name = input("请输入name: ")
+        pwd = input("请输入pwd: ")
+        gender = input("请输入gender: ")
+        email = input("请输入email: ")
+        phone = input("请输入phone: ")
+        dept = input("请输入dept: ")
+        grade = input("请输入grade: ")
+        language = input("请输入language: ")
+        region = input("请输入region: ")
+        role = input("请输入role: ")
+        preferTags = input("请输入preferTags: ")
+        obtainedCredits = int(input("请输入obtainedCredits: "))
+
+        UserService.register(name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
+                             obtainedCredits)
+        print("添加用户成功")
+        return
         pass
 
     @staticmethod

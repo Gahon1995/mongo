@@ -7,9 +7,9 @@
 import json
 import logging
 
-from service.UserService import UserService
-from service.ArticleService import ArticleService
-from service.ReadService import ReadService, Read
+from service.user_service import UserService
+from service.article_service import ArticleService
+from service.read_service import ReadService, Read
 from main import init
 from .genTable import USERS_NUM, ARTICLES_NUM, READS_NUM
 

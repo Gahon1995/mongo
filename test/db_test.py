@@ -5,7 +5,7 @@ connect('test', host='192.168.109.128', port=27017)
 
 
 def test_user():
-    from model.User import User
+    from model.user import User
 
     data = '{"timestamp": "1506328859000", "uid": "2", "name": "user2", "gender": "male", "email": "email0", "phone": "phone0", "dept": "dept17", "grade": "grade4", "language": "zh", "region": "Beijing", "role": "role1", "preferTags": "tags39", "obtainedCredits": "79"}'
 
@@ -21,7 +21,7 @@ def test_user():
 
 
 def test_article():
-    from model.Article import Article
+    from model.article import Article
 
     arti = {"timestamp": "1506000000000", "aid": "0", "title": "title0", "category": "technology",
             "abstract": "abstract of article 0", "articleTags": "tags33", "authors": "author376", "language": "zh",

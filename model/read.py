@@ -2,8 +2,8 @@ from mongoengine import *
 from db.mongodb import BaseDB
 from datetime import datetime
 
-from .User import User
-from .Article import Article
+from .user import User
+from .article import Article
 
 
 class Read(BaseDB):

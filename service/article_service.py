@@ -4,7 +4,7 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 
-from model.Article import Article
+from model.article import Article
 import logging
 
 logger = logging.getLogger('ArticleService')
@@ -40,12 +40,12 @@ class ArticleService(object):
         pass
 
     @staticmethod
-    def del_by_aid(aid, **kwargs):
-        article = Article.get(aid=aid, **kwargs)
+    def del_by_id(_id, **kwargs):
+        article = Article.get(id=_id, **kwargs)
         if article is not None:
             article.delete()
-            return True
-        return False
+            # return True
+        return True
 
     @staticmethod
     def del_article(article):
@@ -60,20 +60,20 @@ class ArticleService(object):
         return Article.get(**kwargs)
 
     @staticmethod
-    def update_an_article(article):
-        article.update()
-
-    @staticmethod
-    def update_by_condition(aid, condition):
+    def update_an_article(article, condition: dict):
         from datetime import datetime
-        forbid = ("aid", "_id", 'update_time')
-        article = Article.get(aid=aid)
+        forbid = ("id", "_id", 'update_time')
         for key, value in condition.items():
             if key not in forbid and hasattr(article, key):
                 setattr(article, key, value)
         article.update_time = datetime.utcnow()
         article.save()
         return True
+
+    @staticmethod
+    def update_by_id(_id, condition):
+        article = Article.get(id=_id)
+        ArticleService.update_an_article(article, condition)
 
     @staticmethod
     def pretty_articles(articles: list):
