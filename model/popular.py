@@ -16,7 +16,6 @@ temporalChoices = ('daily', 'weekly', 'monthly')
 class Popular(BaseDB):
     meta = {
         'indexes': [
-            'pid',
             'temporalGranularity'
         ]
     }
@@ -31,15 +30,3 @@ class Popular(BaseDB):
     def create_time(self):
         # 创建时间
         return self.get_create_time()
-
-    @classmethod
-    def get_daily_rank(cls):
-        return cls.get(temporalGranularity='daily')
-
-    @classmethod
-    def get_weekly_rank(cls):
-        return cls.get(temporalGranularity='weekly')
-
-    @classmethod
-    def get_monthly_rank(cls):
-        return cls.get(temporalGranularity='monthly')

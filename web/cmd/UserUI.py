@@ -17,11 +17,15 @@ class UserUI(object):
     @staticmethod
     def user_query_all(page_num=1, page_size=20, **kwargs):
         total = UserService.count(**kwargs)
+        UserUI.query_all(total, page_num, page_size, **kwargs)
+
+    @staticmethod
+    def query_all(total, page_num=1, page_size=20, **kwargs):
 
         users = UserService.users_list(page_num, page_size, **kwargs)
         UserService.pretty_users(users)
 
-        show_next(page_num=page_num, page_size=page_size, next_func=UserUI.user_query_all, total=total, **kwargs)
+        show_next(page_num=page_num, page_size=page_size, next_func=UserUI.query_all, total=total, **kwargs)
 
     @staticmethod
     def user_query_by_name():

@@ -126,3 +126,17 @@ def show_next(page_num, page_size, total, next_func, **kwargs):
             return None
     input("\n\t按回车键返回")
     pass
+
+
+def merge_dict_and_sort(dict_1, dict_2) -> list:
+    for key, value in dict_2.items():
+        if dict_1.get(key) is None:
+            dict_1.setdefault(key, value)
+        else:
+            dict_1[key] += value
+
+    return sorted(dict_1.items(), key=lambda item: item[1], reverse=True)
+
+
+def sort_dict(data) -> list:
+    return sorted(data.items(), key=lambda item: item[1], reverse=True)

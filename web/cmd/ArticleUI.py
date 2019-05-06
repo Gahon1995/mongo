@@ -5,7 +5,10 @@
 # @Email   : Gahon1995@gmail.com
 from service.article_service import ArticleService
 from service.read_service import ReadService
+from service.popular_service import PopularService
 from utils.func import *
+
+from prettytable import PrettyTable
 
 
 def article_manage(role='user', user=None):
@@ -165,7 +168,59 @@ def print_an_article(article):
 
 def show_popular():
     # TODO 展示热门文章
+    print('=' * 30)
+    print('1. 今日热门文章')
+    print('2. 最近一周热门文章')
+    print('3. 最近一个月热门文章')
+    print('4. 返回上一级')
+    print('=' * 30)
+
+    mode = input("请选择操作：")
+    if mode == '1':
+        show_daily_popular()
+        pass
+    elif mode == '2':
+        show_weekly_popular()
+        pass
+    elif mode == '3':
+        show_monthly_popular()
+        pass
+    elif mode == '4':
+        return
+    else:
+        pass
+    show_popular()
+
+
+def show_daily_popular():
+    rank = PopularService.get_daily_rank()
+    show_rank(rank)
     pass
+
+
+def show_weekly_popular():
+    rank = PopularService.get_weekly_rank()
+    show_rank(rank)
+    pass
+
+
+def show_monthly_popular():
+    rank = PopularService.get_monthly_rank()
+    show_rank(rank)
+    pass
+
+
+def show_rank(rank):
+    if rank is None:
+        print("当前并无数据，请联系管理员生成")
+        return
+    x = PrettyTable()
+    x.field_names = ('index', 'title', 'id')
+    print("\nlast update time: {}".format(rank.update_time.astimezone()))
+    for index, article in enumerate(rank.articleAidList):
+        x.add_row((index, article.title, article.id))
+    print(x)
+    input("\n按回车键返回")
 
 
 def create_article(user):
@@ -291,6 +346,13 @@ def update_an_article(role, user):
 
 
 def update_popular():
+    print("更新今日热门")
+    PopularService.update_daily_rank()
+    print("更新一周热门")
+    PopularService.update_monthly_rank()
+    print("更新一月热门")
+    PopularService.update_weekly_rank()
+    print("更新完成")
     pass
 
 
