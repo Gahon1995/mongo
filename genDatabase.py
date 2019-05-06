@@ -1,4 +1,3 @@
-import json
 from random import random
 from service.user_service import UserService
 from service.article_service import ArticleService
@@ -173,5 +172,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-    pass
+    main()
