@@ -7,7 +7,7 @@
 import logging
 
 from db.mongodb import init_connect
-from db.gen.genDatabase import main
+from web.cmd.command_ui import menu
 
 import Config
 
@@ -24,7 +24,7 @@ def init():
 def start():
     init()
     logging.info('start')
-    main()
+    menu()
 
 
 if __name__ == "__main__":

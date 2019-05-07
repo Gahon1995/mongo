@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+</head>
+<body>
+<div class="container-fluid">
+    <!-- Content here -->
+    <form class="form-signin" action="{{ url_for('.login') }}" method="post">
+        <h2 class="form-signin-heading">Please sign in</h2>
+        <label for="inputEmail" class="sr-only">Username</label>
+        <input type="text" id="inputEmail" class="form-control" name="username" placeholder="Username" required
+               autofocus>
+        <label for="inputPassword" class="sr-only">Password</label>
+        <input type="password" id="inputPassword" class="form-control" name="password" placeholder="Password" required>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" value="remember-me" name="remember"> Remember me
+            </label>
+        </div>
+        {% if message %}
+        <div class="alert alert-danger" role="alert">
+            {{ message }}
+        </div>
+        {% endif %}
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+    </form>
+</div>
+
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.bootcss.com/popper.js/1.15.0/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+</body>
+
+<style>
+    .selector-for-some-widget {
+        box-sizing: content-box;
+    }
+</style>
+
+<style lang="scss" scoped>
+    body {
+        padding-top: 40px;
+        padding-bottom: 40px;
+        background-color: #eee;
+    }
+
+    .form-signin {
+        /*max-width: 330px;*/
+        /*padding: 15px;*/
+        /*margin: 0 auto;*/
+        /*box-shadow: 0 0px 8px 0 rgba(0, 0, 0, 0.06), 0 1px 0px 0 rgba(0, 0, 0, 0.02);*/
+        -webkit-border-radius: 5px;
+        border-radius: 5px;
+        -moz-border-radius: 5px;
+        background-clip: padding-box;
+        margin: 180px auto;
+        width: 450px;
+        padding: 35px 35px 15px 35px;
+        background: #fff;
+        border: 1px solid #eaeaea;
+        box-shadow: 0 0 25px #cac6c6;
+    }
+
+    .form-signin .form-signin-heading {
+        margin: 0px auto 40px auto;
+        text-align: center;
+        color: #505458;
+    }
+
+    .form-signin .checkbox {
+        margin-bottom: 10px;
+    }
+
+    .form-signin .checkbox {
+        font-weight: normal;
+    }
+
+    .form-signin .form-control {
+        position: relative;
+        height: auto;
+        margin: 0 0 20px 0;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .form-signin .form-control:focus {
+        z-index: 2;
+    }
+
+    .form-signin input[type="email"] {
+        /*margin-bottom: -1px;*/
+        border-bottom-right-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    .form-signin input[type="password"] {
+        margin-bottom: 10px;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+
+    /*.login-container {*/
+    /*    !*box-shadow: 0 0px 8px 0 rgba(0, 0, 0, 0.06), 0 1px 0px 0 rgba(0, 0, 0, 0.02);*!*/
+    /*    -webkit-border-radius: 5px;*/
+    /*    border-radius: 5px;*/
+    /*    -moz-border-radius: 5px;*/
+    /*    background-clip: padding-box;*/
+    /*    margin: 180px auto;*/
+    /*    width: 450px;*/
+    /*    padding: 35px 35px 15px 35px;*/
+    /*    background: #fff;*/
+    /*    border: 1px solid #eaeaea;*/
+    /*    box-shadow: 0 0 25px #cac6c6;*/
+    /*}*/
+
+    /*.title {*/
+    /*    margin: 0px auto 40px auto;*/
+    /*    text-align: center;*/
+    /*    color: #505458;*/
+    /*}*/
+
+    /*.remember {*/
+    /*    margin: 0px 0px 35px 0px;*/
+    /*}*/
+</style>
+</html>
+
