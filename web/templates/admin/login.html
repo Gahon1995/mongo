@@ -6,26 +6,21 @@
         <div class="row-fluid">
             <div class="span12">
                 <!-- Content here -->
-                <form class="form-signin" action="{{ url_for('.login') }}" method="post">
-                    <h2 class="form-signin-heading">用户登录</h2>
+                <form class="form-signin" action="{{ url_for('.admin_login') }}" method="post">
+                    <h2 class="form-signin-heading">管理员登录</h2>
                     <label for="inputEmail" class="sr-only">用户名</label>
                     <input type="text" id="inputEmail" class="form-control" name="username" placeholder="用户名" required
                            autofocus>
                     <label for="inputPassword" class="sr-only">密码</label>
                     <input type="password" id="inputPassword" class="form-control" name="password" placeholder="密码"
                            required>
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" value="remember-me" name="remember"> 记住我
-                        </label>
-                    </div>
                     {% if message %}
                         <div class="alert alert-danger" role="alert">
                             <button type="button" class="close" data-dismiss="alter">×</button>
                             {{ message }}
                         </div>
                     {% endif %}
-                    <button class="btn btn-lg btn-primary btn-block" type="submit">登录</button>
+                    <button class="btn btn-lg btn-primary btn-block" type="submit" style="margin-top: 10px">登录</button>
                 </form>
             </div>
         </div>
