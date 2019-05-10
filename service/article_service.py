@@ -60,6 +60,10 @@ class ArticleService(object):
         return Article.get(**kwargs)
 
     @staticmethod
+    def get_an_article_by_id(aid):
+        return Article.get(id=aid)
+
+    @staticmethod
     def update_an_article(article, condition: dict):
         from datetime import datetime
         forbid = ("id", "_id", 'update_time')

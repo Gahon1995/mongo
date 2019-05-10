@@ -13,7 +13,11 @@ log_file_name = './mongo.log'
 
 #  MongoDB 相关配置
 mongo_db_name = 'mongo-new'
-# mongo_host = 'gahon.xyz'   # 服务器
-# mongo_host = '10.211.55.5'    # 宿舍
-mongo_host = '192.168.109.130'    # 工位
+# mongo_host = 'gahon.xyz'  # 服务器
+mongo_host = '10.211.55.5'  # 宿舍
+# mongo_host = '192.168.109.130'    # 工位
 mongo_port = 27017
+
+# Redis 配置
+redis_host = '10.211.55.5'
+redis_port = 6379

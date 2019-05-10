@@ -140,3 +140,11 @@ def merge_dict_and_sort(dict_1, dict_2) -> list:
 
 def sort_dict(data) -> list:
     return sorted(data.items(), key=lambda item: item[1], reverse=True)
+
+
+# 工具类简单，如果是字节，转成str
+def bytes_to_str(s, encoding='utf-8'):
+    """Returns a str if a bytes object is given."""
+    if isinstance(s, bytes):
+        return s.decode(encoding)
+    return s
