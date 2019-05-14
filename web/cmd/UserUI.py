@@ -4,7 +4,8 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 from service.user_service import UserService
-from utils.func import show_next
+from utils.func import show_next, get_dbms_by_region
+from utils.consts import DBMS
 import json
 
 
@@ -16,21 +17,39 @@ class UserUI(object):
 
     @staticmethod
     def user_query_all(page_num=1, page_size=20, **kwargs):
-        total = UserService.count(**kwargs)
-        UserUI.query_all(total, page_num, page_size, **kwargs)
+        print("1. Beijing")
+        print("2. Hong Kong")
+        print("3. Beijing and Hong Kong")
+        print("输入其他内容返回")
+        mode = input("请选择操作： ")
+        if mode == '1':
+            total = UserService.count(db_alias=DBMS.DBMS1, **kwargs)
+            UserUI.query_all(total, page_num, page_size, db_alias=DBMS.DBMS1, **kwargs)
+        elif mode == '2':
+            total = UserService.count(db_alias=DBMS.DBMS2, **kwargs)
+            UserUI.query_all(total, page_num, page_size, db_alias=DBMS.DBMS2, **kwargs)
+        elif mode == '3':
+            # TODO 添加两个地区查询的方式
+            pass
+        return
 
     @staticmethod
-    def query_all(total, page_num=1, page_size=20, **kwargs):
+    def query_all(total, page_num=1, page_size=20, db_alias=None, **kwargs):
 
-        users = UserService.users_list(page_num, page_size, **kwargs)
+        users = UserService.users_list(page_num, page_size, db_alias=db_alias, **kwargs)
+
+        if len(users) == 0:
+            print("未查找到相关用户")
+            return
         UserService.pretty_users(users)
 
-        show_next(page_num=page_num, page_size=page_size, next_func=UserUI.query_all, total=total, **kwargs)
+        show_next(page_num=page_num, page_size=page_size, db_alias=db_alias, next_func=UserUI.query_all, total=total,
+                  **kwargs)
 
     @staticmethod
     def user_query_by_name():
         name = input("\n请输入查询的用户名: ")
-        user = UserService.get_an_user(name)
+        user = UserService.get_user_by_name(name)
         if user is None:
             print("用户名不存在")
         else:
@@ -56,9 +75,10 @@ class UserUI(object):
             return None
 
     @staticmethod
-    def update_user_info(**kwargs):
+    def update_user_info():
+        forbid = ['id', 'name', 'region']
         username = input("请输入要更新的用户名：")
-        user = UserService.get_an_user(username)
+        user = UserService.get_user_by_name(username)
         if user is None:
             print("用户不存在")
         UserService.pretty_users([user])
@@ -66,8 +86,9 @@ class UserUI(object):
         try:
             con = json.loads(update_date)
             for key, value in con.items():
-                kwargs[key] = value
-            return UserService.update_by_admin(username, **kwargs)
+                if key not in forbid and hasattr(user, key):
+                    setattr(user, key, value)
+            return UserService.update_user_by_admin(username, db_alias=get_dbms_by_region(user.region))
         except json.JSONDecodeError:
             print("输入不是json格式")
             return None
@@ -75,14 +96,14 @@ class UserUI(object):
     @staticmethod
     def del_user():
         username = input("请输入要删除的用户名： ")
-        user = UserService.get_an_user(username)
+        user = UserService.get_user_by_name(username)
         if user is None:
             print("该用户不存在")
             return None
         UserService.pretty_users([user])
         choice = input("是否删除该用户？（Y or N）： ")
         if choice == 'Y' or choice == 'y' or choice == 'yes':
-            UserService.del_user(user)
+            UserService.del_user(user, db_alias=get_dbms_by_region(user.region))
             print("删除成功")
 
         return None

@@ -12,10 +12,10 @@ from utils.consts import Region
 class TestBaseArticleService(TestBase):
 
     def test_get_size(self):
-        size = ArticleService.get_size(db_alias=Region.bj)
+        size = ArticleService.count(db_alias=Region.bj)
 
         print('bj: size: ' + str(size))
-        size = ArticleService.get_size(db_alias=Region.hk)
+        size = ArticleService.count(db_alias=Region.hk)
 
         print('hk: size: ' + str(size))
 

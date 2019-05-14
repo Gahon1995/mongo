@@ -11,6 +11,8 @@ from datetime import datetime, date
 
 from mongoengine.base import BaseDocument
 
+from utils.consts import Region, Category, DBMS
+
 
 def singleton(cls):
     """
@@ -93,7 +95,7 @@ def convert_mongo_2_json(o):
     return ret
 
 
-def show_next(page_num, page_size, total, next_func, **kwargs):
+def show_next(page_num, page_size, total, next_func, db_alias=None, **kwargs):
     total_pages = int((total - 1) / page_size) + 1
     flag = False
 
@@ -110,16 +112,16 @@ def show_next(page_num, page_size, total, next_func, **kwargs):
             if page_num <= 1:
                 print("当前就在第一页哟")
             else:
-                return next_func(total=total, page_num=page_num - 1, **kwargs)
+                return next_func(total=total, page_num=page_num - 1, db_alias=db_alias, **kwargs)
         elif mode == '2':
             if page_num >= total_pages:
                 print("当前在最后一页哟")
             else:
-                return next_func(total=total, page_num=page_num + 1, **kwargs)
+                return next_func(total=total, page_num=page_num + 1, db_alias=db_alias, **kwargs)
         elif mode == '3':
             num = int(input('请输入跳转页数: '))
             if 0 < num <= total_pages:
-                return next_func(total=total, page_num=num, **kwargs)
+                return next_func(total=total, page_num=num, db_alias=db_alias, **kwargs)
             else:
                 print("输入页码错误")
         elif mode == '4':
@@ -148,3 +150,36 @@ def bytes_to_str(s, encoding='utf-8'):
     if isinstance(s, bytes):
         return s.decode(encoding)
     return s
+
+
+class AliasIsNoneException(Exception):
+    pass
+
+
+class DbmsErrorException(Exception):
+    pass
+
+
+def check_alias(db_alias):
+    if db_alias is None:
+        raise AliasIsNoneException("alias is None")
+    if not (db_alias == DBMS.DBMS1 or db_alias == DBMS.DBMS2):
+        raise DbmsErrorException("alias is wrong, please check")
+
+
+def get_dbms_by_region(region):
+    if region == Region.bj:
+        return [DBMS.DBMS1]
+    else:
+        return [DBMS.DBMS2]
+
+
+def get_dbms_by_category(category):
+    if category == Category.science:
+        return [DBMS.DBMS1, DBMS.DBMS2]
+    else:
+        return [DBMS.DBMS2]
+
+
+def get_start_end_object_id():
+    pass

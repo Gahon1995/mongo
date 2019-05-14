@@ -5,6 +5,8 @@
 # @Email   : Gahon1995@gmail.com
 from model.user import User
 from db.mongodb import switch_mongo_db
+from utils.consts import DBMS, Region
+from utils.func import check_alias, get_dbms_by_region
 import logging
 
 logger = logging.getLogger('userService')
@@ -19,23 +21,46 @@ class UserService(object):
     @staticmethod
     @switch_mongo_db(cls=User)
     def users_list(page_num=1, page_size=20, db_alias=None, **kwargs):
+        check_alias(db_alias)
         return User.list_by_page(page_num, page_size, **kwargs)
 
     @staticmethod
     @switch_mongo_db(cls=User)
     def count(db_alias=None, **kwargs):
+        check_alias(db_alias)
         return User.count(**kwargs)
 
     @staticmethod
-    @switch_mongo_db(cls=User)
-    def get_an_user(name, db_alias=None):
-        return User.get(name=name)
+    def count_all(**kwargs):
+        return User.count(db_alias=DBMS.DBMS1, **kwargs) + User.count(db_alias=DBMS.DBMS2, **kwargs)
+
+    @staticmethod
+    def get_user_by_name(name, db_alias=None):
+        if db_alias is None:
+            user = UserService.__get_user_by_name(name, db_alias=DBMS.DBMS1)
+            if user is None:
+                user = UserService.__get_user_by_name(name, db_alias=DBMS.DBMS2)
+            return user
+        else:
+            return UserService.__get_user_by_name(name, db_alias=db_alias)
 
     @staticmethod
     @switch_mongo_db(cls=User)
-    def login(username, password, db_alias=None):
-        if username is None or password is None:
-            return None
+    def __get_user_by_name(name, db_alias=None):
+        check_alias(db_alias)
+        return User.get(name=name)
+
+    @staticmethod
+    def login(username, password):
+        user = UserService.__login(username, password, db_alias=DBMS.DBMS1)
+        if user is None:
+            user = UserService.__login(username, password, db_alias=DBMS.DBMS2)
+        return user
+
+    @staticmethod
+    @switch_mongo_db(cls=User)
+    def __login(username, password, db_alias=None):
+        check_alias(db_alias)
         user = User.get(name=username)
         if user is not None and user.pwd == password:
             logger.info("用户 {} 登录成功".format(username))
@@ -45,22 +70,30 @@ class UserService(object):
         return None
 
     @staticmethod
-    @switch_mongo_db(cls=User)
-    def logout(name, db_alias=None):
+    def logout(name):
         logger.info('用户 {} 退出登录'.format(name))
         return True
 
     @staticmethod
     @switch_mongo_db(cls=User)
     def register(name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
-                 obtainedCredits: int, db_alias=None):
-        user = User.get(name=name)
+                 obtainedCredits: int):
+        user = UserService.get_user_by_name(name)
         if user is not None:
             logger.info('用户名已存在')
             return False
+        db_alias = get_dbms_by_region(region)
+        return UserService.__register(name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
+                                      obtainedCredits, db_alias=db_alias)
 
-        user = User(name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
-                    obtainedCredits)
+    @staticmethod
+    def __register(name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
+                   obtainedCredits: int, db_alias=None):
+
+        check_alias(db_alias)
+
+        user = User.register(name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
+                             obtainedCredits)
         if user.save() is not None:
             logger.info('用户：{} 注册成功'.format(name))
             return True
@@ -69,7 +102,8 @@ class UserService(object):
     @staticmethod
     @switch_mongo_db(cls=User)
     def update(name, db_alias=None, **kwargs):
-        forbid = ('name', 'uid', '_id')
+        check_alias(db_alias)
+        forbid = ('name', 'id', '_id', 'region')
         user = User.get(name=name)
         if user is None:
             logger.info("用户{}不存在".format(name))
@@ -86,7 +120,8 @@ class UserService(object):
     @staticmethod
     @switch_mongo_db(cls=User)
     def update_user(user, db_alias=None, **kwargs):
-        forbid = ('name', 'uid', '_id')
+        check_alias(db_alias)
+        forbid = ('name', 'id', '_id', 'region')
         if user is None:
             logger.info("用户名不存在")
             return False
@@ -101,18 +136,8 @@ class UserService(object):
 
     @staticmethod
     @switch_mongo_db(cls=User)
-    def update_by_admin(name, db_alias=None, **kwargs):
-        forbid = ('name', 'uid', '_id')
-        user = User.get(name=name)
-        if user is None:
-            logger.info("用户名不存在")
-            return False
-
-        # TODO 添加管理员能够更改用户名的功能
-        for key in kwargs:
-            if key not in forbid and hasattr(user, key):
-                setattr(user, key, kwargs[key])
-
+    def update_user_by_admin(user, db_alias=None):
+        check_alias(db_alias)
         user.save()
         # TODO 如何判断更新失败？（例如更新时网络异常）
         return True
@@ -120,6 +145,7 @@ class UserService(object):
     @staticmethod
     @switch_mongo_db(cls=User)
     def del_user_by_name(name, db_alias=None):
+        check_alias(db_alias)
         user = User.get(name=name)
         if user is not None:
             user.delete()
@@ -129,6 +155,7 @@ class UserService(object):
     @staticmethod
     @switch_mongo_db(cls=User)
     def del_user(user: User, db_alias=None):
+        check_alias(db_alias)
         if user is not None:
             user.delete()
             return True
@@ -136,8 +163,9 @@ class UserService(object):
 
     @staticmethod
     @switch_mongo_db(cls=User)
-    def del_user_by_uid(uid, db_alias=None):
-        user = User.get(id=uid)
+    def del_user_by_id(_id, db_alias=None):
+        check_alias(db_alias)
+        user = User.get(id=_id)
         if user is not None:
             user.delete()
             return True
@@ -154,10 +182,6 @@ class UserService(object):
         for user in users:
             x.add_row(list(user.__getattribute__(key) for key in field_names))
 
-            # data = json.loads(user.__str__())
-            # data.pop('_id')
-            # x.add_row(data.values())
-
         print(x)
 
 
@@ -166,5 +190,5 @@ if __name__ == '__main__':
 
     init()
 
-    users = UserService.users_list()
-    UserService.pretty_users(users)
+    _users = UserService.users_list()
+    UserService.pretty_users(_users)

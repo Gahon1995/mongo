@@ -7,24 +7,26 @@
 from enum import Enum
 
 
-class Gender(Enum):
-    male = 0
-    female = 1
+class Gender:
+    male = 'male'
+    female = 'female'
 
 
-class Region(Enum):
-    bj = 'bj'
-    hk = 'hk'
+class Region:
+    bj = 'Beijing'
+    hk = 'Hong Kong'
 
 
-class Language(Enum):
-    zh = 0
-    eng = 1
+class DBMS:
+    DBMS1 = Region.bj
+    DBMS2 = Region.hk
 
 
-class Const:
-    gender = {'male', 'female'}
-    region = {}
-    language = {}
-    role = {}
-    grade = {}
+class Language:
+    zh = 'zh'
+    eng = 'eng'
+
+
+class Category:
+    science = 'science'
+    technology = 'technology'

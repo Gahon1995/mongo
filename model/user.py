@@ -32,11 +32,28 @@ class User(BaseDB):
         # 创建时间
         return self.get_create_time()
 
-    def __init__(self, name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
-                 obtainedCredits: int, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # if self.uid is None:
-        #     self.uid = self.get_id('uid')
+    # def __init__(self, name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
+    #              obtainedCredits: int, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     # if self.uid is None:
+    #     #     self.uid = self.get_id('uid')
+    #     self.name = name
+    #     self.pwd = pwd
+    #     self.gender = gender
+    #     self.email = email
+    #     self.phone = phone
+    #     self.dept = dept
+    #     self.grade = grade
+    #     self.language = language
+    #     self.region = region
+    #     self.role = role
+    #     self.preferTags = preferTags
+    #     self.obtainedCredits = obtainedCredits
+
+    @classmethod
+    def register(cls, name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
+                 obtainedCredits: int):
+        self = cls()
         self.name = name
         self.pwd = pwd
         self.gender = gender
@@ -49,6 +66,7 @@ class User(BaseDB):
         self.role = role
         self.preferTags = preferTags
         self.obtainedCredits = obtainedCredits
+        return self
 
     def update(self, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
                obtainedCredits: int):

@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 class Article(BaseDB):
-    # aid = IntField(primary_key=True)
+    aid = IntField(required=True, unique=True)  # 通过aid的奇偶来判断存到哪一个数据库上去
     title = StringField(required=True)
 
     category = StringField(required=True)
@@ -19,7 +19,7 @@ class Article(BaseDB):
 
     meta = {
         'indexes': [
-            # 'aid',
+            'aid',
             'title',
             'category',
             'articleTags',
@@ -34,3 +34,7 @@ class Article(BaseDB):
         return self.get_create_time()
 
     # timestamp = DateTimeField(default=datetime.now)
+
+    @classmethod
+    def get_id(cls, **kwargs):
+        return super().get_id('aid')

@@ -134,29 +134,37 @@ def init_connect():
     :return:
     """
     from Config import Config
-    from utils.consts import Region
+    from utils.consts import DBMS
     # tz_aware=True 设置时区修正，mongoDB的时区默认为UTC0，需要加上这个加入时区信息
     connect(Config.mongo_db_name, host=Config.bj_mongo_host, port=Config.bj_mongo_port, tz_aware=True)
     # connect(Config.mongo_db_name)
-    register_connection(alias=Region.bj, db=Config.mongo_db_name, host=Config.bj_mongo_host,
+    register_connection(alias=DBMS.DBMS1, db=Config.mongo_db_name, host=Config.bj_mongo_host,
                         port=Config.bj_mongo_port,
                         tz_aware=True)
-    register_connection(alias=Region.hk, db=Config.mongo_db_name, host=Config.hk_mongo_host,
+    register_connection(alias=DBMS.DBMS2, db=Config.mongo_db_name, host=Config.hk_mongo_host,
                         port=Config.hk_mongo_port, tz_aware=True)
 
 
-def switch_mongo_db(cls):
+from utils.func import DbmsErrorException
+from utils.consts import DBMS
+
+
+def switch_mongo_db(cls, default_db=None):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             try:
-                db_alias = kwargs.pop('db_alias')
+                db_alias = kwargs.get('db_alias')
+                if db_alias is None:
+                    db_alias = default_db
+                if not (db_alias == DBMS.DBMS1 or db_alias == DBMS.DBMS2):
+                    raise DbmsErrorException('db_alias error, {}'.format(db_alias))
                 # print("switch db: cls={0}, db_alias={1}".format(cls.__name__, db_alias))
                 logger.info("switch db: cls={0}, db_alias={1}".format(cls.__name__, db_alias))
                 with switch_db(cls, db_alias):
                     return func(*args, **kwargs)
             except KeyError:
-                logger.info("没有指定数据库连接，使用默认数据库连接")
+                logger.warning("没有指定数据库连接，使用默认数据库连接")
                 return func(*args, **kwargs)
 
         return wrapper

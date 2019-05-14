@@ -8,8 +8,6 @@ from service.read_service import ReadService
 from service.popular_service import PopularService
 from utils.func import *
 
-from prettytable import PrettyTable
-
 
 def article_manage(role='user', user=None):
     print("\n\n" + "=" * 20)
@@ -67,16 +65,29 @@ def article_manage(role='user', user=None):
     article_manage(role, user)
 
 
-def articles_query_all(**kwargs):
-    total = ArticleService.get_size(**kwargs)
-    query_all(total, **kwargs)
+def articles_query_all(page_num=1, page_size=20, **kwargs):
+    print("1. Beijing")
+    print("2. Hong Kong (所有数据）")
+    print("输入其他内容返回")
+    mode = input("请选择操作： ")
+    if mode == '1':
+        total = ArticleService.count(db_alias=DBMS.DBMS1, **kwargs)
+        query_all(total, page_num, page_size, db_alias=DBMS.DBMS1, **kwargs)
+    elif mode == '2':
+        total = ArticleService.count(db_alias=DBMS.DBMS2, **kwargs)
+        query_all(total, page_num, page_size, db_alias=DBMS.DBMS2, **kwargs)
+    return
 
 
-def query_all(total, page_num=1, page_size=20, **kwargs):
-    articles = ArticleService.articles_list(page_num, page_size, **kwargs)
+def query_all(total, page_num=1, page_size=20, db_alias=None, **kwargs):
+    articles = ArticleService.articles_list(page_num, page_size, db_alias=db_alias, **kwargs)
+
+    if len(articles) == 0:
+        print("未找到文章信息")
+        return
 
     ArticleService.pretty_articles(articles)
-    show_next(page_num, page_size, total, query_all, **kwargs)
+    show_next(page_num, page_size, total, db_alias=db_alias, next_func=query_all, **kwargs)
 
     pass
 
@@ -87,7 +98,7 @@ def choices_article(user):
     keyword = input("请输入要阅读的文章部分标题： ")
     if keyword == '':
         return
-    articles = ArticleService.search_by_title(keyword)
+    articles = ArticleService.search_by_title(keyword, db_alias=DBMS.DBMS2)
     if len(articles) == 0:
         print("未找到相关文章")
         return
@@ -141,7 +152,7 @@ def read_an_article(user, article):
         elif mode == '4':
             time_read_end = time.time()
             new_read.readTimeLength = time_read_end - time_read_start
-            ReadService.save_new_read(new_read)
+            ReadService.save_read(new_read)
             return
         else:
             print("输入错入，请重新输入")
@@ -246,7 +257,7 @@ x = PrettyTable()
 
 
 def history(user):
-    total = ReadService.get_size(uid=user)
+    total = ReadService.count(uid=user, db_alias=get_dbms_by_region(user.region))
     show_history(user, total)
 
 
@@ -269,7 +280,7 @@ def show_history(user, total, page_num=1, page_size=20, **kwargs):
 
 
 def history_admin():
-    total = ReadService.get_size()
+    total = ReadService.count()
     show_history_admin(total)
 
 
@@ -281,7 +292,8 @@ def show_history_admin(total, page_num=1, page_size=20, **kwargs):
                      'agreeOrNot', 'commentOrNot', 'shareOrNot', 'commentDetail', 'readTime')
     # TODO 展示历史阅读数据
     #       根据Read 表的数据展示当前用户的阅读历史
-    reads = ReadService.reads_list(page_num, page_size)
+    #       目前只展示DBMS1里边的阅读数据
+    reads = ReadService.reads_list(page_num, page_size, db_alias=DBMS.DBMS2)
     for index, read in enumerate(reads):
         x.add_row((index, read.aid.title, read.uid.name, read.readTimeLength, read.readSequence,
                    read.agreeOrNot, read.commentOrNot, read.shareOrNot, read.commentDetail, read.create_time))
@@ -372,5 +384,5 @@ if __name__ == '__main__':
     # read_an_article(user)
     from service.user_service import UserService
 
-    _user = UserService.get_an_user('admin')
+    _user = UserService.get_user_by_name('admin')
     choices_article(_user)
