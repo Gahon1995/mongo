@@ -1,5 +1,10 @@
-from mongoengine import Document, connect, DoesNotExist
+from mongoengine import Document, connect, register_connection, DoesNotExist
+from mongoengine.context_managers import switch_db
 from utils.func import convert_mongo_2_json, utc_2_local
+import functools
+import logging
+
+logger = logging.getLogger('db')
 
 
 class BaseDB(Document):
@@ -10,17 +15,6 @@ class BaseDB(Document):
     def __str__(self):
         #     # 重写str方法， 将ObjectId 和datetime格式正确的输出
         return convert_mongo_2_json(self)
-
-    #     data = dict()
-    #     for key in self._db_field_map.keys():
-    #         value = self.__getattribute__(key)
-    #         if isinstance(value, ObjectId):
-    #             value = str(value)
-    #         elif isinstance(value, (datetime, date)):
-    #             value = str(value)
-    #         data.setdefault(key, value)
-    #     data['create_time'] = str(self.get_create_time())
-    #     return json.dumps(data)
 
     def get_create_time(self):
         if self.id is None:
@@ -133,19 +127,38 @@ class BaseDB(Document):
             return int(obj.__getattribute__(_id)) + 1
 
 
-def init_connect(db=None, host=None, port=None):
+def init_connect():
     """
         初始化mongo连接， 不传参数则从Config文件中读取
-
-    :param db:
-    :param host:
-    :param port:
+        默认连接北京节点，然后分别注册两个节点的信息
     :return:
     """
-    if db is None:
-        from Config import mongo_db_name, mongo_host, mongo_port
-        db = mongo_db_name
-        host = mongo_host
-        port = mongo_port
+    from Config import Config
+    from utils.consts import Region
     # tz_aware=True 设置时区修正，mongoDB的时区默认为UTC0，需要加上这个加入时区信息
-    connect(db, host=host, port=port, tz_aware=True)
+    connect(Config.mongo_db_name, host=Config.bj_mongo_host, port=Config.bj_mongo_port, tz_aware=True)
+    # connect(Config.mongo_db_name)
+    register_connection(alias=Region.bj, db=Config.mongo_db_name, host=Config.bj_mongo_host,
+                        port=Config.bj_mongo_port,
+                        tz_aware=True)
+    register_connection(alias=Region.hk, db=Config.mongo_db_name, host=Config.hk_mongo_host,
+                        port=Config.hk_mongo_port, tz_aware=True)
+
+
+def switch_mongo_db(cls):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                db_alias = kwargs.pop('db_alias')
+                # print("switch db: cls={0}, db_alias={1}".format(cls.__name__, db_alias))
+                logger.info("switch db: cls={0}, db_alias={1}".format(cls.__name__, db_alias))
+                with switch_db(cls, db_alias):
+                    return func(*args, **kwargs)
+            except KeyError:
+                logger.info("没有指定数据库连接，使用默认数据库连接")
+                return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

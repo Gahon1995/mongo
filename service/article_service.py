@@ -5,6 +5,7 @@
 # @Email   : Gahon1995@gmail.com
 
 from model.article import Article
+from db.mongodb import switch_mongo_db
 import logging
 
 logger = logging.getLogger('ArticleService')
@@ -13,16 +14,20 @@ logger = logging.getLogger('ArticleService')
 class ArticleService(object):
 
     @staticmethod
-    def get_size(**kwargs):
+    @switch_mongo_db(cls=Article)
+    def get_size(db_alias=None, **kwargs):
         return Article.count(**kwargs)
 
     @staticmethod
-    def search_by_title(name):
+    @switch_mongo_db(cls=Article)
+    def search_by_title(name, db_alias=None):
         # TODO 测试该方法是否有用
         return Article.objects(title__contains=name)
 
     @staticmethod
-    def add_an_article(title, authors, category, abstract, articleTags, language, text, image=None, video=None):
+    @switch_mongo_db(cls=Article)
+    def add_an_article(title, authors, category, abstract, articleTags, language, text, image=None,
+                       video=None, db_alias=None):
         article = Article()
         article.title = title
         article.authors = authors
@@ -40,7 +45,8 @@ class ArticleService(object):
         pass
 
     @staticmethod
-    def del_by_id(_id, **kwargs):
+    @switch_mongo_db(cls=Article)
+    def del_by_id(_id, db_alias=None, **kwargs):
         article = Article.get(id=_id, **kwargs)
         if article is not None:
             article.delete()
@@ -48,23 +54,28 @@ class ArticleService(object):
         return True
 
     @staticmethod
-    def del_article(article):
+    @switch_mongo_db(cls=Article)
+    def del_article(article, db_alias=None):
         article.delete()
 
     @staticmethod
-    def articles_list(page_num=1, page_size=20, **kwargs):
+    @switch_mongo_db(cls=Article)
+    def articles_list(page_num=1, page_size=20, db_alias=None, **kwargs):
         return Article.list_by_page(page_num, page_size, **kwargs)
 
     @staticmethod
-    def get_an_article(**kwargs):
+    @switch_mongo_db(cls=Article)
+    def get_an_article(db_alias=None, **kwargs):
         return Article.get(**kwargs)
 
     @staticmethod
-    def get_an_article_by_id(aid):
+    @switch_mongo_db(cls=Article)
+    def get_an_article_by_id(aid, db_alias=None):
         return Article.get(id=aid)
 
     @staticmethod
-    def update_an_article(article, condition: dict):
+    @switch_mongo_db(cls=Article)
+    def update_an_article(article, condition: dict, db_alias=None):
         from datetime import datetime
         forbid = ("id", "_id", 'update_time')
         for key, value in condition.items():
@@ -75,7 +86,8 @@ class ArticleService(object):
         return True
 
     @staticmethod
-    def update_by_id(_id, condition):
+    @switch_mongo_db(cls=Article)
+    def update_by_id(_id, condition, db_alias=None):
         article = Article.get(id=_id)
         ArticleService.update_an_article(article, condition)
 

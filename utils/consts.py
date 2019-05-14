@@ -4,6 +4,23 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 
+from enum import Enum
+
+
+class Gender(Enum):
+    male = 0
+    female = 1
+
+
+class Region(Enum):
+    bj = 'bj'
+    hk = 'hk'
+
+
+class Language(Enum):
+    zh = 0
+    eng = 1
+
 
 class Const:
     gender = {'male', 'female'}

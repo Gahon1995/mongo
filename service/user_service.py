@@ -4,6 +4,7 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 from model.user import User
+from db.mongodb import switch_mongo_db
 import logging
 
 logger = logging.getLogger('userService')
@@ -16,19 +17,23 @@ class UserService(object):
         return hasattr(User, key)
 
     @staticmethod
-    def users_list(page_num=1, page_size=20, **kwargs):
+    @switch_mongo_db(cls=User)
+    def users_list(page_num=1, page_size=20, db_alias=None, **kwargs):
         return User.list_by_page(page_num, page_size, **kwargs)
 
     @staticmethod
-    def count(**kwargs):
+    @switch_mongo_db(cls=User)
+    def count(db_alias=None, **kwargs):
         return User.count(**kwargs)
 
     @staticmethod
-    def get_an_user(name):
+    @switch_mongo_db(cls=User)
+    def get_an_user(name, db_alias=None):
         return User.get(name=name)
 
     @staticmethod
-    def login(username, password):
+    @switch_mongo_db(cls=User)
+    def login(username, password, db_alias=None):
         if username is None or password is None:
             return None
         user = User.get(name=username)
@@ -40,13 +45,15 @@ class UserService(object):
         return None
 
     @staticmethod
-    def logout(name):
+    @switch_mongo_db(cls=User)
+    def logout(name, db_alias=None):
         logger.info('用户 {} 退出登录'.format(name))
         return True
 
     @staticmethod
+    @switch_mongo_db(cls=User)
     def register(name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
-                 obtainedCredits: int):
+                 obtainedCredits: int, db_alias=None):
         user = User.get(name=name)
         if user is not None:
             logger.info('用户名已存在')
@@ -60,7 +67,8 @@ class UserService(object):
         return False
 
     @staticmethod
-    def update(name, **kwargs):
+    @switch_mongo_db(cls=User)
+    def update(name, db_alias=None, **kwargs):
         forbid = ('name', 'uid', '_id')
         user = User.get(name=name)
         if user is None:
@@ -76,7 +84,8 @@ class UserService(object):
         return True
 
     @staticmethod
-    def update_user(user, **kwargs):
+    @switch_mongo_db(cls=User)
+    def update_user(user, db_alias=None, **kwargs):
         forbid = ('name', 'uid', '_id')
         if user is None:
             logger.info("用户名不存在")
@@ -91,7 +100,8 @@ class UserService(object):
         return True
 
     @staticmethod
-    def update_by_admin(name, **kwargs):
+    @switch_mongo_db(cls=User)
+    def update_by_admin(name, db_alias=None, **kwargs):
         forbid = ('name', 'uid', '_id')
         user = User.get(name=name)
         if user is None:
@@ -108,7 +118,8 @@ class UserService(object):
         return True
 
     @staticmethod
-    def del_user_by_name(name):
+    @switch_mongo_db(cls=User)
+    def del_user_by_name(name, db_alias=None):
         user = User.get(name=name)
         if user is not None:
             user.delete()
@@ -116,15 +127,17 @@ class UserService(object):
         return False
 
     @staticmethod
-    def del_user(user: User):
+    @switch_mongo_db(cls=User)
+    def del_user(user: User, db_alias=None):
         if user is not None:
             user.delete()
             return True
         return False
 
     @staticmethod
-    def del_user_by_uid(uid):
-        user = User.get(uid=uid)
+    @switch_mongo_db(cls=User)
+    def del_user_by_uid(uid, db_alias=None):
+        user = User.get(id=uid)
         if user is not None:
             user.delete()
             return True

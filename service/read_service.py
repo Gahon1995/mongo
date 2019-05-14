@@ -9,6 +9,7 @@ import datetime
 from model.read import Read
 from model.be_read import BeRead
 from service.article_service import ArticleService
+from db.mongodb import switch_mongo_db
 import logging
 
 from utils.func import utc_2_local, sort_dict
@@ -19,21 +20,30 @@ logger = logging.getLogger('ReadService')
 class ReadService(object):
 
     @staticmethod
-    def get_size(**kwargs):
+    @switch_mongo_db(cls=Read)
+    def get_size(db_alias=None, **kwargs):
         return Read.count(**kwargs)
 
     @staticmethod
-    def save_new_read(new_read):
+    @switch_mongo_db(cls=Read)
+    def save_new_read(new_read, db_alias=None):
         logger.info('save read:{}'.format(new_read))
         new_read.save()
-        BeRead.add_read_record(new_read)
+        ReadService.__save_new_be_read(new_read, db_alias)
 
     @staticmethod
-    def reads_list(page_num=1, page_size=20, **kwargs):
+    @switch_mongo_db(cls=BeRead)
+    def __save_new_be_read(new_read, db_alias=None):
+        return BeRead.add_read_record(new_read)
+
+    @staticmethod
+    @switch_mongo_db(cls=Read)
+    def reads_list(page_num=1, page_size=20, db_alias=None, **kwargs):
         return Read.list_by_page(page_num, page_size, **kwargs)
 
     @staticmethod
-    def del_read(_id):
+    @switch_mongo_db(cls=Read)
+    def del_read(_id, db_alias=None):
         article = Read.get(id=_id)
         if article is not None:
             article.delete()
@@ -41,15 +51,18 @@ class ReadService(object):
         return False
 
     @staticmethod
-    def read_info(_id):
+    @switch_mongo_db(cls=Read)
+    def read_info(_id, db_alias=None):
         return Read.get(id=_id)
 
     @staticmethod
-    def get_history(user, page_num=1, page_size=20):
+    @switch_mongo_db(cls=Read)
+    def get_history(user, page_num=1, page_size=20, db_alias=None):
         return Read.list_by_page(page_num, page_size, uid=user)
 
     @staticmethod
-    def get_popular(end_date, before_days, top_n):
+    @switch_mongo_db(cls=Read)
+    def get_popular(end_date, before_days, top_n, db_alias=None):
         if isinstance(end_date, datetime.date) and not isinstance(end_date, datetime.datetime):
             end_date = datetime.datetime.strptime(str(end_date), '%Y-%m-%d')
         if isinstance(end_date, datetime.datetime):
@@ -72,13 +85,16 @@ class ReadService(object):
         # return articles
 
     @staticmethod
-    def get_daily_popular(end_date, before_days=1, top_n=10):
+    @switch_mongo_db(cls=Read)
+    def get_daily_popular(end_date, before_days=1, top_n=10, db_alias=None):
         return ReadService.get_popular(end_date, before_days, top_n)
 
     @staticmethod
-    def get_weekly_popular(end_date, before_days=7, top_n=10):
+    @switch_mongo_db(cls=Read)
+    def get_weekly_popular(end_date, before_days=7, top_n=10, db_alias=None):
         return ReadService.get_popular(end_date, before_days, top_n)
 
     @staticmethod
-    def get_month_popular(end_date, before_days=30, top_n=10):
+    @switch_mongo_db(cls=Read)
+    def get_month_popular(end_date, before_days=30, top_n=10, db_alias=None):
         return ReadService.get_popular(end_date, before_days, top_n)
