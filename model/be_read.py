@@ -11,13 +11,15 @@ from db.mongodb import BaseDB
 from model.article import Article
 from model.user import User
 
+from utils.consts import Category
+
 
 class BeRead(BaseDB):
     # 可以尝试使用LazyReferenceField，看能否优化查询性能
 
     meta = {
         'indexes': [
-            # 'rid',
+            'bid',
             'aid',
             'readNum',
             'commentNum',
@@ -26,7 +28,7 @@ class BeRead(BaseDB):
         ]
     }
 
-    # rid = IntField(required=True, unique=True, primary_key=True)
+    bid = IntField(required=True, unique=True)
     aid = ReferenceField(Article, required=True, reverse_delete_rule=NULLIFY)
     readNum = IntField(default=0)
     readUidList = ListField(ReferenceField(User, reverse_delete_rule=NULLIFY))
@@ -44,16 +46,14 @@ class BeRead(BaseDB):
         # 创建时间
         return self.get_create_time()
 
-    def __init__(self, aid, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.aid = aid
-
     @classmethod
-    def add_read_record(cls, read):
+    def add_read_record(cls, read, bid):
 
         record = cls.get(aid=read.aid)
         if record is None:
-            record = BeRead(read.aid)
+            record = BeRead()
+            record.aid = read.aid
+            record.bid = bid
 
         user = read.uid
         if read.readOrNot:

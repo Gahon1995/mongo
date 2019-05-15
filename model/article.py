@@ -34,7 +34,3 @@ class Article(BaseDB):
         return self.get_create_time()
 
     # timestamp = DateTimeField(default=datetime.now)
-
-    @classmethod
-    def get_id(cls, **kwargs):
-        return super().get_id('aid')

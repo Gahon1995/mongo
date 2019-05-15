@@ -116,13 +116,9 @@ def gen_users():
     for i in range(USERS_NUM):
         # print_bar(i, USERS_NUM)
         data = gen_an_user(i)
-        if data['region'] == Region.bj:
-            db_alias = DBMS.DBMS1
-        else:
-            db_alias = DBMS.DBMS2
         UserService.register(data['name'], data['pwd'], data['gender'], data['email'], data['phone'], data['dept'],
                              data['grade'], data['language'], data['region'], data['role'], data['preferTags'],
-                             int(data['obtainedCredits']), db_alias=db_alias)
+                             int(data['obtainedCredits']))
 
 
 def gen_articles():
@@ -151,11 +147,9 @@ def gen_reads():
         name = 'user' + data['uid'] if data['uid'] != '0' else 'admin'
         user = UserService.get_user_by_name(name=name)
 
-        db_alias = DBMS.DBMS1 if user.region == Region.bj else DBMS.DBMS2
-
-        new_read = Read()
+        new_read = Read.new_read(user)
         new_read.aid = article
-        new_read.uid = user
+        # new_read.uid = user
         new_read.readOrNot = int(data['readOrNot'])
         new_read.readTimeLength = int(data['readTimeLength'])
         new_read.readSequence = int(data['readSequence'])

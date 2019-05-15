@@ -17,6 +17,16 @@ logger = logging.getLogger('ArticleService')
 class ArticleService(object):
 
     @staticmethod
+    def get_id():
+        return max(ArticleService.__id(DBMS.DBMS1), ArticleService.__id(DBMS.DBMS2))
+
+    @staticmethod
+    @switch_mongo_db(cls=Article, default_db=DBMS.DBMS2)
+    def __id(db_alias=None):
+        check_alias(db_alias)
+        return Article.get_id('aid')
+
+    @staticmethod
     @switch_mongo_db(cls=Article, default_db=DBMS.DBMS2)
     def count(db_alias=DBMS.DBMS2, **kwargs):
         check_alias(db_alias)
@@ -50,7 +60,7 @@ class ArticleService(object):
         article.video = video
         article.update_time = datetime.utcnow()
 
-        _id = Article.get_id()
+        _id = ArticleService.get_id()
         if category == Category.science:
             article.aid = _id if _id % 2 == 0 else _id + 1
         if category == Category.technology:

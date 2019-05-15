@@ -21,6 +21,16 @@ logger = logging.getLogger('ReadService')
 class ReadService(object):
 
     @staticmethod
+    def get_be_id():
+        return max(ReadService.__be_id(DBMS.DBMS1), ReadService.__be_id(DBMS.DBMS2))
+
+    @staticmethod
+    @switch_mongo_db(cls=BeRead, default_db=DBMS.DBMS2)
+    def __be_id(db_alias=None):
+        check_alias(db_alias)
+        return BeRead.get_id('bid')
+
+    @staticmethod
     @switch_mongo_db(cls=Read)
     def count(db_alias=None, **kwargs):
         check_alias(db_alias)
@@ -30,10 +40,9 @@ class ReadService(object):
     def save_read(new_read):
         logger.info('save read:{}'.format(new_read))
 
-        for dbms in get_dbms_by_region(new_read.uid.region):
-            ReadService.__save_read(new_read, db_alias=dbms)
+        ReadService.__save_read(new_read, db_alias=get_dbms_by_region(new_read.uid.region))
 
-        for dbms in get_dbms_by_region(new_read.aid.category):
+        for dbms in get_dbms_by_category(new_read.aid.category):
             ReadService.__save_be_read(new_read, db_alias=dbms)
 
     @staticmethod
@@ -45,7 +54,14 @@ class ReadService(object):
     @switch_mongo_db(cls=BeRead)
     def __save_be_read(new_read, db_alias=None):
         check_alias(db_alias)
-        return BeRead.add_read_record(new_read)
+        _id = ReadService.get_be_id()
+
+        if new_read.aid.category == Category.science:
+            bid = _id if _id % 2 == 0 else _id + 1
+        else:
+            bid = _id if _id % 2 == 1 else _id + 1
+
+        return BeRead.add_read_record(new_read, bid)
 
     @staticmethod
     @switch_mongo_db(cls=Read)
@@ -72,7 +88,7 @@ class ReadService(object):
     @staticmethod
     def get_history(user, page_num=1, page_size=20):
         # TODO 当DBMS1 节点查询出错时， 选择DBMS2 节点
-        return ReadService.__get_history(user, page_num, page_size, db_alias=get_dbms_by_region(user.region)[0])
+        return ReadService.__get_history(user, page_num, page_size, db_alias=get_dbms_by_region(user.region))
 
     @staticmethod
     @switch_mongo_db(cls=Read)

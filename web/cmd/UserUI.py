@@ -88,7 +88,7 @@ class UserUI(object):
             for key, value in con.items():
                 if key not in forbid and hasattr(user, key):
                     setattr(user, key, value)
-            return UserService.update_user_by_admin(username, db_alias=get_dbms_by_region(user.region))
+            return UserService.update_user_by_admin(user, db_alias=get_dbms_by_region(user.region))
         except json.JSONDecodeError:
             print("输入不是json格式")
             return None

@@ -169,9 +169,9 @@ def check_alias(db_alias):
 
 def get_dbms_by_region(region):
     if region == Region.bj:
-        return [DBMS.DBMS1]
+        return DBMS.DBMS1
     else:
-        return [DBMS.DBMS2]
+        return DBMS.DBMS2
 
 
 def get_dbms_by_category(category):

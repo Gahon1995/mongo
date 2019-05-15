@@ -75,18 +75,18 @@ class UserService(object):
         return True
 
     @staticmethod
-    @switch_mongo_db(cls=User)
     def register(name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
                  obtainedCredits: int):
         user = UserService.get_user_by_name(name)
         if user is not None:
             logger.info('用户名已存在')
             return False
-        db_alias = get_dbms_by_region(region)
-        return UserService.__register(name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
-                                      obtainedCredits, db_alias=db_alias)
+        UserService.__register(name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
+                               obtainedCredits, db_alias=get_dbms_by_region(region))
+        return True
 
     @staticmethod
+    @switch_mongo_db(cls=User)
     def __register(name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
                    obtainedCredits: int, db_alias=None):
 
