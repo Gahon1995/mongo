@@ -29,15 +29,15 @@ class BeRead(BaseDB):
     }
 
     bid = IntField(required=True, unique=True)
-    aid = ReferenceField(Article, required=True, reverse_delete_rule=NULLIFY)
+    aid = IntField(required=True)
     readNum = IntField(default=0)
-    readUidList = ListField(ReferenceField(User, reverse_delete_rule=NULLIFY))
+    readUidList = ListField(IntField(required=False), default=list())
     commentNum = IntField(default=0)
-    commentUidList = ListField(ReferenceField(User, reverse_delete_rule=NULLIFY))
+    commentUidList = ListField(IntField(required=False), default=list())
     agreeNum = IntField(default=0)
-    agreeUidList = ListField(ReferenceField(User, reverse_delete_rule=NULLIFY))
+    agreeUidList = ListField(IntField(required=False), default=list())
     shareNum = IntField(default=0)
-    shareUidList = ListField(ReferenceField(User, reverse_delete_rule=NULLIFY))
+    shareUidList = ListField(IntField(required=False), default=list())
     # create_time = DateTimeField(default=datetime.now)
     last_update_time = DateTimeField(default=datetime.utcnow)
 
@@ -47,34 +47,8 @@ class BeRead(BaseDB):
         return self.get_create_time()
 
     @classmethod
-    def add_read_record(cls, read, bid):
-
-        record = cls.get(aid=read.aid)
-        if record is None:
-            record = BeRead()
-            record.aid = read.aid
-            record.bid = bid
-
-        user = read.uid
-        if read.readOrNot:
-            record.readNum += 1
-            if user not in record.readUidList:
-                record.readUidList.append(user)
-        if read.commentOrNot:
-            record.commentNum += 1
-            if user not in record.commentUidList:
-                record.commentUidList.append(user)
-        if read.agreeOrNot:
-            record.agreeNum += 1
-            if user not in record.agreeUidList:
-                record.agreeUidList.append(user)
-        if read.shareOrNot:
-            record.shareNum += 1
-            if user not in record.shareUidList:
-                record.shareUidList.append(user)
-
-        record.last_update_time = datetime.utcnow()
-        record.save()
+    def add_read_record(cls, read):
+        pass
 
     def never_read(self, user):
         return user not in self.readUidList

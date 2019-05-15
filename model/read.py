@@ -23,8 +23,8 @@ class Read(BaseDB):
     }
 
     rid = IntField(required=True, unique=True)
-    uid = ReferenceField(User, required=True, reverse_delete_rule=NULLIFY)
-    aid = ReferenceField(Article, required=True, reverse_delete_rule=NULLIFY)
+    uid = IntField(required=True)
+    aid = IntField(required=True)
     readOrNot = IntField(default=1)
     readTimeLength = IntField(default=0)
     readSequence = IntField(default=1)
@@ -38,15 +38,3 @@ class Read(BaseDB):
     def create_time(self):
         # 创建时间
         return self.get_create_time()
-
-    @classmethod
-    def new_read(cls, user):
-        self = cls()
-        self.uid = user
-
-        _id = Read.get_id('rid')
-        if user.region == Region.bj:
-            self.rid = _id if _id % 2 == 0 else _id + 1
-        else:
-            self.rid = _id if _id % 2 == 1 else _id + 1
-        return self

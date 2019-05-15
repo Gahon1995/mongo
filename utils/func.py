@@ -167,11 +167,31 @@ def check_alias(db_alias):
         raise DbmsErrorException("alias is wrong, please check")
 
 
+def is_odd(uid):
+    """
+        判断是不是奇数
+    :param uid:
+    :return:
+    """
+
+    return int(uid) % 2 == 1
+
+
 def get_dbms_by_region(region):
     if region == Region.bj:
-        return DBMS.DBMS1
+        return [DBMS.DBMS1]
     else:
-        return DBMS.DBMS2
+        return [DBMS.DBMS2]
+
+
+def get_best_dbms_by_region(region):
+    """
+        该方法用于返回当前region最好的服务器地址，目前默认为第一个
+        TODO 返回当前region所对应的可连接的DBMS
+    :param region:
+    :return:
+    """
+    return get_dbms_by_region(region)[0]
 
 
 def get_dbms_by_category(category):
@@ -181,5 +201,64 @@ def get_dbms_by_category(category):
         return [DBMS.DBMS2]
 
 
+def get_best_dbms_by_category(category):
+    """
+        category，目前默认为第一个
+        TODO 返回当前category所对应的可连接的DBMS
+    :param category:
+    :return:
+    """
+    return get_dbms_by_category(category)[0]
+
+
+def get_dbms_by_uid(uid):
+    if not is_odd(uid):
+        return [DBMS.DBMS1]
+    else:
+        return [DBMS.DBMS2]
+
+
+def get_best_dbms_by_uid(uid):
+    """
+        该方法用于返回当前uid最好的服务器地址，目前默认为第一个
+        TODO 返回当前uid所对应的可连接的DBMS
+    :param uid:
+    :return:
+    """
+    return get_dbms_by_uid(int(uid))[0]
+
+
+def get_dbms_by_aid(aid):
+    # TODO 统一奇偶
+    if is_odd(aid):
+        return [DBMS.DBMS1, DBMS.DBMS2]
+    else:
+        return [DBMS.DBMS2]
+
+
+def get_best_dbms_by_aid(aid):
+    """
+        该方法用于返回当前aid最好的服务器地址，目前默认为第一个
+        TODO 返回当前aid所对应的可连接的DBMS
+    :param aid:
+    :return:
+    """
+    return get_dbms_by_aid(aid)[0]
+
+
 def get_start_end_object_id():
     pass
+
+
+def get_id_by_region(_id, region):
+    if region == Region.bj:
+        return _id if not is_odd(_id) else _id + 1
+    else:
+        return _id if is_odd(_id) else _id + 1
+
+
+def get_id_by_category(_id, category):
+    if category == Category.science:
+        return _id if not is_odd(_id) else _id + 1
+    else:
+        return _id if is_odd(_id) == 1 else _id + 1

@@ -7,7 +7,7 @@
 from model.article import Article
 from db.mongodb import switch_mongo_db
 from utils.consts import DBMS, Category
-from utils.func import check_alias, get_dbms_by_category
+from utils.func import *
 from datetime import datetime
 import logging
 
@@ -18,7 +18,10 @@ class ArticleService(object):
 
     @staticmethod
     def get_id():
-        return max(ArticleService.__id(DBMS.DBMS1), ArticleService.__id(DBMS.DBMS2))
+        _id = -1
+        for dbms in DBMS.all:
+            _id = max(ArticleService.__id(dbms), _id)
+        return _id
 
     @staticmethod
     @switch_mongo_db(cls=Article, default_db=DBMS.DBMS2)
@@ -60,13 +63,9 @@ class ArticleService(object):
         article.video = video
         article.update_time = datetime.utcnow()
 
-        _id = ArticleService.get_id()
-        if category == Category.science:
-            article.aid = _id if _id % 2 == 0 else _id + 1
-        if category == Category.technology:
-            article.aid = _id if _id % 2 == 1 else _id + 1
+        article.aid = get_id_by_category(ArticleService.get_id(), category)
 
-        for dbms in get_dbms_by_category(article.category):
+        for dbms in get_dbms_by_category(category):
             ArticleService.save_article(article, db_alias=dbms)
             article.id = None
         pass
@@ -77,6 +76,8 @@ class ArticleService(object):
         check_alias(db_alias)
         if article.save() is not None:
             logger.info('文章"{}"保存成功'.format(article.title))
+            return True
+        return False
 
     @staticmethod
     @switch_mongo_db(cls=Article)
@@ -104,6 +105,11 @@ class ArticleService(object):
     def get_an_article(db_alias=DBMS.DBMS2, **kwargs):
         check_alias(db_alias)
         return Article.objects(**kwargs).first()
+
+    @staticmethod
+    def get_article_by_aid(aid):
+        # TODO 修改实现方法
+        return ArticleService.get_an_article(aid=aid)
 
     @staticmethod
     @switch_mongo_db(cls=Article)

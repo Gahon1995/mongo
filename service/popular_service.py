@@ -15,18 +15,18 @@ class PopularService(object):
 
     @staticmethod
     @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
-    def get_daily_rank(db_alias=DBMS.DBMS1):
-        return Popular.get(temporalGranularity='daily')
+    def get_daily_rank(end_date, db_alias=DBMS.DBMS1):
+        return Popular.get(update_time=end_date, temporalGranularity='daily')
 
     @staticmethod
     @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
-    def get_weekly_rank(db_alias=DBMS.DBMS1):
-        return Popular.get(temporalGranularity='weekly')
+    def get_weekly_rank(end_date, db_alias=DBMS.DBMS1):
+        return Popular.get(update_time=end_date, temporalGranularity='weekly')
 
     @staticmethod
     @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
-    def get_monthly_rank(db_alias=DBMS.DBMS1):
-        return Popular.get(temporalGranularity='monthly')
+    def get_monthly_rank(end_date, db_alias=DBMS.DBMS1):
+        return Popular.get(update_time=end_date, temporalGranularity='monthly')
 
     @staticmethod
     @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
@@ -38,28 +38,28 @@ class PopularService(object):
         for article in articles:
             rank.articleAidList.append(article[0])
 
-        rank.update_time = datetime.datetime.utcnow()
+        rank.update_time = datetime.date.today()
         rank.save()
 
     @staticmethod
     @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
     def update_daily_rank(db_alias=DBMS.DBMS1):
         rank = PopularService.get_daily_rank()
-        articles = ReadService.get_daily_popular(datetime.datetime.now())
+        articles = ReadService.get_daily_popular(datetime.date.today())
         PopularService._update_rank(rank, articles, 'daily')
 
     @staticmethod
     @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
     def update_weekly_rank(db_alias=DBMS.DBMS1):
         rank = PopularService.get_weekly_rank()
-        articles = ReadService.get_weekly_popular(datetime.datetime.now())
+        articles = ReadService.get_weekly_popular(datetime.date.today())
         PopularService._update_rank(rank, articles, 'weekly')
 
     @staticmethod
     @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
     def update_monthly_rank(db_alias=DBMS.DBMS1):
         rank = PopularService.get_monthly_rank()
-        articles = ReadService.get_month_popular(datetime.datetime.now())
+        articles = ReadService.get_month_popular(datetime.date.today())
         PopularService._update_rank(rank, articles, 'monthly')
 
     @staticmethod

@@ -3,7 +3,7 @@ from service.user_service import UserService
 from service.article_service import ArticleService
 from service.read_service import ReadService
 
-from utils.consts import Region, Gender, Category, DBMS
+from utils.consts import Region, Gender, Category
 
 # USERS_NUM = 10000
 # ARTICLES_NUM = 200000
@@ -147,18 +147,10 @@ def gen_reads():
         name = 'user' + data['uid'] if data['uid'] != '0' else 'admin'
         user = UserService.get_user_by_name(name=name)
 
-        new_read = Read.new_read(user)
-        new_read.aid = article
-        # new_read.uid = user
-        new_read.readOrNot = int(data['readOrNot'])
-        new_read.readTimeLength = int(data['readTimeLength'])
-        new_read.readSequence = int(data['readSequence'])
-        new_read.commentOrNot = int(data['commentOrNot'])
-        new_read.commentDetail = data['commentDetail']
-        new_read.agreeOrNot = int(data['agreeOrNot'])
-        new_read.shareOrNot = int(data['shareOrNot'])
-        ReadService.save_read(new_read)
-        del new_read
+        ReadService.save_read(article.aid, user.uid, int(data['readOrNot']), int(data['readTimeLength']),
+                              int(data['readSequence']), int(data['commentOrNot']),
+                              data['commentDetail'], int(data['agreeOrNot']), int(data['shareOrNot']))
+        # time.sleep(1)
 
 
 def main():

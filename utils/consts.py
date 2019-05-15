@@ -18,6 +18,7 @@ class Region:
 
 
 class DBMS:
+    all = [Region.bj, Region.hk]
     DBMS1 = Region.bj
     DBMS2 = Region.hk
 

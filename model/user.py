@@ -11,7 +11,7 @@ class User(BaseDB):
             'name',
         ]
     }
-    uid = IntField(required=True, unique=True)
+    uid = IntField(required=True, unique=True)  # Beijing 偶数， hk 奇数
     name = StringField(required=True, unique=True)
     pwd = StringField(required=True)
     gender = StringField(required=True)
@@ -32,32 +32,6 @@ class User(BaseDB):
     def create_time(self):
         # 创建时间
         return self.get_create_time()
-
-    @classmethod
-    def register(cls, name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
-                 obtainedCredits: int):
-        self = cls()
-        self.name = name
-        self.pwd = pwd
-        self.gender = gender
-        self.email = email
-        self.phone = phone
-        self.dept = dept
-        self.grade = grade
-        self.language = language
-        self.region = region
-        self.role = role
-        self.preferTags = preferTags
-        self.obtainedCredits = obtainedCredits
-
-        _id = User.get_id('uid')
-
-        if region == Region.bj:
-            self.uid = _id if _id % 2 == 0 else _id + 1
-        elif region == Region.hk:
-            self.uid = _id if _id % 2 == 1 else _id + 1
-
-        return self
 
     def update(self, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
                obtainedCredits: int):

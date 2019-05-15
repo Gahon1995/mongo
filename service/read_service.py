@@ -7,13 +7,12 @@ from bson import ObjectId
 import datetime
 
 from model.read import Read
-from model.be_read import BeRead
-from utils.consts import DBMS, Category, Region
-from utils.func import check_alias
+from utils.func import *
 from db.mongodb import switch_mongo_db
 import logging
 
-from utils.func import utc_2_local, sort_dict, get_dbms_by_category, get_dbms_by_region, merge_dict_and_sort
+from service.be_read_service import BeReadService
+from service.user_service import UserService
 
 logger = logging.getLogger('ReadService')
 
@@ -21,14 +20,17 @@ logger = logging.getLogger('ReadService')
 class ReadService(object):
 
     @staticmethod
-    def get_be_id():
-        return max(ReadService.__be_id(DBMS.DBMS1), ReadService.__be_id(DBMS.DBMS2))
+    def get_id():
+        _id = -1
+        for dbms in DBMS.all:
+            _id = max(ReadService.__id(db_alias=dbms), _id)
+        return _id
 
     @staticmethod
-    @switch_mongo_db(cls=BeRead, default_db=DBMS.DBMS2)
-    def __be_id(db_alias=None):
+    @switch_mongo_db(cls=Read)
+    def __id(db_alias=None):
         check_alias(db_alias)
-        return BeRead.get_id('bid')
+        return Read.get_id('rid')
 
     @staticmethod
     @switch_mongo_db(cls=Read)
@@ -37,31 +39,43 @@ class ReadService(object):
         return Read.count(**kwargs)
 
     @staticmethod
-    def save_read(new_read):
-        logger.info('save read:{}'.format(new_read))
+    def save_read(aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot, commentDetail, agreeOrNot,
+                  shareOrNot):
+        # logger.info('save read:{}'.format(new_read))
 
-        ReadService.__save_read(new_read, db_alias=get_dbms_by_region(new_read.uid.region))
+        user = UserService.get_user_by_uid(int(uid))
+        _id = ReadService.get_id()
+        rid = get_id_by_region(_id, user.region)
 
-        for dbms in get_dbms_by_category(new_read.aid.category):
-            ReadService.__save_be_read(new_read, db_alias=dbms)
+        new_read = None
+        for dbms in get_dbms_by_uid(uid):
+            new_read = ReadService.__save_read(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot,
+                                               commentDetail,
+                                               agreeOrNot,
+                                               shareOrNot, db_alias=dbms)
+
+        BeReadService.add_be_read_record(new_read, user)
 
     @staticmethod
-    def __save_read(read, db_alias=None):
+    @switch_mongo_db(cls=Read)
+    def __save_read(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot, commentDetail, agreeOrNot,
+                    shareOrNot, db_alias=None):
         check_alias(db_alias)
-        read.save()
 
-    @staticmethod
-    @switch_mongo_db(cls=BeRead)
-    def __save_be_read(new_read, db_alias=None):
-        check_alias(db_alias)
-        _id = ReadService.get_be_id()
-
-        if new_read.aid.category == Category.science:
-            bid = _id if _id % 2 == 0 else _id + 1
-        else:
-            bid = _id if _id % 2 == 1 else _id + 1
-
-        return BeRead.add_read_record(new_read, bid)
+        new_read = Read()
+        new_read.rid = rid
+        new_read.aid = aid
+        new_read.uid = uid
+        new_read.readOrNot = int(readOrNot)
+        new_read.readTimeLength = int(readTimeLength)
+        new_read.readSequence = int(readSequence)
+        new_read.commentOrNot = int(commentOrNot)
+        new_read.commentDetail = commentDetail
+        new_read.agreeOrNot = int(agreeOrNot)
+        new_read.shareOrNot = int(shareOrNot)
+        logger.info("save to dbms:{}\nrecord: {}".format(db_alias, new_read))
+        new_read.save()
+        return new_read
 
     @staticmethod
     @switch_mongo_db(cls=Read)
@@ -98,8 +112,9 @@ class ReadService(object):
 
     @staticmethod
     def get_popular(end_date, before_days, top_n=5, db_alias=None):
-        if isinstance(end_date, datetime.date) and not isinstance(end_date, datetime.datetime):
-            end_date = datetime.datetime.strptime(str(end_date), '%Y-%m-%d')
+        if isinstance(end_date, datetime.date):
+            end_date = datetime.datetime.strptime(
+                str("{}-{}-{}".format(end_date.year, end_date.month, end_date.day + 1)), '%Y-%m-%d')
         if isinstance(end_date, datetime.datetime):
             start = ObjectId.from_datetime(utc_2_local(end_date - datetime.timedelta(days=before_days)))
             end = ObjectId.from_datetime(utc_2_local(end_date))
