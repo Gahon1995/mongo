@@ -50,8 +50,9 @@ class ReadService(object):
 
     @staticmethod
     def get_popular(end_date, before_days, top_n):
-        if isinstance(end_date, datetime.date) and not isinstance(end_date, datetime.datetime):
-            end_date = datetime.datetime.strptime(str(end_date), '%Y-%m-%d')
+        if isinstance(end_date, datetime.date):
+            end_date = datetime.datetime.strptime(
+                str("{}-{}-{}".format(end_date.year, end_date.month, end_date.day + 1)), '%Y-%m-%d')
         if isinstance(end_date, datetime.datetime):
             # if date.tzinfo is None:
             #     date = utc_2_local(date)

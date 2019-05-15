@@ -193,19 +193,19 @@ def show_popular():
 
 
 def show_daily_popular():
-    rank = PopularService.get_daily_rank()
+    rank = PopularService.get_daily_rank(datetime.today())
     show_rank(rank)
     pass
 
 
 def show_weekly_popular():
-    rank = PopularService.get_weekly_rank()
+    rank = PopularService.get_weekly_rank(datetime.today())
     show_rank(rank)
     pass
 
 
 def show_monthly_popular():
-    rank = PopularService.get_monthly_rank()
+    rank = PopularService.get_monthly_rank(datetime.today())
     show_rank(rank)
     pass
 
@@ -216,7 +216,7 @@ def show_rank(rank):
         return
     x = PrettyTable()
     x.field_names = ('index', 'title', 'id')
-    print("\nlast update time: {}".format(rank.update_time.astimezone()))
+    print("\nlast update time: {}".format(rank.update_time))
     for index, article in enumerate(rank.articleAidList):
         x.add_row((index, article.title, article.id))
     print(x)

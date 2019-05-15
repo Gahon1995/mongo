@@ -11,7 +11,7 @@ class User(BaseDB):
         ]
     }
     # uid = IntField(required=True)
-    name = StringField(required=True, unique=True)
+    name = StringField(required=True)
     pwd = StringField(required=True)
     gender = StringField(required=True)
     email = StringField(required=True)
