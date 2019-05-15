@@ -13,6 +13,8 @@ from mongoengine.base import BaseDocument
 
 from utils.consts import Region, Category, DBMS
 
+from Config import Config
+
 
 def singleton(cls):
     """
@@ -183,3 +185,11 @@ def get_dbms_by_category(category):
 
 def get_start_end_object_id():
     pass
+
+
+def get_dbms_location(model: str, value: str):
+    return Config.rules[model]['location'][value]
+
+
+def get_dbms_field(model: str):
+    return Config.rules[model]['field']

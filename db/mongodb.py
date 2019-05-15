@@ -1,6 +1,6 @@
 from mongoengine import Document, connect, register_connection, DoesNotExist
 from mongoengine.context_managers import switch_db
-from utils.func import convert_mongo_2_json, utc_2_local
+from utils.func import convert_mongo_2_json
 import functools
 import logging
 

@@ -18,8 +18,8 @@ class Region:
 
 
 class DBMS:
-    DBMS1 = Region.bj
-    DBMS2 = Region.hk
+    DBMS1 = 'DBMS1'
+    DBMS2 = 'DBMS2'
 
 
 class Language:
