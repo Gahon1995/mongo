@@ -158,8 +158,8 @@ def gen_reads():
 
 def main():
     from mongoengine import connect
-    host = '192.168.109.130'
-    connect('mongo-new', host=host, port=27017)
+    host = '127.0.0.1'
+    connect('mongo-all', host=host, port=27017)
 
     print('\n导入user数据...')
     gen_users()

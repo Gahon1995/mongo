@@ -12,9 +12,9 @@ log_in_file = True
 log_file_name = './mongo.log'
 
 #  MongoDB 相关配置
-mongo_db_name = 'mongo-new'
+mongo_db_name = 'mongo-all'
 # mongo_host = 'gahon.xyz'  # 服务器
-mongo_host = '10.211.55.5'  # 宿舍
+mongo_host = '127.0.0.1'  # 宿舍
 # mongo_host = '192.168.109.130'    # 工位
 mongo_port = 27017
 
