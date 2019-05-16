@@ -6,7 +6,7 @@
 
 import functools
 import json
-import pytz
+# import pytz
 import datetime
 
 from mongoengine.base import BaseDocument
@@ -39,7 +39,13 @@ def singleton(cls):
     return cls
 
 
-tz = pytz.timezone("Asia/Shanghai")
+def available_value(value):
+    if isinstance(value, str) or isinstance(value, bytes):
+        return value
+    return str(value)
+
+
+# tz = pytz.timezone("Asia/Shanghai")
 
 
 def utc_2_local(t):

@@ -3,37 +3,56 @@
 # @Time    : 2019-05-11 00:27
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
-import redis
+import pickle
 
-import Config
-
-__redis = None
-
-
-def get_redis(url='redis://@{0}:{1}/0'.format(Config.redis_host, Config.redis_port), new_con=False):
-    global __redis
-    if __redis is None or new_con:
-        __redis = redis.from_url(url=url)
-    return __redis
+from redis import Redis as PyRedis
+from Config import Config
+from utils.func import singleton, available_value
 
 
-# class RedisClient(object):
-#     _redis = None
-#
-#     def __init__(self, url='redis://@{0}:{1}/0'.format(Config.redis_host, Config.redis_port)):
-#         RedisClient._redis = redis.from_url(url=url)
-#
-#     # 保证单例，减少连接数
-#     def __new__(cls, *args, **kwargs):
-#         if not hasattr(cls, '__instance'):
-#             cls.__instance = object.__new__(cls)
-#         return cls.__instance
-#
-#     @classmethod
-#     def redis(cls):
-#         if cls._redis is None:
-#             raise BaseException("未初始化连接")
-#         return cls._redis
+@singleton
+class Redis(PyRedis):
+    # session = None
+
+    def __init__(self, *args):
+        args = {
+            'host': Config.redis_host,
+            'port': Config.redis_port,
+            'db': 0,
+            'password': Config.redis_password,
+            'decode_responses': True
+        }
+        super().__init__(**args)
+
+    def get(self, name, default=None):
+        res = super().get(name)
+        # if decode: res = res.decode()
+        return res if res else default
+
+    def set(self, name, value, ex=None, px=None, nx=False, xx=False):
+        return super().set(name, available_value(value), ex=ex, px=px, nx=nx, xx=xx)
+
+    def set_dict(self, name, value):
+        return self.set_pickle(name, value)
+        # return self.set(name, json.dumps(value))
+
+    def get_dict(self, name, default={}):
+        return self.get_pickle(name, default)
+        # res = self.get(name)
+        # if res:
+        #     return json.loads(res)
+        # return default
+
+    def set_pickle(self, name, value):
+        return self.set(name, pickle.dumps(value, 0).decode())
+
+    def get_pickle(self, name, default=None):
+        res = self.get(name)
+        return pickle.loads(res.encode()) if res else default
+
+    # def smembers(self, name, default=[]):
+    #     res = super().smembers(name)
+    #     return [val.decode() for val in list(res)] if res else default
 
 
 if __name__ == '__main__':
