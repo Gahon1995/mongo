@@ -36,7 +36,7 @@ class BeReadService(object):
         return BeRead.get_id('bid')
 
     @staticmethod
-    def add_be_read_record(read, user):
+    def add_be_read_record(read, user, timestamp=None):
 
         _id = BeReadService.get_be_id()
         bid = get_uid_by_region(_id, user.region)
@@ -49,6 +49,7 @@ class BeReadService(object):
                 record = BeRead()
                 record.aid = read.aid
                 record.bid = bid
+                record.timestamp = timestamp or datetime.datetime.utcnow()
             BeReadService.save_new_be_read(record, read, user.uid, db_alias=dbms)
 
     @staticmethod

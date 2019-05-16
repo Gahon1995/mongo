@@ -40,7 +40,7 @@ class ReadService(object):
 
     @staticmethod
     def save_read(aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot, commentDetail, agreeOrNot,
-                  shareOrNot):
+                  shareOrNot, timestamp=None):
         # logger.info('save read:{}'.format(new_read))
 
         user = UserService().get_user_by_uid(int(uid))
@@ -52,14 +52,14 @@ class ReadService(object):
             new_read = ReadService.__save_read(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot,
                                                commentDetail,
                                                agreeOrNot,
-                                               shareOrNot, db_alias=dbms)
+                                               shareOrNot, timestamp, db_alias=dbms)
 
-        BeReadService.add_be_read_record(new_read, user)
+        BeReadService.add_be_read_record(new_read, user, timestamp)
 
     @staticmethod
     @switch_mongo_db(cls=Read)
     def __save_read(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot, commentDetail, agreeOrNot,
-                    shareOrNot, db_alias=None):
+                    shareOrNot, timestamp=None, db_alias=None):
         check_alias(db_alias)
 
         new_read = Read()
@@ -73,6 +73,7 @@ class ReadService(object):
         new_read.commentDetail = commentDetail
         new_read.agreeOrNot = int(agreeOrNot)
         new_read.shareOrNot = int(shareOrNot)
+        new_read.timestamp = timestamp or datetime.datetime.utcnow()
         logger.info("save to dbms:{}\nrecord: {}".format(db_alias, new_read))
         new_read.save()
         return new_read

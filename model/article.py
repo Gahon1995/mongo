@@ -16,6 +16,7 @@ class Article(BaseDB):
     image = StringField(default='')
     video = StringField(default='')
     update_time = DateTimeField(default=datetime.utcnow)
+    timestamp = DateTimeField(required=True)
 
     meta = {
         'indexes': [
@@ -32,5 +33,3 @@ class Article(BaseDB):
     def create_time(self):
         # 创建时间
         return self.get_create_time()
-
-    # timestamp = DateTimeField(default=datetime.now)

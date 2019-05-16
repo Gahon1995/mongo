@@ -80,7 +80,7 @@ def articles_query_all(page_num=1, page_size=20, **kwargs):
 
 
 def query_all(total, page_num=1, page_size=20, db_alias=None, **kwargs):
-    articles = ArticleService.articles_list(page_num, page_size, db_alias=db_alias, **kwargs)
+    articles = ArticleService.get_articles(page_num, page_size, db_alias=db_alias, **kwargs)
 
     if len(articles) == 0:
         print("未找到文章信息")
@@ -98,7 +98,7 @@ def choices_article(user):
     keyword = input("请输入要阅读的文章部分标题： ")
     if keyword == '':
         return
-    articles = ArticleService.search_by_title(keyword, db_alias=DBMS.DBMS2)
+    articles = ArticleService.get_articles_by_title(keyword, db_alias=DBMS.DBMS2)
     if len(articles) == 0:
         print("未找到相关文章")
         return
@@ -315,7 +315,7 @@ def del_an_article(user, role):
             return
         ArticleService.del_article(article)
     elif role == 'admin':
-        ArticleService.del_by_id(_id=aid)
+        ArticleService.del_by_aid(_id=aid)
     else:
         print("用户不存在或者权限错误")
         return
@@ -369,7 +369,7 @@ def update_popular():
 
 
 def show_my_article(user):
-    articles = ArticleService.articles_list(authors=user.name)
+    articles = ArticleService.get_articles(authors=user.name)
     ArticleService.pretty_articles(articles)
 
     input("按回车返回")

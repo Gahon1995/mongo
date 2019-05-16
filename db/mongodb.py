@@ -139,7 +139,7 @@ def init_connect():
 
     # from utils.consts import DBMS
     # tz_aware=True 设置时区修正，mongoDB的时区默认为UTC0，需要加上这个加入时区信息
-    connect(Config.mongo_db_name, host=Config.bj_mongo_host, port=Config.bj_mongo_port, tz_aware=True)
+    connect(DBMS.db_name, host=Config.bj_mongo_host, port=Config.bj_mongo_port, tz_aware=True)
 
     for dbms in DBMS.all:
         register_connection(alias=dbms, db=DBMS.db_name, host=DBMS.configs[dbms]['host'],

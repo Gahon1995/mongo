@@ -6,7 +6,7 @@
 
 import functools
 import json
-# import pytz
+import pytz
 import datetime
 import time
 
@@ -49,9 +49,6 @@ def available_value(value):
     if isinstance(value, str) or isinstance(value, bytes):
         return value
     return str(value)
-
-
-# tz = pytz.timezone("Asia/Shanghai")
 
 
 def utc_2_local(t):
@@ -325,10 +322,29 @@ def get_best_dbms_by_aid(aid):
     return get_dbms_by_aid(aid)[0]
 
 
-def timestamp_to_time(timestamp):
+def timestamp_to_time(timestamp: int):
+    if len(str(timestamp)) == 13:
+        timestamp = int(timestamp / 1000)
     time_s = time.localtime(timestamp)
     return time.strftime('%Y-%m-%d %H:%M:%S', time_s)
 
 
 def str_to_time(string):
-    return datetime.datetime.strptime(string, '%Y-%m-%d %H:%M:%S.%f')
+    return datetime.datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
+
+
+def timestamp_to_datetime(timestamp):
+    tz = pytz.timezone("Asia/Shanghai")
+    timestamp = int(timestamp)
+    if len(str(timestamp)) == 13:
+        return datetime.datetime.fromtimestamp(timestamp / 1000, tz=tz)
+    else:
+        return datetime.datetime.fromtimestamp(timestamp, tz=tz)
+
+
+def datetime_to_timestamp(_date: datetime):
+    return int(_date.timestamp() * 1000)
+
+
+def get_timestamp():
+    return int(datetime.datetime.now().timestamp() * 1000)

@@ -1,5 +1,6 @@
 from mongoengine import *
 from db.mongodb import BaseDB
+from datetime import datetime
 
 
 class Read(BaseDB):
@@ -27,7 +28,8 @@ class Read(BaseDB):
     shareOrNot = IntField(default=0)
     commentDetail = StringField(default='')
 
-    # timestamp = DateTimeField(default=datetime.now)
+    timestamp = DateTimeField(default=datetime.utcnow)
+
     @property
     def create_time(self):
         # 创建时间

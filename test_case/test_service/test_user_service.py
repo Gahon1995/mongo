@@ -79,11 +79,11 @@ class TestUserService(TestBase):
         assert user is not None
         print(user)
 
-    # def test_del(self):
-    #     UserService().del_user_by_uid(49)
-    #     user = UserService().get_user_by_uid(49)
-    #     assert user is None
-    #
-    #     UserService().del_user_by_name('user52')
-    #     user = UserService().get_user_by_name('user52')
-    #     assert user is None
+    def test_del(self):
+        # UserService().del_user_by_uid(49)
+        # user = UserService().get_user_by_uid(49)
+        # assert user is None
+
+        UserService().del_user_by_name('gahon')
+        user = UserService().get_user_by_name('gahon')
+        assert user is None

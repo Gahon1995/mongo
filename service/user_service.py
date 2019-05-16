@@ -37,9 +37,10 @@ class UserService(object):
         return User.get_id('uid')
 
     def register(self, name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
-                 obtainedCredits) -> dict:
+                 obtainedCredits, timestamp=None):
         """
             用户注册，返回注册结果和信息
+        :param timestamp:
         :param name:  用户名
         :param pwd:     密码
         :param gender:  性别
@@ -52,7 +53,7 @@ class UserService(object):
         :param role:
         :param preferTags:
         :param obtainedCredits:
-        :return: dict[True or False, msg]
+        :return: list[True or False, msg]
         """
         user = self.get_user_by_name(name)
         if user is not None:
@@ -63,14 +64,14 @@ class UserService(object):
         uid = get_uid_by_region(self.get_uid(region), region)
         for dbms in get_dbms_by_region(region):
             re = self.__register(uid, name, pwd, gender, email, phone, dept, grade, language, region, role,
-                                 preferTags, obtainedCredits, db_alias=dbms)
+                                 preferTags, obtainedCredits, timestamp, db_alias=dbms)
             if not re[0]:
                 break
         return re
 
     @switch_mongo_db(cls=User)
     def __register(self, uid, name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
-                   obtainedCredits: int, db_alias=None):
+                   obtainedCredits: int, timestamp=None, db_alias=None):
 
         check_alias(db_alias)
 
@@ -88,6 +89,7 @@ class UserService(object):
         user.role = role
         user.preferTags = preferTags
         user.obtainedCredits = obtainedCredits
+        user.timestamp = timestamp or datetime.datetime.utcnow()
         if user.save() is not None:
             logger.info('用户：{} 注册成功'.format(name))
             return True, '用户：{} 注册成功'.format(name)

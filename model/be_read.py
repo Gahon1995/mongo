@@ -34,7 +34,7 @@ class BeRead(BaseDB):
     agreeUidList = ListField(IntField(required=False), default=list())
     shareNum = IntField(default=0)
     shareUidList = ListField(IntField(required=False), default=list())
-    # create_time = DateTimeField(default=datetime.now)
+    timestamp = DateTimeField(default=datetime.utcnow)
     last_update_time = DateTimeField(default=datetime.utcnow)
 
     @property

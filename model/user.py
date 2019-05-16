@@ -25,7 +25,7 @@ class User(BaseDB):
     obtainedCredits = StringField(default='0')
 
     # 尝试利用objectid来获取创建时间
-    # timestamp = DateTimeField(default=datetime.now)
+    timestamp = DateTimeField(required=True)
 
     @property
     def create_time(self):

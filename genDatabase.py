@@ -2,6 +2,7 @@ from random import random
 from service.user_service import UserService
 from service.article_service import ArticleService
 from service.read_service import ReadService
+from utils.func import timestamp_to_datetime
 
 # USERS_NUM = 10000
 # ARTICLES_NUM = 200000
@@ -109,14 +110,13 @@ def print_bar(now, total):
 
 
 def gen_users():
-    from model.user import User
-    User.delete_by()
+    # User.delete_by()
     for i in range(USERS_NUM):
         # print_bar(i, USERS_NUM)
         data = gen_an_user(i)
         UserService().register(data['name'], data['pwd'], data['gender'], data['email'], data['phone'], data['dept'],
                                data['grade'], data['language'], data['region'], data['role'], data['preferTags'],
-                               data['obtainedCredits'])
+                               data['obtainedCredits'], timestamp_to_datetime(data['timestamp']))
 
 
 def gen_articles():
@@ -128,7 +128,7 @@ def gen_articles():
         ArticleService.add_an_article(title=data['title'], authors=data['authors'], category=data['category'],
                                       abstract=data['abstract'], articleTags=data['articleTags'],
                                       language=data['language'], text=data['text'], image=data['image'],
-                                      video=data['video'])
+                                      video=data['video'], timestamp=timestamp_to_datetime(data['timestamp']))
 
 
 def gen_reads():
@@ -147,7 +147,8 @@ def gen_reads():
 
         ReadService.save_read(article.aid, user.uid, int(data['readOrNot']), int(data['readTimeLength']),
                               int(data['readSequence']), int(data['commentOrNot']),
-                              data['commentDetail'], int(data['agreeOrNot']), int(data['shareOrNot']))
+                              data['commentDetail'], int(data['agreeOrNot']), int(data['shareOrNot']),
+                              timestamp=timestamp_to_datetime(data["timestamp"]))
         # time.sleep(1)
 
 
