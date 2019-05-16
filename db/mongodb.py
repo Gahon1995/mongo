@@ -160,7 +160,7 @@ def switch_mongo_db(cls, default_db=None):
                 if not (db_alias == DBMS.DBMS1 or db_alias == DBMS.DBMS2):
                     raise DbmsErrorException('db_alias error, {}'.format(db_alias))
                 # print("switch db: cls={0}, db_alias={1}".format(cls.__name__, db_alias))
-                logger.info("switch db: cls={0}, db_alias={1}".format(cls.__name__, db_alias))
+                logger.debug("switch db: cls={0}, db_alias={1}".format(cls.__name__, db_alias))
                 with switch_db(cls, db_alias):
                     return func(*args, **kwargs)
             except KeyError:

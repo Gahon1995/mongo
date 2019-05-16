@@ -8,6 +8,7 @@ import functools
 import json
 # import pytz
 import datetime
+import time
 
 from mongoengine.base import BaseDocument
 
@@ -40,6 +41,11 @@ def singleton(cls):
 
 
 def available_value(value):
+    """
+    判断是否为redis能存储的数据类型： str or bytes
+    :param value:
+    :return:
+    """
     if isinstance(value, str) or isinstance(value, bytes):
         return value
     return str(value)
@@ -102,6 +108,16 @@ def convert_mongo_2_json(o):
 
 
 def show_next(page_num, page_size, total, next_func, db_alias=None, **kwargs):
+    """
+        展示上一页、下一页选项， cmd 界面接口需要
+    :param page_num: 当前的
+    :param page_size:
+    :param total:
+    :param next_func:
+    :param db_alias:
+    :param kwargs:
+    :return:
+    """
     total_pages = int((total - 1) / page_size) + 1
     flag = False
 
@@ -137,16 +153,39 @@ def show_next(page_num, page_size, total, next_func, db_alias=None, **kwargs):
 
 
 def merge_dict_and_sort(dict_1, dict_2) -> list:
+    """
+        合并两个简单字典，然后进行排序输出list
+    :param dict_1:
+    :param dict_2:
+    :return:
+    """
+    dict_1 = merge_dict(dict_1, dict_2)
+
+    return sorted(dict_1.items(), key=lambda item: item[1], reverse=True)
+
+
+def merge_dict(dict_1, dict_2) -> dict:
+    """
+        合并两个字典，相同name的value进行简单相加
+    :param dict_1:
+    :param dict_2:
+    :return:
+    """
     for key, value in dict_2.items():
         if dict_1.get(key) is None:
             dict_1.setdefault(key, value)
         else:
             dict_1[key] += value
 
-    return sorted(dict_1.items(), key=lambda item: item[1], reverse=True)
+    return dict_1
 
 
-def sort_dict(data) -> list:
+def sort_dict(data: dict) -> list:
+    """
+        通过value对字典进行排序， 返回list
+    :param data:
+    :return: list
+    """
     return sorted(data.items(), key=lambda item: item[1], reverse=True)
 
 
@@ -158,19 +197,18 @@ def bytes_to_str(s, encoding='utf-8'):
     return s
 
 
-class AliasIsNoneException(Exception):
-    pass
-
-
-class DbmsErrorException(Exception):
+class DbmsAliasError(Exception):
     pass
 
 
 def check_alias(db_alias):
-    if db_alias is None:
-        raise AliasIsNoneException("alias is None")
-    if not (db_alias == DBMS.DBMS1 or db_alias == DBMS.DBMS2):
-        raise DbmsErrorException("alias is wrong, please check")
+    """
+        检查所传入的db_alias 是否是一个合法的DBMS地址
+    :param db_alias:
+    :return:
+    """
+    if db_alias not in DBMS.all:
+        raise DbmsAliasError("alias is wrong, please check")
 
 
 def is_odd(uid):
@@ -184,6 +222,12 @@ def is_odd(uid):
 
 
 def get_dbms_by_region(region):
+    """
+        通过region的值返回其内容存储的所有数据库地址
+        # TODO 通过读取配置文件来进行返回
+    :param region:
+    :return:
+    """
     if region == Region.bj:
         return [DBMS.DBMS1]
     else:
@@ -218,6 +262,12 @@ def get_best_dbms_by_category(category):
 
 
 def get_dbms_by_uid(uid):
+    """
+        通过uid返回该uid对应的用户数据存储地址
+        # TODO 从配置文件获取地址配置信息
+    :param uid:
+    :return:
+    """
     if not is_odd(uid):
         return [DBMS.DBMS1]
     else:
@@ -252,11 +302,14 @@ def get_best_dbms_by_aid(aid):
     return get_dbms_by_aid(aid)[0]
 
 
-def get_start_end_object_id():
-    pass
-
-
 def get_id_by_region(_id, region):
+    """
+        通过region字段来计算正确的id
+        目前bj地区默认为偶数，hk为奇数
+    :param _id: mongo查询所返回的id
+    :param region:  该当前数据的region地址
+    :return:
+    """
     if region == Region.bj:
         return _id if not is_odd(_id) else _id + 1
     else:
@@ -268,3 +321,12 @@ def get_id_by_category(_id, category):
         return _id if not is_odd(_id) else _id + 1
     else:
         return _id if is_odd(_id) == 1 else _id + 1
+
+
+def timestamp_to_time(timestamp):
+    time_s = time.localtime(timestamp)
+    return time.strftime('%Y-%m-%d %H:%M:%S', time_s)
+
+
+def str_to_time(string):
+    return datetime.datetime.strptime(string, '%Y-%m-%d %H:%M:%S.%f')

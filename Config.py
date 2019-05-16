@@ -9,7 +9,7 @@ import logging
 
 class Config(object):
     # logging 配置
-    debug_level = logging.DEBUG
+    debug_level = logging.INFO
     log_in_file = False
     log_file_name = './mongo.log'
 

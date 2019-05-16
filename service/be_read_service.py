@@ -73,5 +73,5 @@ class BeReadService(object):
             if uid not in be_read.shareUidList:
                 be_read.shareUidList.append(uid)
 
-        be_read.last_update_time = datetime.utcnow()
+        be_read.last_update_time = datetime.datetime.utcnow()
         be_read.save()
