@@ -43,7 +43,7 @@ class ReadService(object):
                   shareOrNot):
         # logger.info('save read:{}'.format(new_read))
 
-        user = UserService.get_user_by_uid(int(uid))
+        user = UserService().get_user_by_uid(int(uid))
         _id = ReadService.get_id()
         rid = get_id_by_region(_id, user.region)
 

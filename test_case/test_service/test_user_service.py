@@ -6,76 +6,84 @@
 
 from test_case.base_test import TestBase
 from service.user_service import UserService
-from utils.consts import Region, DBMS
+from utils.consts import DBMS
 
 
 class TestUserService(TestBase):
 
     def test_user_list(self):
-        users = UserService.users_list(db_alias=DBMS.DBMS1)
-        UserService.pretty_users(users)
+        users = UserService().users_list(db_alias=DBMS.DBMS1)
+        UserService().pretty_users(users)
+
+        print('total: {}'.format(len(users)))
+
+        users = UserService().users_list(db_alias=DBMS.DBMS2)
+        UserService().pretty_users(users)
 
         print('total: {}'.format(len(users)))
 
     def test_register(self):
-        re1 = UserService.register('gahon', 'password', 'male', 'asdf', 'asdfasdf', 'asdf', 'asdf', 'asdf',
-                                   'Beijing',
-                                   'asdf',
-                                   'asdfas', 123)
+        re1 = UserService().register('gahon', 'password', 'male', 'asdf', 'asdfasdf', 'asdf', 'asdf', 'asdf',
+                                     'Beijing', 'asdf', 'asdfas', '123')
 
         assert re1
+        print(re1)
 
     def test_count(self):
         print()
-        cnt = UserService.count(db_alias=DBMS.DBMS1)
+        cnt = UserService().count(db_alias=DBMS.DBMS1)
         print('DBMS1:', cnt)
-        cnt = UserService.count(db_alias=DBMS.DBMS2)
+        cnt = UserService().count(db_alias=DBMS.DBMS2)
         print('DBMS2:', cnt)
-        cnt = UserService.count_all()
+        cnt = UserService().count_all()
         print('all: ', cnt)
 
     def test_get_user_by_name(self):
-        user = UserService.get_user_by_name('gahon')
+        user = UserService().get_user_by_name('gahon')
         assert user is not None
         print(user)
 
-        admin = UserService.get_user_by_name('admin', db_alias=DBMS.DBMS1)
+        admin = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS2)
         assert admin is None
 
-        admin = UserService.get_user_by_name('admin', db_alias=DBMS.DBMS2)
+        admin = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS1)
         assert admin is not None
         print(admin)
 
     def test_get_by_uid(self):
-        user = UserService.get_user_by_uid(34)
+        user = UserService().get_user_by_uid(34)
         # assert user is not None
         print(user)
-        user = UserService.get_user_by_uid(23)
+        user = UserService().get_user_by_uid(23)
         # assert user is not None
         print(user)
 
     def test_login(self):
-        user = UserService.login('admin', 'admin')
+        user = UserService().login('admin', 'admin')
         assert user is not None
         print(user)
 
-        user = UserService.login('admin', 'qweqwe')
+        user = UserService().login('gahon', 'password')
+        assert user is not None
+        print(user)
+
+        user = UserService().login('admin', 'qweqwe')
         assert user is None
 
     def test_update(self):
-        user = UserService.update_by_uid(2, gender='female', email='ewrqwr')
+        user = UserService().update_by_uid(6, gender='female', email='ewrqwr')
         assert user is not None
         print(user)
 
-        user = UserService.update_by_name('user54', gender='female', email='awerasfsa')
+        user = UserService().update_by_name('user56', gender='female', email='awerasfsa')
         assert user is not None
         print(user)
 
-    def test_del(self):
-        UserService.del_user_by_uid(67)
-        user = UserService.get_user_by_uid(67)
-        assert user is None
-
-        UserService.del_user_by_name('user52')
-        user = UserService.get_user_by_name('user52')
-        assert user is None
+    # def test_del(self):
+    #     UserService().del_user_by_uid(49)
+    #     user = UserService().get_user_by_uid(49)
+    #     assert user is None
+    #
+    #     UserService().del_user_by_name('user52')
+    #     user = UserService().get_user_by_name('user52')
+    #     assert user is None

@@ -5,49 +5,71 @@
 # @Email   : Gahon1995@gmail.com
 from model.user import User
 from db.mongodb import switch_mongo_db
-from utils.consts import DBMS, Region
 from utils.func import *
 import logging
 
 logger = logging.getLogger('userService')
 
 
+@singleton
 class UserService(object):
 
     @staticmethod
     def hasattr(key):
+        """
+            判断User中是否有key这个属性
+        :param key:  待判断的属性
+        :return: True or False
+        """
         return hasattr(User, key)
 
-    @staticmethod
-    def get_uid(region):
-        return UserService.__uid(db_alias=get_best_dbms_by_region(region))
+    def get_uid(self, region):
+        """
+            通过region来获取当前region所对应的数据库的下一个id应该是啥
+        :param region: 地区，该参数需要和consts 类中Region所对应的值相等
+        :return:
+        """
+        return self.__uid(db_alias=get_best_dbms_by_region(region))
 
-    @staticmethod
     @switch_mongo_db(cls=User)
-    def __uid(db_alias=None):
+    def __uid(self, db_alias=None):
         check_alias(db_alias)
         return User.get_id('uid')
 
-    @staticmethod
-    def register(name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
-                 obtainedCredits: int):
-        user = UserService.get_user_by_name(name)
+    def register(self, name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
+                 obtainedCredits) -> dict:
+        """
+            用户注册，返回注册结果和信息
+        :param name:  用户名
+        :param pwd:     密码
+        :param gender:  性别
+        :param email:
+        :param phone:
+        :param dept:
+        :param grade:
+        :param language:
+        :param region: 地区，该值应与Region类中的值一样
+        :param role:
+        :param preferTags:
+        :param obtainedCredits:
+        :return: dict[True or False, msg]
+        """
+        user = self.get_user_by_name(name)
         if user is not None:
             logger.info('用户名已存在')
             return False, '用户名已存在'
         re = False, ''
 
-        uid = get_id_by_region(UserService.get_uid(region), region)
+        uid = get_id_by_region(self.get_uid(region), region)
         for dbms in get_dbms_by_region(region):
-            re = UserService.__register(uid, name, pwd, gender, email, phone, dept, grade, language, region, role,
-                                        preferTags, obtainedCredits, db_alias=dbms)
+            re = self.__register(uid, name, pwd, gender, email, phone, dept, grade, language, region, role,
+                                 preferTags, obtainedCredits, db_alias=dbms)
             if not re[0]:
                 break
         return re
 
-    @staticmethod
     @switch_mongo_db(cls=User)
-    def __register(uid, name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
+    def __register(self, uid, name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
                    obtainedCredits: int, db_alias=None):
 
         check_alias(db_alias)
@@ -71,105 +93,153 @@ class UserService(object):
             return True, '用户：{} 注册成功'.format(name)
         return False, '保存至数据库失败'
 
-    @staticmethod
     @switch_mongo_db(cls=User)
-    def users_list(page_num=1, page_size=20, db_alias=None, **kwargs):
+    def users_list(self, page_num=1, page_size=20, db_alias=None, **kwargs) -> list:
+        """
+            获取db_alias 所对应的数据库里边的用户列表，采用分页
+            可以通过**kwargs进行高级查询，
+        :param page_num:    查询页码
+        :param page_size:   每页的数据量大小
+        :param db_alias:    数据库的别名
+        :param kwargs:      其他的一些查询参数
+        :return:
+        """
         check_alias(db_alias)
         return User.list_by_page(page_num, page_size, **kwargs)
 
-    @staticmethod
     @switch_mongo_db(cls=User)
-    def count(db_alias=None, **kwargs):
+    def count(self, db_alias=None, **kwargs):
+        """
+            计算db_alias所对应的的数据库下满足条件的用户数量
+        :param db_alias:
+        :param kwargs:  查询参数字典， 为空则统计所有用户数量
+        :return:
+        """
         check_alias(db_alias)
         return User.count(**kwargs)
 
-    @staticmethod
-    def count_all(**kwargs):
-        return UserService.count(db_alias=DBMS.DBMS1, **kwargs) + UserService.count(db_alias=DBMS.DBMS2, **kwargs)
+    def count_all(self, **kwargs):
+        """
+            统计所有数据库中的用户总量
+        :param kwargs:  制定特殊查询参数
+        :return:
+        """
+        count = 0
+        for dbms in DBMS.all:
+            count += self.count(db_alias=dbms, **kwargs)
+        return count
 
-    @staticmethod
-    def get_user_by_name(name, db_alias=None):
+    def get_user_by_name(self, name: str, db_alias: str = None) -> User:
+        """
+            通过用户名进行查询
+        :param name:    查询的用户名
+        :param db_alias:    查找的数据库名称， 如果为空的话则查询所有数据库
+        :return:
+        """
+        user = None
         if db_alias is None:
-            user = UserService.__get_user_by_name(name, db_alias=DBMS.DBMS1)
-            if user is None:
-                user = UserService.__get_user_by_name(name, db_alias=DBMS.DBMS2)
+            for dbms in DBMS.all:
+                user = self.__get_user_by_name(name, db_alias=dbms)
+                if user is not None:
+                    break
             return user
         else:
-            return UserService.__get_user_by_name(name, db_alias=db_alias)
+            return self.__get_user_by_name(name, db_alias=db_alias)
 
-    @staticmethod
     @switch_mongo_db(cls=User)
-    def __get_user_by_name(name, db_alias=None):
+    def __get_user_by_name(self, name, db_alias=None):
         check_alias(db_alias)
         return User.get(name=name)
 
-    @staticmethod
-    def get_user_by_uid(uid: int):
-        return UserService.__get_user_by_uid(uid, db_alias=get_best_dbms_by_uid(uid))
+    def get_user_by_uid(self, uid: int) -> User:
+        """
+            根据uid进行用户查询
+        :param uid:
+        :return:
+        """
+        return self.__get_user_by_uid(uid, db_alias=get_best_dbms_by_uid(uid))
 
-    @staticmethod
     @switch_mongo_db(cls=User)
-    def __get_user_by_uid(uid, db_alias=None):
+    def __get_user_by_uid(self, uid, db_alias=None):
         check_alias(db_alias)
         return User.get(uid=uid)
 
-    @staticmethod
-    def login(username, password):
+    def login(self, username, password) -> User:
+        """
+            用户登录
+        :param username:
+        :param password:
+        :return: User实体，登录失败返回None
+        """
         user = None
         for dbms in DBMS.all:
-            user = UserService.__login(username, password, db_alias=dbms)
+            user = self.__login(username, password, db_alias=dbms)
             if user is not None:
                 break
         return user
 
-    @staticmethod
     @switch_mongo_db(cls=User)
-    def __login(username, password, db_alias=None):
+    def __login(self, username, password, db_alias=None):
         check_alias(db_alias)
-        user = User.get(name=username)
-        if user is not None and user.pwd == password:
+        user = User.get(name=username, pwd=password)
+        if user is not None:
             logger.info("用户 {} 登录成功".format(username))
             return user
         else:
             logger.info("用户名或者密码错误")
         return None
 
-    @staticmethod
-    def logout(name):
+    def logout(self, name):
         logger.info('用户 {} 退出登录'.format(name))
         return True
 
-    @staticmethod
-    def update_by_uid(uid, **kwargs):
-        user = UserService.get_user_by_uid(uid)
+    def update_by_uid(self, uid, **kwargs) -> object:
+        """
+            根据uid进行更新用户数据
+        :param uid:
+        :param kwargs:      待更新的数据
+        :return:    user or None
+        """
+        user = self.get_user_by_uid(uid)
         if user is None:
             logger.info("uid:{}不存在".format(uid))
             return None
 
         # TODO 如何判断更新失败？（例如更新时网络异常）
         for dbms in get_dbms_by_uid(uid):
-            user = UserService.update_user(user, db_alias=dbms, **kwargs)
+            user = self.update_user(user, db_alias=dbms, **kwargs)
             if user is None:
                 break
         return user
 
-    @staticmethod
-    def update_by_name(name, **kwargs):
-        user = UserService.get_user_by_name(name)
+    def update_by_name(self, name, **kwargs):
+        """
+            根据name进行更新
+        :param name:
+        :param kwargs:  更新的数据
+        :return:
+        """
+        user = self.get_user_by_name(name)
         if user is None:
             logger.info("name:{}不存在".format(name))
             return None
 
         # TODO 如何判断更新失败？（例如更新时网络异常）
         for dbms in get_dbms_by_uid(user.uid):
-            user = UserService.update_user(user, db_alias=dbms, **kwargs)
+            user = self.update_user(user, db_alias=dbms, **kwargs)
             if user is None:
                 break
         return user
 
-    @staticmethod
     @switch_mongo_db(cls=User)
-    def update_user(user, db_alias=None, **kwargs):
+    def update_user(self, user: User, db_alias=None, **kwargs):
+        """
+            根据user实例进行更新用户数据
+        :param user:    待更新的用户数据
+        :param db_alias:
+        :param kwargs:      更新的字段和对应的值
+        :return:
+        """
         check_alias(db_alias)
         forbid = ('name', 'id', '_id', 'region')
         if user is None:
@@ -183,29 +253,27 @@ class UserService(object):
         # TODO 如何判断更新失败？（例如更新时网络异常）
         return user.save()
 
-    @staticmethod
-    def del_user_by_name(name):
-        user = UserService.get_user_by_name(name=name)
+    def del_user_by_name(self, name):
+
+        user = self.get_user_by_name(name=name)
         if user is not None:
             for dbms in get_dbms_by_uid(user.uid):
-                success = UserService.del_user(user, db_alias=dbms)
+                success = self.del_user(user, db_alias=dbms)
                 if not success:
                     return False
         return True
 
-    @staticmethod
-    def del_user_by_uid(uid):
-        user = UserService.get_user_by_uid(uid=uid)
+    def del_user_by_uid(self, uid):
+        user = self.get_user_by_uid(uid=uid)
         if user is not None:
             for dbms in get_dbms_by_uid(user.uid):
-                success = UserService.del_user(user, db_alias=dbms)
+                success = self.del_user(user, db_alias=dbms)
                 if not success:
                     return False
         return True
 
-    @staticmethod
     @switch_mongo_db(cls=User)
-    def del_user(user: User, db_alias=None):
+    def del_user(self, user: User, db_alias=None):
         check_alias(db_alias)
         if user is not None:
             user.delete()
@@ -250,5 +318,5 @@ if __name__ == '__main__':
 
     init()
 
-    _users = UserService.users_list()
-    UserService.pretty_users(_users)
+    _users = UserService().users_list()
+    UserService().pretty_users(_users)

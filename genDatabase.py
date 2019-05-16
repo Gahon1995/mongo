@@ -116,9 +116,9 @@ def gen_users():
     for i in range(USERS_NUM):
         # print_bar(i, USERS_NUM)
         data = gen_an_user(i)
-        UserService.register(data['name'], data['pwd'], data['gender'], data['email'], data['phone'], data['dept'],
-                             data['grade'], data['language'], data['region'], data['role'], data['preferTags'],
-                             int(data['obtainedCredits']))
+        UserService().register(data['name'], data['pwd'], data['gender'], data['email'], data['phone'], data['dept'],
+                               data['grade'], data['language'], data['region'], data['role'], data['preferTags'],
+                               data['obtainedCredits'])
 
 
 def gen_articles():
@@ -145,7 +145,7 @@ def gen_reads():
         article = ArticleService.get_an_article(title='title' + data['aid'])
 
         name = 'user' + data['uid'] if data['uid'] != '0' else 'admin'
-        user = UserService.get_user_by_name(name=name)
+        user = UserService().get_user_by_name(name=name)
 
         ReadService.save_read(article.aid, user.uid, int(data['readOrNot']), int(data['readTimeLength']),
                               int(data['readSequence']), int(data['commentOrNot']),

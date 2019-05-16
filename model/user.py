@@ -23,7 +23,7 @@ class User(BaseDB):
     region = StringField(required=True)
     role = StringField(required=True)
     preferTags = StringField(required=True)
-    obtainedCredits = IntField(default=0)
+    obtainedCredits = StringField(default='0')
 
     # 尝试利用objectid来获取创建时间
     # timestamp = DateTimeField(default=datetime.now)
