@@ -12,7 +12,7 @@ import time
 
 from mongoengine.base import BaseDocument
 
-from utils.consts import Region, Category, DBMS
+from Config import DBMS
 
 
 def singleton(cls):
@@ -228,10 +228,11 @@ def get_dbms_by_region(region):
     :param region:
     :return:
     """
-    if region == Region.bj:
-        return [DBMS.DBMS1]
-    else:
-        return [DBMS.DBMS2]
+    return DBMS.region[region]
+    # if region == Region.bj:
+    #     return [DBMS.DBMS1]
+    # else:
+    #     return [DBMS.DBMS2]
 
 
 def get_best_dbms_by_region(region):
@@ -245,10 +246,11 @@ def get_best_dbms_by_region(region):
 
 
 def get_dbms_by_category(category):
-    if category == Category.science:
-        return [DBMS.DBMS1, DBMS.DBMS2]
-    else:
-        return [DBMS.DBMS2]
+    return DBMS.category[category]
+    # if category == Category.science:
+    #     return [DBMS.DBMS1, DBMS.DBMS2]
+    # else:
+    #     return [DBMS.DBMS2]
 
 
 def get_best_dbms_by_category(category):
@@ -261,6 +263,20 @@ def get_best_dbms_by_category(category):
     return get_dbms_by_category(category)[0]
 
 
+def get_uid_by_region(_id, region):
+    """
+        通过region字段来计算正确的id
+        目前bj地区默认为偶数，hk为奇数
+    :param _id: mongo查询所返回的id
+    :param region:  该当前数据的region地址
+    :return:
+    """
+    if DBMS.region[region][0] == DBMS.DBMS1:
+        return _id if not is_odd(_id) else _id + 1
+    else:
+        return _id if is_odd(_id) else _id + 1
+
+
 def get_dbms_by_uid(uid):
     """
         通过uid返回该uid对应的用户数据存储地址
@@ -269,9 +285,9 @@ def get_dbms_by_uid(uid):
     :return:
     """
     if not is_odd(uid):
-        return [DBMS.DBMS1]
+        return get_dbms_by_region(DBMS.region['values'][0])
     else:
-        return [DBMS.DBMS2]
+        return get_dbms_by_region(DBMS.region['values'][1])
 
 
 def get_best_dbms_by_uid(uid):
@@ -284,12 +300,19 @@ def get_best_dbms_by_uid(uid):
     return get_dbms_by_uid(int(uid))[0]
 
 
+def get_id_by_category(_id, category):
+    if DBMS.category[category][0] == DBMS.DBMS1:
+        return _id if not is_odd(_id) else _id + 1
+    else:
+        return _id if is_odd(_id) == 1 else _id + 1
+
+
 def get_dbms_by_aid(aid):
     # TODO 统一奇偶
     if is_odd(aid):
-        return [DBMS.DBMS1, DBMS.DBMS2]
+        return get_dbms_by_category(DBMS.category['values'][0])
     else:
-        return [DBMS.DBMS2]
+        return get_dbms_by_category(DBMS.category['values'][0])
 
 
 def get_best_dbms_by_aid(aid):
@@ -300,27 +323,6 @@ def get_best_dbms_by_aid(aid):
     :return:
     """
     return get_dbms_by_aid(aid)[0]
-
-
-def get_id_by_region(_id, region):
-    """
-        通过region字段来计算正确的id
-        目前bj地区默认为偶数，hk为奇数
-    :param _id: mongo查询所返回的id
-    :param region:  该当前数据的region地址
-    :return:
-    """
-    if region == Region.bj:
-        return _id if not is_odd(_id) else _id + 1
-    else:
-        return _id if is_odd(_id) else _id + 1
-
-
-def get_id_by_category(_id, category):
-    if category == Category.science:
-        return _id if not is_odd(_id) else _id + 1
-    else:
-        return _id if is_odd(_id) == 1 else _id + 1
 
 
 def timestamp_to_time(timestamp):

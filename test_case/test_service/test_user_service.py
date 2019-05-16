@@ -6,7 +6,7 @@
 
 from test_case.base_test import TestBase
 from service.user_service import UserService
-from utils.consts import DBMS
+from Config import DBMS
 
 
 class TestUserService(TestBase):

@@ -6,10 +6,11 @@
 
 from model.article import Article
 from db.mongodb import switch_mongo_db
-from utils.consts import DBMS, Category
+
 from utils.func import *
 from datetime import datetime
 import logging
+from Config import DBMS
 
 logger = logging.getLogger('ArticleService')
 

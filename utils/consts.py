@@ -4,30 +4,18 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 
-from enum import Enum
+
+# class Region:
+#     bj = 'Beijing'
+#     hk = 'Hong Kong'
 
 
-class Gender:
-    male = 'male'
-    female = 'female'
+# class DBMS:
+#     all = [Region.bj, Region.hk]
+#     DBMS1 = Region.bj
+#     DBMS2 = Region.hk
 
 
-class Region:
-    bj = 'Beijing'
-    hk = 'Hong Kong'
-
-
-class DBMS:
-    all = [Region.bj, Region.hk]
-    DBMS1 = Region.bj
-    DBMS2 = Region.hk
-
-
-class Language:
-    zh = 'zh'
-    eng = 'eng'
-
-
-class Category:
-    science = 'science'
-    technology = 'technology'
+# class Category:
+#     science = 'science'
+#     technology = 'technology'

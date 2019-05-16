@@ -3,8 +3,6 @@ from service.user_service import UserService
 from service.article_service import ArticleService
 from service.read_service import ReadService
 
-from utils.consts import Region, Gender, Category
-
 # USERS_NUM = 10000
 # ARTICLES_NUM = 200000
 # READS_NUM = 1000000
@@ -31,13 +29,13 @@ def gen_an_user(i):
     user["uid"] = str(i)
     user["name"] = "user%d" % i if i != 0 else "admin"
     user["pwd"] = "password" if i != 0 else "admin"
-    user["gender"] = Gender.male if random() > 0.33 else Gender.female
+    user["gender"] = "male" if random() > 0.33 else "female"
     user["email"] = "email%d" % i
     user["phone"] = "phone%d" % i
     user["dept"] = "dept%d" % int(random() * 20)
     user["grade"] = "grade%d" % int(random() * 4 + 1)
     user["language"] = "en" if random() > 0.8 else "zh"
-    user["region"] = Region.bj if random() > 0.4 else Region.hk
+    user["region"] = "Beijing" if random() > 0.4 else "Hong Kong"
     user["role"] = "role%d" % int(random() * 3)
     user["preferTags"] = "tags%d" % int(random() * 50)
     user["obtainedCredits"] = str(int(random() * 100))
@@ -56,7 +54,7 @@ def gen_an_article(i):
     article["timestamp"] = str(timeBegin + i)
     article["aid"] = str(i)
     article["title"] = "title%d" % i
-    article["category"] = Category.science if random() > 0.55 else Category.technology
+    article["category"] = "science" if random() > 0.55 else "technology"
     article["abstract"] = "abstract of article %d" % i
     article["articleTags"] = "tags%d" % int(random() * 50)
     article["authors"] = "author%d" % int(random() * 2000)

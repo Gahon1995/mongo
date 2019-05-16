@@ -1,11 +1,5 @@
 from mongoengine import *
 from db.mongodb import BaseDB
-from datetime import datetime
-
-from .user import User
-from .article import Article
-
-from utils.consts import Region
 
 
 class Read(BaseDB):

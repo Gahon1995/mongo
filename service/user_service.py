@@ -60,7 +60,7 @@ class UserService(object):
             return False, '用户名已存在'
         re = False, ''
 
-        uid = get_id_by_region(self.get_uid(region), region)
+        uid = get_uid_by_region(self.get_uid(region), region)
         for dbms in get_dbms_by_region(region):
             re = self.__register(uid, name, pwd, gender, email, phone, dept, grade, language, region, role,
                                  preferTags, obtainedCredits, db_alias=dbms)

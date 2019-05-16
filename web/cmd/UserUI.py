@@ -5,7 +5,7 @@
 # @Email   : Gahon1995@gmail.com
 from service.user_service import UserService
 from utils.func import show_next, get_dbms_by_region
-from utils.consts import DBMS
+from Config import DBMS
 import json
 
 

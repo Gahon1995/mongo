@@ -1,6 +1,5 @@
 from mongoengine import *
 from db.mongodb import BaseDB
-from utils.consts import Region
 
 
 class User(BaseDB):

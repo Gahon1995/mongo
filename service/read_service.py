@@ -45,7 +45,7 @@ class ReadService(object):
 
         user = UserService().get_user_by_uid(int(uid))
         _id = ReadService.get_id()
-        rid = get_id_by_region(_id, user.region)
+        rid = get_uid_by_region(_id, user.region)
 
         new_read = None
         for dbms in get_dbms_by_uid(uid):

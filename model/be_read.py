@@ -8,10 +8,6 @@ from datetime import datetime
 from mongoengine import *
 
 from db.mongodb import BaseDB
-from model.article import Article
-from model.user import User
-
-from utils.consts import Category
 
 
 class BeRead(BaseDB):

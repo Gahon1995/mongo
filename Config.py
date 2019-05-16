@@ -34,3 +34,36 @@ class Config(object):
     redis_host = '127.0.0.1'
     redis_port = 6379
     redis_password = ''
+
+
+class DBMS:
+    DBMS1 = 'DBMS1'
+    DBMS2 = 'DBMS2'
+    DBMS3 = 'DBMS3'
+
+    all = [DBMS1, DBMS2]
+
+    db_name = 'mongo'
+
+    configs = {
+        DBMS1: {
+            'host': '127.0.0.1',
+            'port': 27017
+        },
+        DBMS2: {
+            'host': '127.0.0.1',
+            'port': 27018
+        },
+    }
+
+    region = {
+        'values': ['Beijing', 'Hong Kong'],
+        'Beijing': [DBMS1],
+        'Hong Kong': [DBMS2]
+    }
+
+    category = {
+        'values': ['science', 'technology'],
+        'science': [DBMS1, DBMS2],
+        'technology': [DBMS2]
+    }

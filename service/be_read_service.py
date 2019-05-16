@@ -39,7 +39,7 @@ class BeReadService(object):
     def add_be_read_record(read, user):
 
         _id = BeReadService.get_be_id()
-        bid = get_id_by_region(_id, user.region)
+        bid = get_uid_by_region(_id, user.region)
 
         article = ArticleService.get_article_by_aid(read.aid)
 

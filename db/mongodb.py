@@ -127,26 +127,37 @@ class BaseDB(Document):
             return int(obj.__getattribute__(_id)) + 1
 
 
+from Config import Config, DBMS
+
+
 def init_connect():
     """
         初始化mongo连接， 不传参数则从Config文件中读取
         默认连接北京节点，然后分别注册两个节点的信息
     :return:
     """
-    from Config import Config
-    from utils.consts import DBMS
+
+    # from utils.consts import DBMS
     # tz_aware=True 设置时区修正，mongoDB的时区默认为UTC0，需要加上这个加入时区信息
     connect(Config.mongo_db_name, host=Config.bj_mongo_host, port=Config.bj_mongo_port, tz_aware=True)
+
+    for dbms in DBMS.all:
+        register_connection(alias=dbms, db=DBMS.db_name, host=DBMS.configs[dbms]['host'],
+                            port=DBMS.configs[dbms]['port'],
+                            tz_aware=True)
+
     # connect(Config.mongo_db_name)
-    register_connection(alias=DBMS.DBMS1, db=Config.mongo_db_name, host=Config.bj_mongo_host,
-                        port=Config.bj_mongo_port,
-                        tz_aware=True)
-    register_connection(alias=DBMS.DBMS2, db=Config.mongo_db_name, host=Config.hk_mongo_host,
-                        port=Config.hk_mongo_port, tz_aware=True)
+    # register_connection(alias=DBMS.DBMS1, db=Config.mongo_db_name, host=Config.bj_mongo_host,
+    #                     port=Config.bj_mongo_port,
+    #                     tz_aware=True)
+    # register_connection(alias=DBMS.DBMS2, db=Config.mongo_db_name, host=Config.hk_mongo_host,
+    #                     port=Config.hk_mongo_port, tz_aware=True)
 
 
 from utils.func import DbmsAliasError
-from utils.consts import DBMS
+
+
+# from utils.consts import DBMS
 
 
 def switch_mongo_db(cls, default_db=None):
@@ -157,8 +168,8 @@ def switch_mongo_db(cls, default_db=None):
                 db_alias = kwargs.get('db_alias')
                 if db_alias is None:
                     db_alias = default_db
-                if not (db_alias == DBMS.DBMS1 or db_alias == DBMS.DBMS2):
-                    raise DbmsAliasError('db_alias error, {}'.format(db_alias))
+                if db_alias not in DBMS.all:
+                    raise DbmsAliasError('db_alias error, {} , all:{}'.format(db_alias, DBMS.all))
                 # print("switch db: cls={0}, db_alias={1}".format(cls.__name__, db_alias))
                 logger.debug("switch db: cls={0}, db_alias={1}".format(cls.__name__, db_alias))
                 with switch_db(cls, db_alias):
