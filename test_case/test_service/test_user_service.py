@@ -43,10 +43,10 @@ class TestUserService(TestBase):
         assert user is not None
         print(user)
 
-        admin = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS2)
+        admin = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS1)
         assert admin is None
 
-        admin = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS1)
+        admin = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS2)
         assert admin is not None
         print(admin)
 
@@ -71,7 +71,7 @@ class TestUserService(TestBase):
         assert user is None
 
     def test_update(self):
-        user = UserService().update_by_uid(6, gender='female', email='ewrqwr')
+        user = UserService().update_by_uid(8, gender='female', email='ewrqwr')
         assert user is not None
         print(user)
 

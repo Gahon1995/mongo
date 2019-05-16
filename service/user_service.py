@@ -4,7 +4,9 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 from model.user import User
+from model.ids import Ids
 from db.mongodb import switch_mongo_db
+from service.ids_service import IdsService
 from utils.func import *
 import logging
 
@@ -23,13 +25,14 @@ class UserService(object):
         """
         return hasattr(User, key)
 
-    def get_uid(self, region):
+    def get_uid(self):
         """
             通过region来获取当前region所对应的数据库的下一个id应该是啥
-        :param region: 地区，该参数需要和consts 类中Region所对应的值相等
+        # :param region: 地区，该参数需要和consts 类中Region所对应的值相等
         :return:
         """
-        return self.__uid(db_alias=get_best_dbms_by_region(region))
+        # return self.__uid(db_alias=get_best_dbms_by_region(region))
+        return IdsService().next_id('uid')
 
     @switch_mongo_db(cls=User)
     def __uid(self, db_alias=None):
@@ -61,12 +64,14 @@ class UserService(object):
             return False, '用户名已存在'
         re = False, ''
 
-        uid = get_uid_by_region(self.get_uid(region), region)
+        uid = get_id_by_region(self.get_uid(), region)
         for dbms in get_dbms_by_region(region):
             re = self.__register(uid, name, pwd, gender, email, phone, dept, grade, language, region, role,
                                  preferTags, obtainedCredits, timestamp, db_alias=dbms)
             if not re[0]:
                 break
+        if re:
+            IdsService().set_id('uid', uid)
         return re
 
     @switch_mongo_db(cls=User)

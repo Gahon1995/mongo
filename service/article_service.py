@@ -6,6 +6,7 @@
 
 from model.article import Article
 from db.mongodb import switch_mongo_db
+from service.ids_service import IdsService
 
 from utils.func import *
 import logging
@@ -18,10 +19,11 @@ class ArticleService(object):
         self.logger = logging.getLogger('ArticleService')
 
     def get_id(self):
-        _id = -1
-        for dbms in DBMS.all:
-            _id = max(self.__id(dbms), _id)
-        return _id
+        # _id = -1
+        # for dbms in DBMS.all:
+        #     _id = max(self.__id(dbms), _id)
+        # return _id
+        return IdsService().next_id('aid')
 
     @switch_mongo_db(cls=Article, default_db=DBMS.DBMS2)
     def __id(self, db_alias=None):
@@ -71,18 +73,20 @@ class ArticleService(object):
 
     def add_an_article(self, title, authors, category, abstract, articleTags, language, text, image=None,
                        video=None, timestamp=None):
+        aid = get_id_by_category(self.get_id(), category)
         for dbms in get_dbms_by_category(category):
-            self.__add_an_article(title, authors, category, abstract, articleTags, language, text, image,
+            self.__add_an_article(aid, title, authors, category, abstract, articleTags, language, text, image,
                                   video, timestamp, db_alias=dbms)
+        IdsService().set_id('aid', aid)
         return True
 
     @switch_mongo_db(cls=Article)
-    def __add_an_article(self, title, authors, category, abstract, articleTags, language, text, image=None,
+    def __add_an_article(self, aid, title, authors, category, abstract, articleTags, language, text, image=None,
                          video=None, timestamp=None, db_alias=None):
 
         check_alias(db_alias)
         article = Article()
-        article.aid = get_id_by_category(self.get_id(), category)
+        article.aid = aid
         article.title = title
         article.authors = authors
         article.category = category

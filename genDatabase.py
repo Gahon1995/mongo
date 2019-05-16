@@ -1,4 +1,6 @@
 from random import random
+
+from Config import DBMS
 from service.user_service import UserService
 from service.article_service import ArticleService
 from service.read_service import ReadService
@@ -120,27 +122,21 @@ def gen_users():
 
 
 def gen_articles():
-    from model.article import Article
-    Article.delete_by()
     for i in range(ARTICLES_NUM):
         # print_bar(i, ARTICLES_NUM)
         data = gen_an_article(i)
-        ArticleService.add_an_article(title=data['title'], authors=data['authors'], category=data['category'],
-                                      abstract=data['abstract'], articleTags=data['articleTags'],
-                                      language=data['language'], text=data['text'], image=data['image'],
-                                      video=data['video'], timestamp=timestamp_to_datetime(data['timestamp']))
+        ArticleService().add_an_article(title=data['title'], authors=data['authors'], category=data['category'],
+                                        abstract=data['abstract'], articleTags=data['articleTags'],
+                                        language=data['language'], text=data['text'], image=data['image'],
+                                        video=data['video'], timestamp=timestamp_to_datetime(data['timestamp']))
 
 
 def gen_reads():
-    from model.read import Read
-    from model.be_read import BeRead
-    Read.delete_by()
-    BeRead.delete_by()
     for i in range(READS_NUM):
         # print_bar(i, READS_NUM)
         data = gen_an_read(i)
 
-        article = ArticleService.get_an_article(title='title' + data['aid'])
+        article = ArticleService().get_articles_by_title(title='title' + data['aid'], db_alias=DBMS.DBMS2)[0]
 
         name = 'user' + data['uid'] if data['uid'] != '0' else 'admin'
         user = UserService().get_user_by_name(name=name)

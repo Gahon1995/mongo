@@ -260,7 +260,7 @@ def get_best_dbms_by_category(category):
     return get_dbms_by_category(category)[0]
 
 
-def get_uid_by_region(_id, region):
+def get_id_by_region(_id, region):
     """
         通过region字段来计算正确的id
         目前bj地区默认为偶数，hk为奇数

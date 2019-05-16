@@ -6,10 +6,12 @@
 
 
 from model.be_read import BeRead
+from model.ids import Ids
 
 from db.mongodb import switch_mongo_db
 import logging
 
+from service.ids_service import IdsService
 from utils.func import *
 
 from service.article_service import ArticleService
@@ -27,7 +29,8 @@ class BeReadService(object):
 
     @staticmethod
     def get_be_id():
-        return max(BeReadService.__be_id(DBMS.DBMS1), BeReadService.__be_id(DBMS.DBMS2))
+        return IdsService().next_id('bid')
+        # return max(BeReadService.__be_id(DBMS.DBMS1), BeReadService.__be_id(DBMS.DBMS2))
 
     @staticmethod
     @switch_mongo_db(cls=BeRead, default_db=DBMS.DBMS2)
@@ -39,9 +42,9 @@ class BeReadService(object):
     def add_be_read_record(read, user, timestamp=None):
 
         _id = BeReadService.get_be_id()
-        bid = get_uid_by_region(_id, user.region)
+        bid = get_id_by_region(_id, user.region)
 
-        article = ArticleService.get_article_by_aid(read.aid)
+        article = ArticleService().get_article_by_aid(read.aid)
 
         for dbms in get_dbms_by_category(article.category):
             record = BeReadService.get_by_aid(read.aid, db_alias=dbms)
@@ -51,6 +54,7 @@ class BeReadService(object):
                 record.bid = bid
                 record.timestamp = timestamp or datetime.datetime.utcnow()
             BeReadService.save_new_be_read(record, read, user.uid, db_alias=dbms)
+        IdsService().set_id('bid', bid)
 
     @staticmethod
     @switch_mongo_db(cls=BeRead)

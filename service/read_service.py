@@ -7,6 +7,8 @@ from bson import ObjectId
 import datetime
 
 from model.read import Read
+from model.ids import Ids
+from service.ids_service import IdsService
 from utils.func import *
 from db.mongodb import switch_mongo_db
 import logging
@@ -21,10 +23,11 @@ class ReadService(object):
 
     @staticmethod
     def get_id():
-        _id = -1
-        for dbms in DBMS.all:
-            _id = max(ReadService.__id(db_alias=dbms), _id)
-        return _id
+        # _id = -1
+        # for dbms in DBMS.all:
+        #     _id = max(ReadService.__id(db_alias=dbms), _id)
+        # return _id
+        return IdsService().next_id('rid')
 
     @staticmethod
     @switch_mongo_db(cls=Read)
@@ -45,7 +48,7 @@ class ReadService(object):
 
         user = UserService().get_user_by_uid(int(uid))
         _id = ReadService.get_id()
-        rid = get_uid_by_region(_id, user.region)
+        rid = get_id_by_region(_id, user.region)
 
         new_read = None
         for dbms in get_dbms_by_uid(uid):
@@ -53,7 +56,7 @@ class ReadService(object):
                                                commentDetail,
                                                agreeOrNot,
                                                shareOrNot, timestamp, db_alias=dbms)
-
+        IdsService().set_id('rid', rid)
         BeReadService.add_be_read_record(new_read, user, timestamp)
 
     @staticmethod
