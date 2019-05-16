@@ -7,7 +7,7 @@
 import functools
 import json
 import pytz
-from datetime import datetime, date
+import datetime
 
 from mongoengine.base import BaseDocument
 
@@ -49,9 +49,9 @@ def utc_2_local(t):
 # 使json能够转化datetime对象
 class DateEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, datetime):
+        if isinstance(obj, datetime.datetime):
             return utc_2_local(obj).strftime('%Y-%m-%d %H:%M:%S')
-        elif isinstance(obj, date):
+        elif isinstance(obj, datetime.date):
             return obj.strftime("%Y-%m-%d")
         else:
             return json.JSONEncoder.default(self, obj)

@@ -44,21 +44,21 @@ class PopularService(object):
     @staticmethod
     @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
     def update_daily_rank(db_alias=DBMS.DBMS1):
-        rank = PopularService.get_daily_rank()
+        rank = PopularService.get_daily_rank(datetime.date.today())
         articles = ReadService.get_daily_popular(datetime.date.today())
         PopularService._update_rank(rank, articles, 'daily')
 
     @staticmethod
     @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
     def update_weekly_rank(db_alias=DBMS.DBMS1):
-        rank = PopularService.get_weekly_rank()
+        rank = PopularService.get_weekly_rank(datetime.date.today())
         articles = ReadService.get_weekly_popular(datetime.date.today())
         PopularService._update_rank(rank, articles, 'weekly')
 
     @staticmethod
     @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
     def update_monthly_rank(db_alias=DBMS.DBMS1):
-        rank = PopularService.get_monthly_rank()
+        rank = PopularService.get_monthly_rank(datetime.date.today())
         articles = ReadService.get_month_popular(datetime.date.today())
         PopularService._update_rank(rank, articles, 'monthly')
 

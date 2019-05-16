@@ -22,7 +22,7 @@ class Popular(BaseDB):
 
     # default id _id
     temporalGranularity = StringField(max_length=7, choices=temporalChoices)
-    articleAidList = ListField(IntField(required=False), default=None)
+    articleAidList = ListField(IntField(required=False), default=list())
     update_time = DateField(required=True, default=datetime.today)
 
     # timestamp = DateTimeField(default=datetime.now)
