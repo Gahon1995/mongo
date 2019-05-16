@@ -3,6 +3,8 @@ from service.user_service import UserService
 from service.article_service import ArticleService
 from service.read_service import ReadService
 
+from utils.consts import Region, Gender, Category
+
 # USERS_NUM = 10000
 # ARTICLES_NUM = 200000
 # READS_NUM = 1000000
@@ -29,13 +31,13 @@ def gen_an_user(i):
     user["uid"] = str(i)
     user["name"] = "user%d" % i if i != 0 else "admin"
     user["pwd"] = "password" if i != 0 else "admin"
-    user["gender"] = "male" if random() > 0.33 else "female"
+    user["gender"] = Gender.male if random() > 0.33 else Gender.female
     user["email"] = "email%d" % i
     user["phone"] = "phone%d" % i
     user["dept"] = "dept%d" % int(random() * 20)
     user["grade"] = "grade%d" % int(random() * 4 + 1)
     user["language"] = "en" if random() > 0.8 else "zh"
-    user["region"] = "Beijing" if random() > 0.4 else "Hong Kong"
+    user["region"] = Region.bj if random() > 0.4 else Region.hk
     user["role"] = "role%d" % int(random() * 3)
     user["preferTags"] = "tags%d" % int(random() * 50)
     user["obtainedCredits"] = str(int(random() * 100))
@@ -54,7 +56,7 @@ def gen_an_article(i):
     article["timestamp"] = str(timeBegin + i)
     article["aid"] = str(i)
     article["title"] = "title%d" % i
-    article["category"] = "science" if random() > 0.55 else "technology"
+    article["category"] = Category.science if random() > 0.55 else Category.technology
     article["abstract"] = "abstract of article %d" % i
     article["articleTags"] = "tags%d" % int(random() * 50)
     article["authors"] = "author%d" % int(random() * 2000)
@@ -112,7 +114,7 @@ def gen_users():
     from model.user import User
     User.delete_by()
     for i in range(USERS_NUM):
-        print_bar(i, USERS_NUM)
+        # print_bar(i, USERS_NUM)
         data = gen_an_user(i)
         UserService.register(data['name'], data['pwd'], data['gender'], data['email'], data['phone'], data['dept'],
                              data['grade'], data['language'], data['region'], data['role'], data['preferTags'],
@@ -123,7 +125,7 @@ def gen_articles():
     from model.article import Article
     Article.delete_by()
     for i in range(ARTICLES_NUM):
-        print_bar(i, ARTICLES_NUM)
+        # print_bar(i, ARTICLES_NUM)
         data = gen_an_article(i)
         ArticleService.add_an_article(title=data['title'], authors=data['authors'], category=data['category'],
                                       abstract=data['abstract'], articleTags=data['articleTags'],
@@ -137,29 +139,24 @@ def gen_reads():
     Read.delete_by()
     BeRead.delete_by()
     for i in range(READS_NUM):
-        print_bar(i, READS_NUM)
+        # print_bar(i, READS_NUM)
         data = gen_an_read(i)
+
         article = ArticleService.get_an_article(title='title' + data['aid'])
+
         name = 'user' + data['uid'] if data['uid'] != '0' else 'admin'
-        user = UserService.get_an_user(name=name)
-        new_read = Read()
-        new_read.aid = article
-        new_read.uid = user
-        new_read.readOrNot = int(data['readOrNot'])
-        new_read.readTimeLength = int(data['readTimeLength'])
-        new_read.readSequence = int(data['readSequence'])
-        new_read.commentOrNot = int(data['commentOrNot'])
-        new_read.commentDetail = data['commentDetail']
-        new_read.agreeOrNot = int(data['agreeOrNot'])
-        new_read.shareOrNot = int(data['shareOrNot'])
-        ReadService.save_new_read(new_read)
-        del new_read
+        user = UserService.get_user_by_name(name=name)
+
+        ReadService.save_read(article.aid, user.uid, int(data['readOrNot']), int(data['readTimeLength']),
+                              int(data['readSequence']), int(data['commentOrNot']),
+                              data['commentDetail'], int(data['agreeOrNot']), int(data['shareOrNot']))
+        # time.sleep(1)
 
 
 def main():
-    from mongoengine import connect
+    # from mongoengine import connect
     # host = '127.0.0.1'
-    # connect('mongo', host=host, port=30001)
+    # connect('mongo-new', host=host, port=27017)
     from main import init
     init()
 

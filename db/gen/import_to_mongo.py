@@ -64,7 +64,7 @@ def read():
             data = json.loads(line)
             article = ArticleService.get_an_article(title='title' + data['aid'])
             name = 'user' + data['uid'] if data['uid'] != 0 else 'admin'
-            user = UserService.get_an_user(name=name)
+            user = UserService.get_user_by_name(name=name)
             new_read = Read()
             new_read.aid = article
             new_read.uid = user
@@ -75,7 +75,7 @@ def read():
             new_read.commentDetail = data['commentDetail']
             new_read.agreeOrNot = int(data['agreeOrNot'])
             new_read.shareOrNot = int(data['shareOrNot'])
-            ReadService.save_new_read(new_read)
+            ReadService.save_read(new_read)
 
             i += 1
             print_bar(i, READS_NUM)

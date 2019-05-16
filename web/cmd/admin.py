@@ -3,14 +3,14 @@
 # @Time    : 2019-04-28 23:31
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
-from controller.user_controller import UserController
+from service.user_service import UserService
 from web.cmd.UserUI import UserUI
 from web.cmd.ArticleUI import article_manage
 
 
 def login_by_admin(username, password):
     if username == 'admin' and password is not None:
-        admin = UserController.login(username, password)
+        admin = UserService.login(username, password)
         if admin is not None:
             return admin_manage(admin)
     print("用户名或密码错误，请重新输入")

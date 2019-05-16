@@ -9,7 +9,7 @@ import logging
 from db.mongodb import init_connect
 from web.cmd.command_ui import menu
 
-import Config
+from Config import Config
 
 
 def init():

@@ -3,7 +3,7 @@
 # @Time    : 2019-05-03 16:05
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
-from datetime import date
+from datetime import datetime
 
 from mongoengine import *
 
@@ -16,15 +16,14 @@ temporalChoices = ('daily', 'weekly', 'monthly')
 class Popular(BaseDB):
     meta = {
         'indexes': [
-            'temporalGranularity',
-            'update_time'
+            'temporalGranularity'
         ]
     }
 
     # default id _id
     temporalGranularity = StringField(max_length=7, choices=temporalChoices)
-    articleAidList = ListField(ReferenceField(Article, reverse_delete_rule=NULLIFY))
-    update_time = DateField(default=date.today)
+    articleAidList = ListField(IntField(required=False), default=None)
+    update_time = DateField(required=True, default=datetime.today)
 
     # timestamp = DateTimeField(default=datetime.now)
     @property

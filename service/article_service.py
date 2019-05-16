@@ -5,6 +5,10 @@
 # @Email   : Gahon1995@gmail.com
 
 from model.article import Article
+from db.mongodb import switch_mongo_db
+from utils.consts import DBMS, Category
+from utils.func import *
+from datetime import datetime
 import logging
 
 logger = logging.getLogger('ArticleService')
@@ -13,16 +17,40 @@ logger = logging.getLogger('ArticleService')
 class ArticleService(object):
 
     @staticmethod
-    def get_size(**kwargs):
+    def get_id():
+        _id = -1
+        for dbms in DBMS.all:
+            _id = max(ArticleService.__id(dbms), _id)
+        return _id
+
+    @staticmethod
+    @switch_mongo_db(cls=Article, default_db=DBMS.DBMS2)
+    def __id(db_alias=None):
+        check_alias(db_alias)
+        return Article.get_id('aid')
+
+    @staticmethod
+    @switch_mongo_db(cls=Article, default_db=DBMS.DBMS2)
+    def count(db_alias=DBMS.DBMS2, **kwargs):
+        check_alias(db_alias)
         return Article.count(**kwargs)
 
     @staticmethod
-    def search_by_title(name):
-        # TODO 测试该方法是否有用
-        return Article.objects(title__contains=name)
+    @switch_mongo_db(cls=Article, default_db=DBMS.DBMS2)
+    def search_by_title(title, db_alias=DBMS.DBMS2) -> list:
+        """
+            因为DBMS2上存有所有的文章，所以默认直接在DBMS2上搜索就行
+            # TODO 测试该方法是否有用
+        :param title:
+        :param db_alias:
+        :return: list, 里边存的article
+        """
+        check_alias(db_alias)
+        return Article.objects(title__contains=title)
 
     @staticmethod
-    def add_an_article(title, authors, category, abstract, articleTags, language, text, image=None, video=None):
+    def add_an_article(title, authors, category, abstract, articleTags, language, text, image=None,
+                       video=None):
         article = Article()
         article.title = title
         article.authors = authors
@@ -33,50 +61,77 @@ class ArticleService(object):
         article.text = text
         article.image = image
         article.video = video
+        article.update_time = datetime.utcnow()
 
-        if article.save() is not None:
-            logger.info('文章"{}"保存成功'.format(title))
+        article.aid = get_id_by_category(ArticleService.get_id(), category)
 
+        for dbms in get_dbms_by_category(category):
+            ArticleService.save_article(article, db_alias=dbms)
+            article.id = None
         pass
 
     @staticmethod
-    def del_by_id(_id, **kwargs):
+    @switch_mongo_db(cls=Article)
+    def save_article(article, db_alias=None):
+        check_alias(db_alias)
+        if article.save() is not None:
+            logger.info('文章"{}"保存成功'.format(article.title))
+            return True
+        return False
+
+    @staticmethod
+    @switch_mongo_db(cls=Article)
+    def del_by_id(_id, db_alias=None, **kwargs):
+        check_alias(db_alias)
         article = Article.get(id=_id, **kwargs)
+        ArticleService.del_article(article, db_alias=db_alias)
+
+    @staticmethod
+    @switch_mongo_db(cls=Article)
+    def del_article(article, db_alias=None):
+        check_alias(db_alias)
         if article is not None:
             article.delete()
-            # return True
         return True
 
     @staticmethod
-    def del_article(article):
-        article.delete()
-
-    @staticmethod
-    def articles_list(page_num=1, page_size=20, **kwargs):
+    @switch_mongo_db(cls=Article, default_db=DBMS.DBMS2)
+    def articles_list(page_num=1, page_size=20, db_alias=DBMS.DBMS2, **kwargs):
+        check_alias(db_alias)
         return Article.list_by_page(page_num, page_size, **kwargs)
 
     @staticmethod
-    def get_an_article(**kwargs):
-        return Article.get(**kwargs)
+    @switch_mongo_db(cls=Article, default_db=DBMS.DBMS2)
+    def get_an_article(db_alias=DBMS.DBMS2, **kwargs):
+        check_alias(db_alias)
+        return Article.objects(**kwargs).first()
 
     @staticmethod
-    def get_an_article_by_id(aid):
-        return Article.get(id=aid)
+    def get_article_by_aid(aid):
+        # TODO 修改实现方法
+        return ArticleService.get_an_article(aid=aid)
+
+    @staticmethod
+    @switch_mongo_db(cls=Article)
+    def get_an_article_by_id(_id, db_alias=None):
+        check_alias(db_alias)
+        return Article.objects(id=_id).first()
 
     @staticmethod
     def update_an_article(article, condition: dict):
-        from datetime import datetime
-        forbid = ("id", "_id", 'update_time')
+        forbid = ("id", "_id", 'update_time', 'aid')
         for key, value in condition.items():
             if key not in forbid and hasattr(article, key):
                 setattr(article, key, value)
         article.update_time = datetime.utcnow()
-        article.save()
-        return True
+        for dbms in get_dbms_by_category(article.category):
+            ArticleService.save_article(article, db_alias=dbms)
 
     @staticmethod
-    def update_by_id(_id, condition):
-        article = Article.get(id=_id)
+    @switch_mongo_db(cls=Article, default_db=DBMS.DBMS2)
+    def update_by_id(_id, condition, db_alias=DBMS.DBMS2):
+        check_alias(db_alias)
+        article = Article.objects(id=_id).first()
         ArticleService.update_an_article(article, condition)
 
     @staticmethod

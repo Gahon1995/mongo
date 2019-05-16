@@ -5,10 +5,13 @@ from datetime import datetime
 from .user import User
 from .article import Article
 
+from utils.consts import Region
+
 
 class Read(BaseDB):
     meta = {
         'indexes': [
+            'rid',
             'uid',
             'aid',
             ('aid', 'uid'),
@@ -19,8 +22,9 @@ class Read(BaseDB):
         ]
     }
 
-    uid = ReferenceField(User, required=True, reverse_delete_rule=NULLIFY)
-    aid = ReferenceField(Article, required=True, reverse_delete_rule=NULLIFY)
+    rid = IntField(required=True, unique=True)
+    uid = IntField(required=True)
+    aid = IntField(required=True)
     readOrNot = IntField(default=1)
     readTimeLength = IntField(default=0)
     readSequence = IntField(default=1)
