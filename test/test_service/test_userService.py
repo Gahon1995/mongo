@@ -4,9 +4,9 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 
-from test_case.base_test import TestBase
+from test.test_base import TestBase
 from service.user_service import UserService
-from Config import DBMS
+from config import DBMS
 
 
 class TestUserService(TestBase):

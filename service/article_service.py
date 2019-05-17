@@ -10,15 +10,17 @@ from service.ids_service import IdsService
 
 from utils.func import *
 import logging
-from Config import DBMS
+from config import DBMS
 
 
+@singleton
 class ArticleService(object):
 
     def __init__(self):
         self.logger = logging.getLogger('ArticleService')
 
-    def get_id(self):
+    @staticmethod
+    def get_id():
         # _id = -1
         # for dbms in DBMS.all:
         #     _id = max(self.__id(dbms), _id)

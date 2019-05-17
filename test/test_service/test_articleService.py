@@ -4,9 +4,9 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 
-from test_case.base_test import TestBase
-from service.article_service import ArticleService, Article
-from Config import DBMS
+from test.test_base import TestBase
+from service.article_service import ArticleService
+from config import DBMS
 
 
 class TestBaseArticleService(TestBase):
@@ -36,7 +36,7 @@ class TestBaseArticleService(TestBase):
 
         articles = ArticleService().get_articles_by_title('test', db_alias=DBMS.DBMS2)
         ArticleService().pretty_articles(articles)
-        
+
     def test_del_article(self):
         # re = ArticleService().del_by_aid(308)
         # assert re

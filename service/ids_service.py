@@ -5,7 +5,7 @@
 # @Email   : Gahon1995@gmail.com
 
 from model.ids import Ids
-from Config import DBMS
+from config import DBMS
 from db.mongodb import switch_mongo_db
 from utils.func import check_alias
 import logging

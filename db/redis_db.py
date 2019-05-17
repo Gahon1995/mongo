@@ -6,7 +6,7 @@
 import pickle
 
 from redis import Redis as PyRedis
-from Config import Config
+from config import Config
 from utils.func import singleton, available_value
 
 

@@ -293,7 +293,7 @@ def show_history_admin(total, page_num=1, page_size=20, **kwargs):
     # TODO 展示历史阅读数据
     #       根据Read 表的数据展示当前用户的阅读历史
     #       目前只展示DBMS1里边的阅读数据
-    reads = ReadService.reads_list(page_num, page_size, db_alias=DBMS.DBMS2)
+    reads = ReadService.get_reads(page_num, page_size, db_alias=DBMS.DBMS2)
     for index, read in enumerate(reads):
         x.add_row((index, read.aid.title, read.uid.name, read.readTimeLength, read.readSequence,
                    read.agreeOrNot, read.commentOrNot, read.shareOrNot, read.commentDetail, read.create_time))

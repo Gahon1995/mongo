@@ -1,6 +1,6 @@
 from random import random
 
-from Config import DBMS
+from config import DBMS
 from service.user_service import UserService
 from service.article_service import ArticleService
 from service.read_service import ReadService
@@ -141,10 +141,10 @@ def gen_reads():
         name = 'user' + data['uid'] if data['uid'] != '0' else 'admin'
         user = UserService().get_user_by_name(name=name)
 
-        ReadService.save_read(article.aid, user.uid, int(data['readOrNot']), int(data['readTimeLength']),
-                              int(data['readSequence']), int(data['commentOrNot']),
-                              data['commentDetail'], int(data['agreeOrNot']), int(data['shareOrNot']),
-                              timestamp=timestamp_to_datetime(data["timestamp"]))
+        ReadService().save_read(article.aid, user.uid, int(data['readOrNot']), int(data['readTimeLength']),
+                                int(data['readSequence']), int(data['commentOrNot']),
+                                data['commentDetail'], int(data['agreeOrNot']), int(data['shareOrNot']),
+                                timestamp=timestamp_to_datetime(data["timestamp"]))
         # time.sleep(1)
 
 

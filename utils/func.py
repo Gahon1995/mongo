@@ -12,7 +12,7 @@ import time
 
 from mongoengine.base import BaseDocument
 
-from Config import DBMS
+from config import DBMS
 
 
 def singleton(cls):
@@ -186,6 +186,11 @@ def sort_dict(data: dict) -> list:
     return sorted(data.items(), key=lambda item: item[1], reverse=True)
 
 
+def sort_dict_in_list(data: list, sort_by, reverse=True):
+    from operator import itemgetter
+    return sorted(data, key=itemgetter(sort_by), reverse=reverse)
+
+
 # 工具类简单，如果是字节，转成str
 def bytes_to_str(s, encoding='utf-8'):
     """Returns a str if a bytes object is given."""
@@ -340,6 +345,11 @@ def timestamp_to_datetime(timestamp):
         return datetime.datetime.fromtimestamp(timestamp / 1000, tz=tz)
     else:
         return datetime.datetime.fromtimestamp(timestamp, tz=tz)
+
+
+def date_to_datetime(_date):
+    if isinstance(_date, datetime.date):
+        return datetime.datetime.strptime(str("{}-{}-{}".format(_date.year, _date.month, _date.day + 1)), '%Y-%m-%d')
 
 
 def datetime_to_timestamp(_date: datetime):

@@ -8,7 +8,7 @@ from model.popular import Popular
 from service.read_service import ReadService
 from db.mongodb import switch_mongo_db
 import datetime
-from Config import DBMS
+from config import DBMS
 
 
 class PopularService(object):

@@ -127,7 +127,7 @@ class BaseDB(Document):
             return int(obj.__getattribute__(_id)) + 1
 
 
-from Config import Config, DBMS
+from config import Config, DBMS
 
 
 def init_connect():
@@ -160,14 +160,17 @@ from utils.func import DbmsAliasError
 # from utils.consts import DBMS
 
 
-def switch_mongo_db(cls, default_db=None):
+def switch_mongo_db(cls, default_db=None, allow_None=False):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+
             try:
                 db_alias = kwargs.get('db_alias')
                 if db_alias is None:
                     db_alias = default_db
+                    if allow_None:
+                        return func(*args, **kwargs)
                 if db_alias not in DBMS.all:
                     raise DbmsAliasError('db_alias error, {} , all:{}'.format(db_alias, DBMS.all))
                 # print("switch db: cls={0}, db_alias={1}".format(cls.__name__, db_alias))
