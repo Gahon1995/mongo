@@ -15,6 +15,8 @@ logger = logging.getLogger('userService')
 
 @singleton
 class UserService(object):
+    field_names = ['id', 'name', 'pwd', 'gender', 'email', 'phone', 'dept', 'grade',
+                   'language', 'region', 'role', 'preferTags', 'obtainedCredits', 'create_time']
 
     @staticmethod
     def hasattr(key):
@@ -289,16 +291,7 @@ class UserService(object):
 
     @staticmethod
     def pretty_users(users):
-        from prettytable import PrettyTable
-
-        x = PrettyTable()
-        field_names = ['id', 'name', 'pwd', 'gender', 'email', 'phone', 'dept', 'grade',
-                       'language', 'region', 'role', 'preferTags', 'obtainedCredits', 'create_time']
-        x.field_names = field_names
-        for user in users:
-            x.add_row(list(user.__getattribute__(key) for key in field_names))
-
-        print(x)
+        pretty_models(users, UserService.field_names)
     # ============================= 待调整     =======================
 
     # @staticmethod

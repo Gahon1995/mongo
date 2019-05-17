@@ -6,7 +6,6 @@
 
 
 from model.be_read import BeRead
-from model.ids import Ids
 
 from db.mongodb import switch_mongo_db
 import logging
@@ -19,49 +18,69 @@ from service.article_service import ArticleService
 logger = logging.getLogger('ReadService')
 
 
+@singleton
 class BeReadService(object):
+    field_names = ['bid', "aid", "readNum", "readUidList", "commentNum", "commentUidList", "agreeNum", "agreeUidList",
+                   "shareNum", "shareUidList", "timestamp", "last_update_time"]
 
     @staticmethod
-    @switch_mongo_db(cls=BeRead)
-    def get_by_aid(aid, db_alias=None):
-        check_alias(db_alias)
-        return BeRead.get(aid=aid)
-
-    @staticmethod
-    def get_be_id():
+    def get_bid():
         return IdsService().next_id('bid')
         # return max(BeReadService.__be_id(DBMS.DBMS1), BeReadService.__be_id(DBMS.DBMS2))
 
-    @staticmethod
-    @switch_mongo_db(cls=BeRead, default_db=DBMS.DBMS2)
-    def __be_id(db_alias=None):
-        check_alias(db_alias)
-        return BeRead.get_id('bid')
+    @switch_mongo_db(cls=BeRead, allow_None=True)
+    def get_by_aid(self, aid, db_alias=None):
+        if db_alias is None:
+            return self.get_by_aid(aid, db_alias=get_best_dbms_by_aid(aid))
+        else:
+            check_alias(db_alias)
+            return BeRead.get(aid=aid)
 
-    @staticmethod
-    def add_be_read_record(aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, region, timestamp=None):
+    @switch_mongo_db(cls=BeRead, allow_None=True)
+    def get_by_bid(self, bid, db_alias=None):
+        if db_alias is None:
+            be_read = None
+            for dbms in DBMS.all:
+                be_read = self.get_by_bid(bid, db_alias=dbms)
+                if be_read is not None:
+                    break
+            return be_read
+        else:
+            check_alias(db_alias)
+            return BeRead.get(bid=bid)
 
-        _id = BeReadService.get_be_id()
-        bid = get_id_by_region(_id, region)
+    # @switch_mongo_db(cls=BeRead)
+    # def __be_id(self, db_alias=None):
+    #     check_alias(db_alias)
+    #     return BeRead.get_id('bid')
 
+    def add_be_read_record(self, aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp=None):
+
+        _id = self.get_bid()
         article = ArticleService().get_article_by_aid(aid)
+        if article is None:
+            return None
+        bid = get_id_by_category(_id, article.category)
 
+        be_read = None
         for dbms in get_dbms_by_category(article.category):
-            BeReadService.save_new_be_read(bid, aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot,
-                                           timestamp, db_alias=dbms)
+            logger.info("save be read to : {} uid: {}".format(dbms, uid))
+            be_read = self.__save_be_read(bid, aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot,
+                                          timestamp, db_alias=dbms)
         IdsService().set_id('bid', bid)
+        return be_read
 
-    @staticmethod
     @switch_mongo_db(cls=BeRead)
-    def save_new_be_read(bid, aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp=None, db_alias=None):
+    def __save_be_read(self, bid, aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp=None,
+                       db_alias=None):
         check_alias(db_alias)
 
-        be_read = BeReadService.get_by_aid(aid, db_alias=db_alias)
+        be_read = self.get_by_aid(aid, db_alias=db_alias)
         if be_read is None:
             be_read = BeRead()
             be_read.aid = aid
             be_read.bid = bid
-            be_read.timestamp = timestamp or datetime.datetime.utcnow()
+            be_read.timestamp = timestamp or get_timestamp()
 
         if readOrNot:
             be_read.readNum += 1
@@ -82,3 +101,24 @@ class BeReadService(object):
 
         be_read.last_update_time = datetime.datetime.utcnow()
         be_read.save()
+
+    def get_total_popular(self, top_n=20, **kwargs):
+        popular = list()
+        aids = list()
+        for dbms in DBMS.all:
+            logger.info("get_total_popular on {}".format(dbms))
+            pop = self.__get_popular(top_n, db_alias=dbms, **kwargs)
+
+            for p in pop:
+                if p.aid not in aids:
+                    popular.append(p)
+                    aids.append(p.aid)
+
+        return sort_dict_in_list(popular, 'readNum')[:top_n]
+        pass
+
+    @switch_mongo_db(cls=BeRead)
+    def __get_popular(self, top_n=20, db_alias=None, **kwargs):
+        check_alias(db_alias)
+        return BeRead.objects(**kwargs).order_by('-aid').limit(top_n)
+        pass

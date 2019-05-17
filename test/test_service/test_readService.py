@@ -16,10 +16,16 @@ class TestReadService(TestBase):
     def test_count(self):
         for dbms in DBMS.all:
             cnt = self.readService.count(db_alias=dbms)
-            print("count {}: {}".format(getattr(DBMS, dbms), cnt))
+            print("count {}: {}".format(dbms, cnt))
 
     def test_save_read(self):
-        read = self.readService.save_read(0, 1, 1, 34, 2, 0, 'sdf', 1, 1)
+        read = self.readService.save_read(1, 0, 1, 34, 2, 0, 'sdf', 1, 1)
+        if read is None:
+            read = self.readService.save_read(1, 1, 1, 34, 2, 0, 'sdf', 1, 1)
+        if read is None:
+            read = self.readService.save_read(0, 0, 1, 34, 2, 0, 'sdf', 1, 1)
+        if read is None:
+            read = self.readService.save_read(0, 1, 1, 34, 2, 0, 'sdf', 1, 1)
 
         assert read is not None
         print(read)

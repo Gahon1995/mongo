@@ -15,6 +15,8 @@ from config import DBMS
 
 @singleton
 class ArticleService(object):
+    field_names = ['aid', 'title', 'category', 'abstract', 'articleTags', 'authors', 'language', 'timestamp',
+                   'update_time']
 
     def __init__(self):
         self.logger = logging.getLogger('ArticleService')
@@ -184,26 +186,7 @@ class ArticleService(object):
 
     @staticmethod
     def pretty_articles(articles: list):
-        from prettytable import PrettyTable
-        from datetime import datetime
-
-        x = PrettyTable()
-
-        if not isinstance(articles, list):
-            articles = list(articles)
-        field_names = (
-            'aid', 'title', 'category', 'abstract', 'articleTags', 'authors', 'language', 'timestamp', 'update_time')
-        x.field_names = field_names
-        for article in articles:
-            # 需要对时间进行时区转换
-            x.add_row(list(article.__getattribute__(key).astimezone()
-                           if isinstance(article.__getattribute__(key), datetime)
-                           else article.__getattribute__(key)
-                           for key in field_names
-                           ))
-
-        print(x)
-        pass
+        pretty_models(articles, ArticleService.field_names)
 
 
 if __name__ == '__main__':

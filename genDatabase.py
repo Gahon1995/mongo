@@ -145,6 +145,7 @@ def gen_reads():
                                 int(data['readSequence']), int(data['commentOrNot']),
                                 data['commentDetail'], int(data['agreeOrNot']), int(data['shareOrNot']),
                                 timestamp=int(data["timestamp"]))
+
         # time.sleep(1)
 
 

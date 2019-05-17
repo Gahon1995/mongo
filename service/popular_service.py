@@ -12,6 +12,7 @@ from config import DBMS
 
 
 class PopularService(object):
+    field_names = []
 
     @staticmethod
     @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)

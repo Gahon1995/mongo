@@ -37,8 +37,8 @@ class Config(object):
 
 
 class DBMS:
-    DBMS1 = 'DBMS1'
-    DBMS2 = 'DBMS2'
+    DBMS1 = 'Beijing'
+    DBMS2 = 'Hong Kong'
     DBMS3 = 'DBMS3'
 
     all = [DBMS1, DBMS2]
@@ -61,12 +61,14 @@ class DBMS:
     }
 
     region = {
+        # 第一个地区为偶数， 第二个地区为奇数
         'values': ['Beijing', 'Hong Kong'],
         'Beijing': [DBMS1],
         'Hong Kong': [DBMS2]
     }
 
     category = {
+        # 第一个为偶数， 第二个为奇数
         'values': ['science', 'technology'],
         'science': [DBMS1, DBMS2],
         'technology': [DBMS2]

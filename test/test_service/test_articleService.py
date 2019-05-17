@@ -59,16 +59,16 @@ class TestBaseArticleService(TestBase):
         ArticleService.pretty_articles(articles)
 
     def test_get_by_aid(self):
-        article = ArticleService().get_article_by_aid(34)
+        article = ArticleService().get_article_by_aid(1)
         ArticleService.pretty_articles([article])
         assert article is not None
 
     def test_update_article_by_aid(self):
-        article = ArticleService().get_article_by_aid(34)
+        article = ArticleService().get_article_by_aid(1)
         ArticleService.pretty_articles([article])
 
         ArticleService().update_an_article(article.aid, {"title": "update24", "language": 'zh'})
 
-        article = ArticleService().get_article_by_aid(34)
+        article = ArticleService().get_article_by_aid(1)
         ArticleService.pretty_articles([article])
         assert article.language == 'zh'

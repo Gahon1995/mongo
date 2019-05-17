@@ -3,8 +3,6 @@
 # @Time    : 2019-04-28 20:43
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
-from bson import ObjectId
-
 from model.read import Read
 from service.ids_service import IdsService
 from utils.func import *
@@ -19,6 +17,8 @@ logger = logging.getLogger('ReadService')
 
 @singleton
 class ReadService(object):
+    field_names = ['rid', 'uid', 'readOrNot', 'readTimeLength', 'readSequence', 'agreeOrNot', 'commentOrNot',
+                   'shareOrNot', 'commentDetail', 'timestamp']
 
     @staticmethod
     def get_id():
@@ -69,6 +69,8 @@ class ReadService(object):
 
         # 根据user的region去得到正确的rid， 因为read表分布和user的region分布式一样的
         user = UserService().get_user_by_uid(int(uid))
+        if user is None:
+            return None
         rid = get_id_by_region(ReadService.get_id(), user.region)
 
         new_read = None
@@ -82,8 +84,7 @@ class ReadService(object):
         IdsService().set_id('rid', rid)
 
         # 待修改
-        # BeReadService.add_be_read_record(aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, user.region,
-        #                                  timestamp)
+        BeReadService().add_be_read_record(aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp)
 
         return new_read
 
@@ -105,7 +106,7 @@ class ReadService(object):
         new_read.agreeOrNot = int(agreeOrNot)
         new_read.shareOrNot = int(shareOrNot)
         new_read.timestamp = timestamp or get_timestamp()
-        logger.info("save to dbms:{}\nrecord: {}".format(db_alias, new_read))
+        logger.info("save read to dbms:{}, record: aid: {}, uid: {}".format(db_alias, aid, uid))
         new_read.save()
         return new_read
 
@@ -241,22 +242,4 @@ class ReadService(object):
 
     @staticmethod
     def pretty_reads(reads):
-        from prettytable import PrettyTable
-        from datetime import datetime
-
-        x = PrettyTable()
-
-        if not isinstance(reads, list):
-            reads = list(reads)
-        field_names = (
-            'rid', 'uid', 'readOrNot', 'readTimeLength', 'readSequence', 'agreeOrNot', 'commentOrNot',
-            'shareOrNot', 'commentDetail', 'timestamp')
-        x.field_names = field_names
-        for read in reads:
-            # 需要对时间进行时区转换
-            x.add_row(list(getattr(read, key).astimezone()
-                           if isinstance(getattr(read, key), datetime)
-                           else getattr(read, key) for key in field_names))
-
-        print(x)
-        pass
+        pretty_models(reads, ReadService.field_names)

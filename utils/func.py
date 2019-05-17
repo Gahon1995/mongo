@@ -219,7 +219,6 @@ def is_odd(uid):
     :param uid:
     :return:
     """
-
     return int(uid) % 2 == 1
 
 
@@ -231,10 +230,6 @@ def get_dbms_by_region(region):
     :return:
     """
     return DBMS.region[region]
-    # if region == Region.bj:
-    #     return [DBMS.DBMS1]
-    # else:
-    #     return [DBMS.DBMS2]
 
 
 def get_best_dbms_by_region(region):
@@ -249,10 +244,6 @@ def get_best_dbms_by_region(region):
 
 def get_dbms_by_category(category):
     return DBMS.category[category]
-    # if category == Category.science:
-    #     return [DBMS.DBMS1, DBMS.DBMS2]
-    # else:
-    #     return [DBMS.DBMS2]
 
 
 def get_best_dbms_by_category(category):
@@ -268,7 +259,9 @@ def get_best_dbms_by_category(category):
 def get_id_by_region(_id, region):
     """
         通过region字段来计算正确的id
-        目前bj地区默认为偶数，hk为奇数
+            DBMS1 -> 偶数
+            DBMS2 -> 奇数
+
     :param _id: mongo查询所返回的id
     :param region:  该当前数据的region地址
     :return:
@@ -282,14 +275,16 @@ def get_id_by_region(_id, region):
 def get_dbms_by_uid(uid):
     """
         通过uid返回该uid对应的用户数据存储地址
-        # TODO 从配置文件获取地址配置信息
+        TODO 从配置文件获取地址配置信息
+            # DBMS1 -> 偶数
+            # DBMS2 -> 奇数
     :param uid:
     :return:
     """
-    if not is_odd(uid):
-        return get_dbms_by_region(DBMS.region['values'][0])
-    else:
+    if is_odd(uid):
         return get_dbms_by_region(DBMS.region['values'][1])
+    else:
+        return get_dbms_by_region(DBMS.region['values'][0])
 
 
 def get_best_dbms_by_uid(uid):
@@ -303,6 +298,13 @@ def get_best_dbms_by_uid(uid):
 
 
 def get_id_by_category(_id, category):
+    """
+        DBMS1 -> 偶数
+        DBMS2 -> 奇数
+    :param _id:
+    :param category:
+    :return:
+    """
     if DBMS.category[category][0] == DBMS.DBMS1:
         return _id if not is_odd(_id) else _id + 1
     else:
@@ -312,7 +314,7 @@ def get_id_by_category(_id, category):
 def get_dbms_by_aid(aid):
     # TODO 统一奇偶
     if is_odd(aid):
-        return get_dbms_by_category(DBMS.category['values'][0])
+        return get_dbms_by_category(DBMS.category['values'][1])
     else:
         return get_dbms_by_category(DBMS.category['values'][0])
 
@@ -360,3 +362,25 @@ def datetime_to_timestamp(_date: datetime):
 
 def get_timestamp():
     return int(datetime.datetime.now().timestamp() * 1000)
+
+
+def pretty_models(models: list, field_names: list):
+    from prettytable import PrettyTable
+    from datetime import datetime
+
+    x = PrettyTable()
+
+    if not isinstance(models, list):
+        models = list(models)
+    # field_names = (
+    #     'aid', 'title', 'category', 'abstract', 'articleTags', 'authors', 'language', 'timestamp', 'update_time')
+    x.field_names = field_names
+    for model in models:
+        # 需要对时间进行时区转换
+        x.add_row(list(model.__getattribute__(key).astimezone()
+                       if isinstance(model.__getattribute__(key), datetime)
+                       else model.__getattribute__(key)
+                       for key in field_names
+                       ))
+    print(x)
+    pass
