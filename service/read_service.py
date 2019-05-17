@@ -104,7 +104,7 @@ class ReadService(object):
         new_read.commentDetail = commentDetail
         new_read.agreeOrNot = int(agreeOrNot)
         new_read.shareOrNot = int(shareOrNot)
-        new_read.timestamp = timestamp or datetime.datetime.utcnow()
+        new_read.timestamp = timestamp or get_timestamp()
         logger.info("save to dbms:{}\nrecord: {}".format(db_alias, new_read))
         new_read.save()
         return new_read
@@ -183,41 +183,61 @@ class ReadService(object):
         check_alias(db_alias)
         return Read.list_by_page(page_num, page_size, uid=user)
 
-    def calu_popular(self, end_date, before_days, top_n=10):
-        if isinstance(end_date, datetime.date):
-            end_date = datetime.datetime.strptime(
-                str("{}-{}-{}".format(end_date.year, end_date.month, end_date.day + 1)), '%Y-%m-%d')
-        # if isinstance(end_date, datetime.datetime):
-        #     start = ObjectId.from_datetime(utc_2_local(end_date - datetime.timedelta(days=before_days)))
-        #     end = ObjectId.from_datetime(utc_2_local(end_date))
-        # else:
-        #     print("查询日期格式不对，需要datetime或date类型")
-        #     return None
+    def compute_popular(self, end_date: datetime.date, before_days, top_n=10):
+        """
+            计算 end_date 这天结束 到 before_days 之间各篇文章阅读的频率
+        :param end_date:    date格式，一般传入当天时间
+        :param before_days:
+        :param top_n:
+        :return:
+        """
 
-        start = utc_2_local(end_date - datetime.timedelta(days=before_days))
-        end = utc_2_local(end_date)
+        freq_all = dict()
+
+        def get_date_timestamp(_date):
+            # 根据date计算第二天0点的timestamp
+            _re = datetime.datetime.strptime(str("{}-{}-{}".format(_date.year, _date.month, _date.day + 1)), '%Y-%m-%d')
+            return int(_re.timestamp() * 1000)
+
+        start = get_date_timestamp(end_date - datetime.timedelta(days=before_days))
+        end = get_date_timestamp(end_date)
         for dbms in DBMS.all:
-            freq = self._get_popular(start, end, top_n * 2, db_alias=dbms)
+            #  TODO 比较 aggregate 和 item_frequencies 的性能差距
+            # freq = self.__get_popular_by_freq(start, end, top_n * 2, db_alias=dbms)
+            # print(freq)
+            freq = self.__get_popular_by_aggregate(start, end, top_n * 2, db_alias=dbms)
+            freq_all = merge_dict(freq_all, freq)
+
+        return sort_dict(freq_all)[:top_n]
 
     @switch_mongo_db(cls=Read)
-    def get_popular(self, start, end, top_n=20, db_alias=None):
+    def __get_popular_by_freq(self, start, end, top_n=20, db_alias=None):
         check_alias(db_alias)
-        re = Read.objects(timestamp__gt=start, timestamp__lt=end).aggregate(
-            {'$group': {'_id': '$aid', 'count': {'$sum': 1}}})
-        return sort_dict_in_list(list(re), sort_by='count')[:top_n]
+
+        return Read.objects(timestamp__gte=start, timestamp__lte=end).item_frequencies('aid')
         pass
 
-    @staticmethod
-    def get_daily_popular(end_date, before_days=1, top_n=10, db_alias=None):
-        return ReadService.calu_popular(end_date, before_days, top_n, db_alias=db_alias)
+    @switch_mongo_db(cls=Read)
+    def __get_popular_by_aggregate(self, start, end, top_n=20, db_alias=None):
+        check_alias(db_alias)
+        #  TODO 比较 aggregate 和 item_frequencies 的性能差距
+        freq = Read.objects(timestamp__gte=start, timestamp__lte=end).aggregate(
+            {'$group': {'_id': '$aid', 'count': {'$sum': 1}}})
 
-    @staticmethod
-    def get_weekly_popular(end_date, before_days=7, top_n=10, db_alias=None):
-        return ReadService.calu_popular(end_date, before_days, top_n, db_alias=db_alias)
+        re = dict()
+        for item in freq:
+            re[item['_id']] = item['count']
 
-    @staticmethod
-    def get_month_popular(end_date, before_days=30, top_n=10, db_alias=None):
-        return ReadService.calu_popular(end_date, before_days, top_n, db_alias=db_alias)
+        return re
+
+    def get_daily_popular(self, end_date: datetime.date, before_days=1, top_n=10):
+        return self.compute_popular(end_date, before_days, top_n)
+
+    def get_weekly_popular(self, end_date: datetime.date, before_days=7, top_n=10):
+        return self.compute_popular(end_date, before_days, top_n)
+
+    def get_month_popular(self, end_date: datetime.date, before_days=30, top_n=10):
+        return self.compute_popular(end_date, before_days, top_n)
 
     @staticmethod
     def pretty_reads(reads):

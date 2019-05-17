@@ -94,7 +94,7 @@ class UserService(object):
         user.role = role
         user.preferTags = preferTags
         user.obtainedCredits = obtainedCredits
-        user.timestamp = timestamp or datetime.datetime.utcnow()
+        user.timestamp = timestamp or get_timestamp()
         if user.save() is not None:
             logger.info('用户：{} 注册成功'.format(name))
             return True, '用户：{} 注册成功'.format(name)

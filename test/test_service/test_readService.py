@@ -48,23 +48,44 @@ class TestReadService(TestBase):
         self.readService.pretty_reads(reads)
 
     def test__get_popular(self):
-        import datetime
-        start = datetime.date(2017, 9, 25)
-        end = datetime.date(2017, 9, 26)
+        from utils.func import merge_dict_and_sort
+        start = 1506332297000
+        end = 1506332347001
+        # [{'_id': 237, 'count': 1}
+        read1 = self.readService._ReadService__get_popular_by_freq(start, end, db_alias=DBMS.DBMS2)
+        read2 = self.readService._ReadService__get_popular_by_freq(start, end, db_alias=DBMS.DBMS1)
+        print(merge_dict_and_sort(read1, read2))
 
-        reads = self.readService.get_popular(start, end, db_alias=DBMS.DBMS1)
-
-        print(reads)
+        read1 = self.readService._ReadService__get_popular_by_aggregate(start, end, db_alias=DBMS.DBMS2)
+        read2 = self.readService._ReadService__get_popular_by_aggregate(start, end, db_alias=DBMS.DBMS1)
+        print(merge_dict_and_sort(read1, read2))
         pass
 
     def test_get_popular(self):
-        self.fail()
+        from utils.func import timestamp_to_datetime
+        _date = timestamp_to_datetime(1506338537000)
+
+        reads = self.readService.compute_popular(_date.date(), before_days=7)
+        print(reads)
 
     def test_get_daily_popular(self):
-        self.fail()
+        # TODO 测试数据量大的时候导入热门数据
+        from utils.func import timestamp_to_datetime
+        _date = timestamp_to_datetime(1506340567000)
+
+        reads = self.readService.get_daily_popular(_date.date())
+        print(reads)
 
     def test_get_weekly_popular(self):
-        self.fail()
+        from utils.func import timestamp_to_datetime
+        _date = timestamp_to_datetime(1506340567000)
+
+        reads = self.readService.get_weekly_popular(_date.date())
+        print(reads)
 
     def test_get_month_popular(self):
-        self.fail()
+        from utils.func import timestamp_to_datetime
+        _date = timestamp_to_datetime(1506342197000)
+
+        reads = self.readService.get_month_popular(_date.date())
+        print(reads)

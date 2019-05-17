@@ -28,7 +28,7 @@ class Read(BaseDB):
     shareOrNot = IntField(default=0)
     commentDetail = StringField(default='')
 
-    timestamp = DateTimeField(default=datetime.utcnow)
+    timestamp = IntField(required=True)
 
     @property
     def create_time(self):

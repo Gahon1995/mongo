@@ -16,7 +16,7 @@ class Article(BaseDB):
     image = StringField(default='')
     video = StringField(default='')
     update_time = DateTimeField(default=datetime.utcnow)
-    timestamp = DateTimeField(required=True)
+    timestamp = IntField(required=True)
 
     meta = {
         'indexes': [

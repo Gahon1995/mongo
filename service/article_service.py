@@ -99,7 +99,7 @@ class ArticleService(object):
         article.image = image
         article.video = video
         article.update_time = datetime.datetime.utcnow()
-        article.timestamp = timestamp or datetime.datetime.utcnow()
+        article.timestamp = timestamp or get_timestamp()
 
         return self.save_article(article)
 

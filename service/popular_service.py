@@ -43,28 +43,29 @@ class PopularService(object):
 
     @staticmethod
     @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
-    def update_daily_rank(db_alias=DBMS.DBMS1):
-        rank = PopularService.get_daily_rank(datetime.date.today())
-        articles = ReadService.get_daily_popular(datetime.date.today())
+    def update_daily_rank(today, db_alias=DBMS.DBMS1):
+        rank = PopularService().get_daily_rank(today)
+        articles = ReadService().get_daily_popular(today)
         PopularService._update_rank(rank, articles, 'daily')
 
     @staticmethod
-    @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
-    def update_weekly_rank(db_alias=DBMS.DBMS1):
-        rank = PopularService.get_weekly_rank(datetime.date.today())
-        articles = ReadService.get_weekly_popular(datetime.date.today())
+    @switch_mongo_db(cls=Popular)
+    def update_weekly_rank(today, db_alias=DBMS.DBMS1):
+        rank = PopularService().get_weekly_rank(today)
+        articles = ReadService().get_weekly_popular(today)
         PopularService._update_rank(rank, articles, 'weekly')
 
     @staticmethod
-    @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
-    def update_monthly_rank(db_alias=DBMS.DBMS1):
-        rank = PopularService.get_monthly_rank(datetime.date.today())
-        articles = ReadService.get_month_popular(datetime.date.today())
+    @switch_mongo_db(cls=Popular)
+    def update_monthly_rank(today, db_alias=DBMS.DBMS1):
+        rank = PopularService().get_monthly_rank(today)
+        articles = ReadService().get_month_popular(today)
         PopularService._update_rank(rank, articles, 'monthly')
 
     @staticmethod
-    def update_popular():
-        PopularService.update_daily_rank()
-        PopularService.update_monthly_rank()
-        PopularService.update_weekly_rank()
+    def update_popular(_date=None):
+        _date = _date or datetime.date.today()
+        PopularService.update_daily_rank(_date)
+        PopularService.update_monthly_rank(_date)
+        PopularService.update_weekly_rank(_date)
         pass

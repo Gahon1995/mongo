@@ -353,6 +353,8 @@ def date_to_datetime(_date):
 
 
 def datetime_to_timestamp(_date: datetime):
+    # if isinstance(_date, datetime.date):
+    #     _date = date_to_datetime(_date)
     return int(_date.timestamp() * 1000)
 
 
