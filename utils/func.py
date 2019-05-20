@@ -4,14 +4,13 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 
+import datetime
 import functools
 import json
 import threading
-
-import pytz
-import datetime
 import time
 
+import pytz
 from mongoengine.base import BaseDocument
 
 from config import DBMS
@@ -410,6 +409,6 @@ def print_run_time(func):
     def wrapper(*args, **kw):
         local_time = time.time()
         func(*args, **kw)
-        print('current Function [%s] run time is %.2f' % (func.__name__, time.time() - local_time))
+        print('current Function [%s] run time is %.2fs' % (func.__name__, time.time() - local_time))
 
     return wrapper

@@ -1,4 +1,3 @@
-import threading
 from random import random
 
 from config import DBMS
@@ -8,16 +7,24 @@ from service.read_service import ReadService
 from service.user_service import UserService
 from utils.func import timestamp_to_datetime, print_run_time
 
-# USERS_NUM = 10000
-# ARTICLES_NUM = 200000
-# READS_NUM = 1000000
+USERS_NUM = 10000
+ARTICLES_NUM = 200000
+READS_NUM = 1000000
 
-USERS_NUM = 100
-ARTICLES_NUM = 200
-READS_NUM = 1000
+# USERS_NUM = 100
+# ARTICLES_NUM = 200
+# READS_NUM = 1000
 
-uid_region = {}
-aid_lang = {}
+# uid_region = {}
+# aid_lang = {}
+from multiprocessing import Manager
+
+uid_region = Manager().dict()
+aid_lang = Manager().dict()
+
+
+# multi_uid_region = Manager().dict(uid_region)
+# multi_aid_lang = Manager().dict(aid_lang)
 
 
 # Beijing:60%   Hong Kong:40%
@@ -110,13 +117,13 @@ def print_bar(now, total):
     print('\rprocess:\t {now} / {total}  {rate}%'.format(now=now + 1, total=total,
                                                          rate=round((now + 1) / total * 100, 2)), end='')
     if now == total:
-        print()
+        print('\n\n', end='\n')
 
 
 @print_run_time
 def gen_users():
     for i in range(USERS_NUM):
-        # print_bar(i, USERS_NUM)
+        print_bar(i, USERS_NUM)
         data = gen_an_user(i)
         UserService().register(data['name'], data['pwd'], data['gender'], data['email'], data['phone'], data['dept'],
                                data['grade'], data['language'], data['region'], data['role'], data['preferTags'],
@@ -126,7 +133,7 @@ def gen_users():
 @print_run_time
 def gen_articles():
     for i in range(ARTICLES_NUM):
-        # print_bar(i, ARTICLES_NUM)
+        print_bar(i, ARTICLES_NUM)
         data = gen_an_article(i)
         ArticleService().add_an_article(title=data['title'], authors=data['authors'], category=data['category'],
                                         abstract=data['abstract'], articleTags=data['articleTags'],
@@ -137,7 +144,7 @@ def gen_articles():
 @print_run_time
 def gen_reads():
     for i in range(READS_NUM):
-        # print_bar(i, READS_NUM)
+        print_bar(i, READS_NUM)
         data = gen_an_read(i)
 
         article = ArticleService().get_articles_by_title(title='title' + data['aid'], db_alias=DBMS.DBMS2)[0]
@@ -145,14 +152,13 @@ def gen_reads():
         name = 'user' + data['uid'] if data['uid'] != '0' else 'admin'
         user = UserService().get_user_by_name(name=name)
 
-        ReadService().save_read(article, user, int(data['readOrNot']), int(data['readTimeLength']),
+        ReadService().save_read(article.aid, user.uid, int(data['readOrNot']), int(data['readTimeLength']),
                                 int(data['readSequence']), int(data['commentOrNot']),
                                 data['commentDetail'], int(data['agreeOrNot']), int(data['shareOrNot']),
                                 timestamp=int(data["timestamp"]))
 
-        # PopularService().update_popular(_date=timestamp_to_datetime(int(data["timestamp"])).date())
 
-
+@print_run_time
 def gen_populars():
     timeBegin = 1506332297000
     timeEnd = timeBegin + READS_NUM * 10000
@@ -160,8 +166,9 @@ def gen_populars():
         PopularService().update_popular(_date=timestamp_to_datetime(timestamp).date())
 
 
-@print_run_time
 def gen_users_by_threads(start, end):
+    from db.mongodb import init_connect
+    init_connect()
     print("start gen user range ({}, {})".format(start, end))
     for i in range(start, end):
         # print_bar(i - start, end - start)
@@ -175,8 +182,9 @@ def gen_users_by_threads(start, end):
     print("finish gen user range ({}, {})".format(start, end))
 
 
-@print_run_time
 def gen_articles_by_threads(start, end):
+    from db.mongodb import init_connect
+    init_connect()
     print("start gen articles range ({}, {})".format(start, end))
     for i in range(start, end):
         if i % 100 == 0:
@@ -190,17 +198,18 @@ def gen_articles_by_threads(start, end):
     print("finish gen articles range ({}, {})".format(start, end))
 
 
-@print_run_time
 def gen_reads_by_threads(start, end):
+    from db.mongodb import init_connect
+    init_connect()
     print("start gen reads range ({}, {})".format(start, end))
     for i in range(start, end):
         if i % 100 == 0:
             print('.', end='')
+
         # print_bar(i - start, end - start)
         data = gen_an_read(i)
 
         article = ArticleService().get_articles_by_title(title='title' + data['aid'], db_alias=DBMS.DBMS2)[0]
-
         name = 'user' + data['uid'] if data['uid'] != '0' else 'admin'
         user = UserService().get_user_by_name(name=name)
 
@@ -214,21 +223,19 @@ def gen_reads_by_threads(start, end):
 
 @print_run_time
 def create_by_threads(target, NUM):
+    from multiprocessing import Pool
+
+    pool = Pool()
     print('start')
     threads = []
     thread_num = 4
-    part = int(NUM / thread_num)
+    part = int(NUM / thread_num) if NUM % thread_num == 0 else int(NUM / thread_num + 1)
     for i in range(thread_num):
         # gen_users_by_thread(i * part, (i + 1) * part)
-        thread = threading.Thread(target=target, args=(i * part, (i + 1) * part))
-        thread.setDaemon(True)
-        thread.start()
-
-        threads.append(thread)
+        pool.apply_async(target, args=(i * part, min(NUM, (i + 1) * part)))
         # print(i * part, (i + 1) * part)
-
-    for thread in threads:
-        thread.join()
+    pool.close()
+    pool.join()
     print('finish')
 
 
@@ -258,41 +265,61 @@ def reset_db():
     IdsService().init(DBMS.DBMS1)
 
 
-def main():
+def gen_data_by_threads():
+    # 30.29s
+
+    from main import init
+    from mongoengine import connection, connect
+    init()
+    db = connect(DBMS.db_name, host=DBMS.configs[DBMS.DBMS1]['host'], port=DBMS.configs[DBMS.DBMS1]['port'],
+                 tz_aware=True)
+    reset_db()
+
+    db.close()
+
+    connection._connections = {}
+    connection._connection_settings = {}
+    connection._dbs = {}
+
+    # 85.79s 116.59s
+    print('\n导入user数据...')
+    create_by_threads(gen_users_by_threads, USERS_NUM)
+
+    print('\n导入article数据...')
+    create_by_threads(gen_articles_by_threads, ARTICLES_NUM)
+
+    print('\n导入read数据...')
+
+    create_by_threads(gen_reads_by_threads, READS_NUM)
+
+    init()
+    gen_populars()
+
+
+def gen_data():
     # host = '127.0.0.1'
     # connect('mongo-new', host=host, port=27017)
     from main import init
     init()
     reset_db()
 
-    # print('\n导入user数据...')
-    # gen_users()
-    #
-    # print('\n导入article数据...')
-    # gen_articles()
-    #
-    # print('\n导入read数据...')
-    # gen_reads()
-
+    # 71.67s
     print('\n导入user数据...')
-    thread = threading.Thread(target=create_by_threads, args=(gen_users_by_threads, USERS_NUM))
-    thread.setDaemon(True)
-    thread.start()
-    thread.join()
+    gen_users()
 
     print('\n导入article数据...')
-    thread = threading.Thread(target=create_by_threads, args=(gen_articles_by_threads, ARTICLES_NUM))
-    thread.setDaemon(True)
-    thread.start()
-    thread.join()
+    gen_articles()
 
     print('\n导入read数据...')
-    thread = threading.Thread(target=create_by_threads, args=(gen_reads_by_threads, READS_NUM))
-    thread.setDaemon(True)
-    thread.start()
-    thread.join()
-    #
-    # gen_populars()
+    gen_reads()
+
+    gen_populars()
+
+
+@print_run_time
+def main():
+    # gen_data()
+    gen_data_by_threads()
 
 
 if __name__ == '__main__':

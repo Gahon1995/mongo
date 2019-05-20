@@ -7,7 +7,6 @@ import logging
 
 from bson import ObjectId
 
-from config import DBMS
 from model.article import Article
 from service.ids_service import IdsService
 from utils.func import *
@@ -120,6 +119,7 @@ class ArticleService(object):
         for dbms in get_dbms_by_category(category):
             self.__add_an_article(aid, title, authors, category, abstract, articleTags, language, text, image,
                                   video, timestamp, db_alias=dbms)
+            self.init_be_read_for_article(aid, db_alias=dbms)
         return True
 
     def __add_an_article(self, aid, title, authors, category, abstract, articleTags, language, text, image=None,
@@ -141,6 +141,17 @@ class ArticleService(object):
         article.timestamp = timestamp or get_timestamp()
 
         return self.save_article(article)
+
+    def init_be_read_for_article(self, aid, db_alias=None, timestamp=None):
+        from service.be_read_service import BeReadService
+
+        check_alias(db_alias=db_alias)
+
+        be_read = BeReadService().get_model(db_alias)()
+        be_read.aid = aid
+        be_read.bid = BeReadService().get_bid()
+        be_read.timestamp = timestamp or get_timestamp()
+        be_read.save()
 
     def save_article(self, article):
         if article.save() is not None:

@@ -25,8 +25,8 @@ class BeRead(BaseDB):
         ]
     }
 
-    bid = IntField(required=True, unique=True, unique_with='aid')
-    aid = IntField(required=True, unique=True, unique_with='bid')
+    bid = IntField(required=True, unique=True)
+    aid = IntField(required=True, unique=True)
     readNum = IntField(default=0)
     readUidList = ListField(IntField(required=False), default=list())
     commentNum = IntField(default=0)

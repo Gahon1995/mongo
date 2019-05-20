@@ -51,25 +51,28 @@ class BeReadService(object):
         if article is None:
             return None
 
-        be_read = self.get_by_aid(aid)
-        bid = self.get_bid() if be_read is None else be_read.bid
+        # be_read = self.get_by_aid(aid)
+        be_read = None
+        # bid = self.get_bid() if be_read is None else be_read.bid
         for dbms in get_dbms_by_category(article.category):
             logger.info("save be read to : {} uid: {}".format(dbms, uid))
-            be_read = self.__save_be_read(bid, aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp,
+            be_read = self.__save_be_read(aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp,
                                           db_alias=dbms)
 
         return be_read
 
-    def __save_be_read(self, bid, aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp=None,
+    def __save_be_read(self, aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp=None,
                        db_alias=None):
         check_alias(db_alias)
 
         be_read = self.get_by_aid(aid, db_alias=db_alias)
         if be_read is None:
-            be_read = self.get_model(db_alias)()
-            be_read.aid = aid
-            be_read.bid = bid
-            be_read.timestamp = timestamp or get_timestamp()
+            logger.info("没有 {} 关联的beread记录".format(aid))
+            return None
+            # be_read = self.get_model(db_alias)()
+            # be_read.aid = aid
+            # be_read.bid = bid
+            # be_read.timestamp = timestamp or get_timestamp()
 
         if readOrNot:
             be_read.readNum += 1
