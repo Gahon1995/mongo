@@ -4,45 +4,58 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 
-from model.ids import Ids
-from config import DBMS
-from db.mongodb import switch_mongo_db
-from utils.func import check_alias
 import logging
+
+from config import DBMS
+from model.ids import Ids
+from utils.func import check_alias
 
 logger = logging.getLogger('IdsService')
 
 
 class IdsService(object):
 
-    def init(self):
-        ids = Ids()
-        ids.ids = 0
-        ids.uid = 0
-        ids.aid = 0
-        ids.rid = 0
-        ids.bid = 0
-        ids.pid = 0
-        ids.save()
-        return ids
+    def init(self, db_alias):
+        if self.get_model(db_alias).count(ids=0) == 0:
+            ids = self.get_model(db_alias)()
+            ids.ids = 0
+            ids.uid = 0
+            ids.aid = 0
+            ids.rid = 0
+            ids.bid = 0
+            ids.pid = 0
+            ids.save()
+            return ids
 
-    def next_id(self, name):
-        ids = Ids.get(ids=0)
-        if ids is None:
-            ids = self.init()
-        logger.debug('set {}: {}'.format(name, getattr(ids, name)))
+    @staticmethod
+    def get_model(dbms: str):
+        class Model(Ids):
+            meta = {
+                'db_alias': dbms,
+                'collection': 'ids'
+            }
+            pass
+
+        return Model
+
+    def next_id(self, name, db_alias=DBMS.DBMS1):
+        model = self.get_model(db_alias)
+        check_alias(db_alias)
+        kwargs = {
+            'inc__' + name: 1
+        }
+        ids = model.objects(ids=0).modify(upsert=True, **kwargs)
+        # logger.debug('set {}: {}'.format(name, getattr(ids, name)))
         return getattr(ids, name)
 
-    def set_id(self, name, last_id):
+    def sync_id(self, name, value):
+        logger.info("IDS 字段： {} 数据不同步, 同步数据中...".format(name))
         for dbms in DBMS.all:
-            self.__set_id(name, last_id, db_alias=dbms)
+            self.__sync_id(name, value, db_alias=dbms)
 
-    @switch_mongo_db(cls=Ids)
-    def __set_id(self, name, last_id, db_alias=None):
+    def __sync_id(self, name, value, db_alias=None):
         check_alias(db_alias=db_alias)
-        logger.debug('set {}: {}'.format(name, last_id + 1))
-        ids = Ids.get(ids=0)
-        if ids is None:
-            ids = IdsService().init()
-        setattr(ids, name, last_id + 1)
-        ids.save()
+        kwargs = {
+            name: value
+        }
+        self.get_model(db_alias).get(ids=0).update(**kwargs)

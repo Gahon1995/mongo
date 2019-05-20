@@ -3,20 +3,19 @@
 # @Time    : 2019-04-28 20:42
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
+import logging
+
 from bson import ObjectId
 
-from model.article import Article as Abs_Article
-from db.mongodb import switch_mongo_db
-from service.ids_service import IdsService
-
-from utils.func import *
-import logging
 from config import DBMS
+from model.article import Article
+from service.ids_service import IdsService
+from utils.func import *
 
 
 @singleton
 class ArticleService(object):
-    field_names = ['id', 'title', 'category', 'abstract', 'articleTags', 'authors', 'language', 'timestamp',
+    field_names = ['aid', 'title', 'category', 'abstract', 'articleTags', 'authors', 'language', 'timestamp',
                    'update_time']
 
     def __init__(self):
@@ -24,34 +23,23 @@ class ArticleService(object):
 
     @staticmethod
     def get_model(dbms: str):
-        class Article(Abs_Article):
+        class Model(Article):
             meta = {
                 'db_alias': dbms,
                 'collection': 'article'
             }
             pass
 
-        return Article
+        return Model
 
-    # @staticmethod
-    # def get_id():
-    #     # _id = -1
-    #     # for dbms in DBMS.all:
-    #     #     _id = max(self.__id(dbms), _id)
-    #     # return _id
-    #     return IdsService().next_id('aid')
-    #
-    # # @switch_mongo_db(cls=Article, default_db=DBMS.DBMS2)
-    # def __id(self, db_alias=None):
-    #     check_alias(db_alias)
-    #     return self.get_model(db_alias).get_id('aid')
+    @staticmethod
+    def get_id():
 
-    def has_article(self, _id, db_alias):
-        if not isinstance(_id, ObjectId):
-            _id = ObjectId(_id)
-        return self.count(id=_id, db_alias=db_alias)
+        return IdsService().next_id('aid')
 
-    # @switch_mongo_db(cls=Article)
+    def has_article(self, aid, db_alias):
+        return self.count(aid=aid, db_alias=db_alias)
+
     def count(self, db_alias=None, **kwargs):
         check_alias(db_alias)
         return self.get_model(db_alias).count(**kwargs)
@@ -80,7 +68,6 @@ class ArticleService(object):
             articles = self.__search_by_title(title, db_alias=db_alias)
         return articles
 
-    # @switch_mongo_db(cls=Article)
     def __search_by_title(self, title, db_alias=None) -> list:
         """
             因为DBMS2上存有所有的文章，所以默认直接在DBMS2上搜索就行
@@ -116,7 +103,6 @@ class ArticleService(object):
             articles = self.__search_by_category(category, db_alias=db_alias)
         return articles
 
-    # @switch_mongo_db(cls=Article)
     def __search_by_category(self, category, db_alias=None) -> list:
         """
             因为DBMS2上存有所有的文章，所以默认直接在DBMS2上搜索就行
@@ -130,20 +116,18 @@ class ArticleService(object):
 
     def add_an_article(self, title, authors, category, abstract, articleTags, language, text, image=None,
                        video=None, timestamp=None):
-        # aid = get_id_by_category(self.get_id(), category)
+        aid = self.get_id()
         for dbms in get_dbms_by_category(category):
-            self.__add_an_article(title, authors, category, abstract, articleTags, language, text, image,
+            self.__add_an_article(aid, title, authors, category, abstract, articleTags, language, text, image,
                                   video, timestamp, db_alias=dbms)
-        # IdsService().set_id('aid', aid)
         return True
 
-    # @switch_mongo_db(cls=Article)
-    def __add_an_article(self, title, authors, category, abstract, articleTags, language, text, image=None,
+    def __add_an_article(self, aid, title, authors, category, abstract, articleTags, language, text, image=None,
                          video=None, timestamp=None, db_alias=None):
 
         check_alias(db_alias)
         article = self.get_model(db_alias)()
-        # article.aid = aid
+        article.aid = aid
         article.title = title
         article.authors = authors
         article.category = category
@@ -164,37 +148,34 @@ class ArticleService(object):
             return True
         return False
 
-    def del_by_aid(self, aid, **kwargs):
+    def del_by_filed(self, field, value, **kwargs):
         re = None
         for dbms in DBMS.all:
-            re = self.__del_by_id(aid, db_alias=dbms, **kwargs)
+            re = self.__del_by_filed(field, value, db_alias=dbms, **kwargs)
             pass
         return re
 
-    # @switch_mongo_db(cls=Article)
-    def __del_by_id(self, _id, db_alias=None, **kwargs):
+    def __del_by_filed(self, field, value, db_alias=None, **kwargs):
         check_alias(db_alias)
+        kwargs[field] = value
+        re = self.get_model(db_alias).objects(**kwargs).delete()
+        return re
 
-        re = self.get_model(db_alias).objects(id=_id, **kwargs).delete()
+    def del_by_aid(self, aid, **kwargs):
+        re = self.del_by_filed('aid', aid, **kwargs)
+
         return re
 
     def del_article(self, article):
         if article is not None:
             for dbms in get_dbms_by_category(article.category):
-                self.__del_by_id(article.id, db_alias=dbms)
+                self.__del_by_filed('aid', article.aid, db_alias=dbms)
         return True
 
-    # @switch_mongo_db(cls=Article, default_db=DBMS.DBMS2)
     def get_articles(self, page_num=1, page_size=20, db_alias=None, **kwargs):
         # TODO 去掉默认db设置，在所有数据库中，根据数量进行分页以及返回相关数据
         check_alias(db_alias)
         return self.get_model(db_alias).list_by_page(page_num, page_size, **kwargs)
-
-    # @staticmethod
-    # @switch_mongo_db(cls=Article, default_db=DBMS.DBMS2)
-    # def get_an_article(db_alias=DBMS.DBMS2, **kwargs):
-    #     check_alias(db_alias)
-    #     return Article.objects(**kwargs).first()
 
     def get_an_article_by_id(self, _id):
         # TODO 修改实现方法
@@ -205,25 +186,37 @@ class ArticleService(object):
                 break
         return article
 
-    # @switch_mongo_db(cls=Article)
     def __get_an_article_by_id(self, _id, db_alias=None):
         check_alias(db_alias)
         if not isinstance(_id, ObjectId):
             _id = ObjectId(_id)
         return self.get_model(db_alias).objects(id=_id).first()
 
+    def get_an_article_by_aid(self, aid):
+        # TODO 修改实现方法
+        article = None
+        for dbms in DBMS.all:
+            article = self.__get_an_article_by_aid(aid, db_alias=dbms)
+            if article is not None:
+                break
+        return article
+
+    def __get_an_article_by_aid(self, aid, db_alias=None):
+        check_alias(db_alias)
+
+        return self.get_model(db_alias).objects(aid=aid).first()
+
     def update_an_article(self, article, condition: dict):
         """
             根据aid更新文章
 
-        :param aid:
+        :param article:
         :param condition:  Json格式更新内容
         :return:
         """
         for dbms in get_dbms_by_category(article.category):
             self.__update_article(article, condition, db_alias=dbms)
 
-    # @switch_mongo_db(cls=Article)
     def __update_article(self, article, condition: dict, db_alias=None):
         check_alias(db_alias)
         article = self.__get_an_article_by_id(article.id, db_alias=db_alias)

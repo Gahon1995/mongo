@@ -21,24 +21,6 @@ class TestUtils(TestBase):
 
         pass
 
-    def test_get_dbms_by_uid(self):
-        dbms = get_dbms_by_uid(34)
-        # print(dbms)
-        assert dbms == DBMS.region[DBMS.region['values'][0]]
-
-        dbms = get_dbms_by_uid(35)
-        # print(dbms)
-        assert dbms == DBMS.region[DBMS.region['values'][1]]
-
-    def test_get_dbms_by_aid(self):
-        dbms = get_dbms_by_aid(34)
-        # print(dbms)
-        assert dbms == DBMS.category[DBMS.category['values'][0]]
-
-        dbms = get_dbms_by_aid(35)
-        # print(dbms)
-        assert dbms == DBMS.category[DBMS.category['values'][1]]
-
     def test_get_id_by_category(self):
         new_id = get_id_by_category(34, DBMS.category['values'][0])
         assert new_id == 34

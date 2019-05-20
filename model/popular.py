@@ -3,12 +3,10 @@
 # @Time    : 2019-05-03 16:05
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
-from datetime import datetime
 
 from mongoengine import *
 
 from db.mongodb import BaseDB
-from model.article import Article
 
 temporalChoices = ('daily', 'weekly', 'monthly')
 
@@ -23,7 +21,6 @@ class Popular(BaseDB):
         ]
     }
 
-    # default id _id
     temporalGranularity = StringField(max_length=7, choices=temporalChoices)
     articleAidDict = DictField(default={})
     timestamp = IntField(required=True)

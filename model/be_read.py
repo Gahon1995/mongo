@@ -16,7 +16,7 @@ class BeRead(BaseDB):
     meta = {
         'abstract': True,
         'indexes': [
-            # 'bid',
+            'bid',
             'aid',
             'readNum',
             'commentNum',
@@ -25,16 +25,16 @@ class BeRead(BaseDB):
         ]
     }
 
-    # bid = IntField(required=True, unique=True)
-    aid = StringField(required=True)
+    bid = IntField(required=True, unique=True, unique_with='aid')
+    aid = IntField(required=True, unique=True, unique_with='bid')
     readNum = IntField(default=0)
-    readUidList = ListField(StringField(required=False), default=list())
+    readUidList = ListField(IntField(required=False), default=list())
     commentNum = IntField(default=0)
-    commentUidList = ListField(StringField(required=False), default=list())
+    commentUidList = ListField(IntField(required=False), default=list())
     agreeNum = IntField(default=0)
-    agreeUidList = ListField(StringField(required=False), default=list())
+    agreeUidList = ListField(IntField(required=False), default=list())
     shareNum = IntField(default=0)
-    shareUidList = ListField(StringField(required=False), default=list())
+    shareUidList = ListField(IntField(required=False), default=list())
     timestamp = IntField(required=True)
     last_update_time = DateTimeField(default=datetime.utcnow)
 

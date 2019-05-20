@@ -4,18 +4,15 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 
-# from model.popular import Popular
-from service.read_service import ReadService
-from service.article_service import ArticleService
-from model.popular import Popular
-from db.mongodb import switch_mongo_db
 import datetime
-from config import DBMS
-from utils.func import date_to_timestamp, datetime_to_timestamp, get_timestamp, check_alias, get_best_dbms
-
 import logging
-
 import threading
+
+from config import DBMS
+from model.popular import Popular
+from service.article_service import ArticleService
+from service.read_service import ReadService
+from utils.func import date_to_timestamp, get_timestamp, check_alias
 
 logger = logging.getLogger('PopularService')
 
@@ -36,9 +33,9 @@ class PopularService(object):
 
     def __update_rank(self, rank, articles, db_alias):
         rank.articleAidDict = {}
-        for title, count in articles:
-            if ArticleService().has_article(title, db_alias):
-                rank.articleAidDict[str(title)] = count
+        for aid, count in articles:
+            if ArticleService().has_article(aid, db_alias):
+                rank.articleAidDict[str(aid)] = count
 
         rank.update_time = get_timestamp()
         rank.save()
@@ -69,7 +66,6 @@ class PopularService(object):
             rank.temporalGranularity = 'monthly'
         self.__update_rank(rank, articles, db_alias)
 
-    # @switch_mongo_db(cls=Popular, allow_None=True)
     def update_popular(self, _date=None, db_alias=None, daily_pop=None, weekly_pop=None, monthly_pop=None):
         if isinstance(_date, datetime.datetime):
             _date = _date.date()

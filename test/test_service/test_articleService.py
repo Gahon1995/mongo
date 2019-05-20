@@ -4,9 +4,9 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 
-from test.test_base import TestBase
-from service.article_service import ArticleService
 from config import DBMS
+from service.article_service import ArticleService
+from test.test_base import TestBase
 
 
 class TestBaseArticleService(TestBase):
@@ -42,11 +42,14 @@ class TestBaseArticleService(TestBase):
         ArticleService().pretty_articles(articles)
 
     def test_del_article(self):
-        # re = ArticleService().del_by_aid(308)
-        # assert re
+        ArticleService().add_an_article('test123', 'gahon', 'science', 'asdf', 'asdfas', 'asdf', 'asdf')
+        articles = ArticleService().get_articles_by_title('test_article')
+        _aid = articles[0].aid
+        re1 = ArticleService().del_by_aid(_aid)
+        assert re1
         #
-        # article = ArticleService().get_an_article_by_id(308)
-        # assert article is None
+        article = ArticleService().get_an_article_by_aid(_aid)
+        assert article is None
 
         re = ArticleService().add_an_article('test_article', 'gahon', 'science', 'asdf', 'asdfas', 'asdf', 'asdf')
         assert re

@@ -2,12 +2,11 @@ import threading
 from random import random
 
 from config import DBMS
-from service.user_service import UserService
 from service.article_service import ArticleService
-from service.read_service import ReadService
-from utils.func import timestamp_to_datetime, print_run_time
-
 from service.popular_service import PopularService
+from service.read_service import ReadService
+from service.user_service import UserService
+from utils.func import timestamp_to_datetime, print_run_time
 
 # USERS_NUM = 10000
 # ARTICLES_NUM = 200000
@@ -161,30 +160,6 @@ def gen_populars():
         PopularService().update_popular(_date=timestamp_to_datetime(timestamp).date())
 
 
-def gen_data():
-    # threads = []
-    print('\n导入user数据...')
-    thread = threading.Thread(target=create_by_threads, args=(gen_users_by_threads, USERS_NUM))
-    thread.setDaemon(True)
-    thread.start()
-    thread.join()
-
-    print('\n导入article数据...')
-    thread = threading.Thread(target=create_by_threads, args=(gen_articles_by_threads, ARTICLES_NUM))
-    thread.setDaemon(True)
-    thread.start()
-    thread.join()
-
-    print('\n导入read数据...')
-    thread = threading.Thread(target=create_by_threads, args=(gen_reads_by_threads, READS_NUM))
-    thread.setDaemon(True)
-    thread.start()
-    thread.join()
-
-
-import time
-
-
 @print_run_time
 def gen_users_by_threads(start, end):
     print("start gen user range ({}, {})".format(start, end))
@@ -196,7 +171,6 @@ def gen_users_by_threads(start, end):
         UserService().register(data['name'], data['pwd'], data['gender'], data['email'], data['phone'], data['dept'],
                                data['grade'], data['language'], data['region'], data['role'], data['preferTags'],
                                data['obtainedCredits'], int(data['timestamp']))
-        time.sleep(0.1)
 
     print("finish gen user range ({}, {})".format(start, end))
 
@@ -230,7 +204,7 @@ def gen_reads_by_threads(start, end):
         name = 'user' + data['uid'] if data['uid'] != '0' else 'admin'
         user = UserService().get_user_by_name(name=name)
 
-        ReadService().save_read(article, user, int(data['readOrNot']), int(data['readTimeLength']),
+        ReadService().save_read(article.aid, user.uid, int(data['readOrNot']), int(data['readTimeLength']),
                                 int(data['readSequence']), int(data['commentOrNot']),
                                 data['commentDetail'], int(data['agreeOrNot']), int(data['shareOrNot']),
                                 timestamp=int(data["timestamp"]))
@@ -268,17 +242,20 @@ def drop(service):
             model.drop_collection()
 
 
-def init_db():
+def reset_db():
     from service.user_service import UserService
     from service.article_service import ArticleService
     from service.read_service import ReadService
     from service.be_read_service import BeReadService
     from service.popular_service import PopularService
+    from service.ids_service import IdsService
     drop(UserService)
     drop(ArticleService)
     drop(ReadService)
     drop(BeReadService)
     drop(PopularService)
+    drop(IdsService)
+    IdsService().init(DBMS.DBMS1)
 
 
 def main():
@@ -286,7 +263,7 @@ def main():
     # connect('mongo-new', host=host, port=27017)
     from main import init
     init()
-    init_db()
+    reset_db()
 
     # print('\n导入user数据...')
     # gen_users()
@@ -314,8 +291,8 @@ def main():
     thread.setDaemon(True)
     thread.start()
     thread.join()
-
-    gen_populars()
+    #
+    # gen_populars()
 
 
 if __name__ == '__main__':

@@ -6,10 +6,9 @@
 
 import logging
 
+from config import Config
 from db.mongodb import init_connect
 from web.cmd.command_ui import menu
-
-from config import Config
 
 
 def init():

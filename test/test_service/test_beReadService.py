@@ -3,9 +3,8 @@
 # @Time    : 2019-05-17 23:48
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
-from config import DBMS
-from service.be_read_service import BeReadService
 from service.article_service import ArticleService
+from service.be_read_service import BeReadService
 from test.test_base import TestBase
 
 
@@ -20,16 +19,14 @@ class TestBeReadService(TestBase):
 
     def test_get_by_aid(self):
         article = ArticleService().get_articles_by_title('title5')[0]
-        beread = self.beReadService.get_by_aid(article.id)
+        beread = self.beReadService.get_by_aid(article.aid)
         print(beread)
-        # beread = self.beReadService.get_by_aid(6)
-        # print(beread)
 
     # def test_get_by_bid(self):
-    #     be = self.beReadService.get_by_id(1)
+    #     be = self.beReadService.get_by_bid(1)
     #     print(be)
     #
-    #     be = self.beReadService.get_by_id(2)
+    #     be = self.beReadService.get_by_bid(2)
     #     print(be)
 
     def test_add_be_read_record(self):

@@ -1,10 +1,12 @@
-from mongoengine import *
-from db.mongodb import BaseDB
 from datetime import datetime
+
+from mongoengine import *
+
+from db.mongodb import BaseDB
 
 
 class Article(BaseDB):
-    # aid = IntField(required=True, unique=True)  # 通过aid的奇偶来判断存到哪一个数据库上去
+    aid = IntField(required=True, unique=True)  # 通过aid的奇偶来判断存到哪一个数据库上去
     title = StringField(required=True)
 
     category = StringField(required=True)
@@ -21,7 +23,7 @@ class Article(BaseDB):
     meta = {
         'abstract': True,
         'indexes': [
-            # 'aid',
+            'aid',
             'title',
             'category',
             'articleTags',

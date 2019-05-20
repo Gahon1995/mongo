@@ -1,13 +1,13 @@
 from mongoengine import *
+
 from db.mongodb import BaseDB
-from datetime import datetime
 
 
 class Read(BaseDB):
     meta = {
         'abstract': True,
         'indexes': [
-            # 'rid',
+            'rid',
             'uid',
             'aid',
             ('aid', 'uid'),
@@ -18,9 +18,9 @@ class Read(BaseDB):
         ]
     }
 
-    # rid = IntField(required=True, unique=True)
-    uid = StringField(required=True)
-    aid = StringField(required=True)
+    rid = IntField(required=True, unique=True)
+    uid = IntField(required=True)
+    aid = IntField(required=True)
     readOrNot = IntField(default=1)
     readTimeLength = IntField(default=0)
     readSequence = IntField(default=1)
