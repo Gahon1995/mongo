@@ -12,11 +12,12 @@ from config import DBMS
 from model.popular import Popular
 from service.article_service import ArticleService
 from service.read_service import ReadService
-from utils.func import date_to_timestamp, get_timestamp, check_alias
+from utils.func import date_to_timestamp, get_timestamp, check_alias, singleton
 
 logger = logging.getLogger('PopularService')
 
 
+@singleton
 class PopularService(object):
     field_names = []
 

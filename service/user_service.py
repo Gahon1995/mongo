@@ -14,6 +14,7 @@ from utils.func import *
 logger = logging.getLogger('userService')
 
 
+@singleton
 class UserService(object):
     field_names = ['id', 'name', 'pwd', 'gender', 'email', 'phone', 'dept', 'grade',
                    'language', 'region', 'role', 'preferTags', 'obtainedCredits', 'create_time']

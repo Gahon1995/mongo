@@ -8,11 +8,12 @@ import logging
 
 from config import DBMS
 from model.ids import Ids
-from utils.func import check_alias
+from utils.func import check_alias, singleton
 
 logger = logging.getLogger('IdsService')
 
 
+@singleton
 class IdsService(object):
 
     def init(self, db_alias):
