@@ -6,6 +6,8 @@
 
 import functools
 import json
+import threading
+
 import pytz
 import datetime
 import time
@@ -272,29 +274,29 @@ def get_id_by_region(_id, region):
         return _id if is_odd(_id) else _id + 1
 
 
-def get_dbms_by_uid(uid):
-    """
-        通过uid返回该uid对应的用户数据存储地址
-        TODO 从配置文件获取地址配置信息
-            # DBMS1 -> 偶数
-            # DBMS2 -> 奇数
-    :param uid:
-    :return:
-    """
-    if is_odd(uid):
-        return get_dbms_by_region(DBMS.region['values'][1])
-    else:
-        return get_dbms_by_region(DBMS.region['values'][0])
+# def get_dbms_by_uid(uid):
+#     """
+#         通过uid返回该uid对应的用户数据存储地址
+#         TODO 从配置文件获取地址配置信息
+#             # DBMS1 -> 偶数
+#             # DBMS2 -> 奇数
+#     :param uid:
+#     :return:
+#     """
+#     if is_odd(uid):
+#         return get_dbms_by_region(DBMS.region['values'][1])
+#     else:
+#         return get_dbms_by_region(DBMS.region['values'][0])
 
 
-def get_best_dbms_by_uid(uid):
-    """
-        该方法用于返回当前uid最好的服务器地址，目前默认为第一个
-        TODO 返回当前uid所对应的可连接的DBMS
-    :param uid:
-    :return:
-    """
-    return get_dbms_by_uid(int(uid))[0]
+# def get_best_dbms_by_uid(uid):
+#     """
+#         该方法用于返回当前uid最好的服务器地址，目前默认为第一个
+#         TODO 返回当前uid所对应的可连接的DBMS
+#     :param uid:
+#     :return:
+#     """
+#     return get_dbms_by_uid(int(uid))[0]
 
 
 def get_id_by_category(_id, category):
@@ -311,22 +313,22 @@ def get_id_by_category(_id, category):
         return _id if is_odd(_id) == 1 else _id + 1
 
 
-def get_dbms_by_aid(aid):
-    # TODO 统一奇偶
-    if is_odd(aid):
-        return get_dbms_by_category(DBMS.category['values'][1])
-    else:
-        return get_dbms_by_category(DBMS.category['values'][0])
+# def get_dbms_by_aid(aid):
+#     # TODO 统一奇偶
+#     if is_odd(aid):
+#         return get_dbms_by_category(DBMS.category['values'][1])
+#     else:
+#         return get_dbms_by_category(DBMS.category['values'][0])
 
 
-def get_best_dbms_by_aid(aid):
+def get_best_dbms():
     """
         该方法用于返回当前aid最好的服务器地址，目前默认为第一个
         TODO 返回当前aid所对应的可连接的DBMS
     :param aid:
     :return:
     """
-    return get_dbms_by_aid(aid)[0]
+    return DBMS.all[0]
 
 
 def timestamp_to_time(timestamp: int):
@@ -354,10 +356,15 @@ def date_to_datetime(_date):
         return datetime.datetime.strptime(str("{}-{}-{}".format(_date.year, _date.month, _date.day + 1)), '%Y-%m-%d')
 
 
-def datetime_to_timestamp(_date: datetime):
+def datetime_to_timestamp(_date: datetime.datetime):
     # if isinstance(_date, datetime.date):
     #     _date = date_to_datetime(_date)
     return int(_date.timestamp() * 1000)
+
+
+def date_to_timestamp(_date: datetime.date):
+    _datetime = datetime.datetime.strptime(str("{}-{}-{}".format(_date.year, _date.month, _date.day)), '%Y-%m-%d')
+    return int(_datetime.timestamp() * 1000)
 
 
 def get_timestamp():
@@ -384,3 +391,25 @@ def pretty_models(models: list, field_names: list):
                        ))
     print(x)
     pass
+
+
+def create_thread_and_run(jobs, callback_name, wait=True, daemon=True, args=(), kwargs={}):
+    threads = []
+    if not isinstance(jobs, list): jobs = [jobs]
+    for job in jobs:
+        thread = threading.Thread(target=getattr(job, callback_name), args=args, kwargs=kwargs)
+        thread.setDaemon(daemon)
+        thread.start()
+        threads.append(thread)
+    if wait:
+        for thread in threads: thread.join()
+
+
+# 计算时间函数
+def print_run_time(func):
+    def wrapper(*args, **kw):
+        local_time = time.time()
+        func(*args, **kw)
+        print('current Function [%s] run time is %.2f' % (func.__name__, time.time() - local_time))
+
+    return wrapper

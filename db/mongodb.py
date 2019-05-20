@@ -139,7 +139,7 @@ def init_connect():
 
     # from utils.consts import DBMS
     # tz_aware=True 设置时区修正，mongoDB的时区默认为UTC0，需要加上这个加入时区信息
-    connect(DBMS.db_name, host=Config.bj_mongo_host, port=Config.bj_mongo_port, tz_aware=True)
+    connect(DBMS.db_name, host=DBMS.configs[DBMS.DBMS1]['host'], port=DBMS.configs[DBMS.DBMS1]['port'], tz_aware=True)
 
     for dbms in DBMS.all:
         register_connection(alias=dbms, db=DBMS.db_name, host=DBMS.configs[dbms]['host'],
@@ -174,7 +174,7 @@ def switch_mongo_db(cls, default_db=None, allow_None=False):
                 if db_alias not in DBMS.all:
                     raise DbmsAliasError('db_alias error, {} , all:{}'.format(db_alias, DBMS.all))
                 # print("switch db: cls={0}, db_alias={1}".format(cls.__name__, db_alias))
-                logger.debug("switch db: cls={0}, db_alias={1}".format(cls.__name__, db_alias))
+                logger.debug("switch db:func={0}, cls={1}, db_alias={2}".format(func.__name__, cls.__name__, db_alias))
                 with switch_db(cls, db_alias):
                     return func(*args, **kwargs)
             except KeyError:

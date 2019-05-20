@@ -15,15 +15,19 @@ temporalChoices = ('daily', 'weekly', 'monthly')
 
 class Popular(BaseDB):
     meta = {
+        'abstract': True,
         'indexes': [
-            'temporalGranularity'
+            'temporalGranularity',
+            'timestamp',
+            ('temporalGranularity', 'timestamp')
         ]
     }
 
     # default id _id
     temporalGranularity = StringField(max_length=7, choices=temporalChoices)
-    articleAidList = ListField(IntField(required=False), default=list())
-    update_time = DateField(required=True, default=datetime.today)
+    articleAidDict = DictField(default={})
+    timestamp = IntField(required=True)
+    update_time = IntField(required=True)
 
     # timestamp = DateTimeField(default=datetime.now)
     @property

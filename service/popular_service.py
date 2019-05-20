@@ -4,69 +4,103 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 
-from model.popular import Popular
+# from model.popular import Popular
 from service.read_service import ReadService
+from service.article_service import ArticleService
+from model.popular import Popular
 from db.mongodb import switch_mongo_db
 import datetime
 from config import DBMS
+from utils.func import date_to_timestamp, datetime_to_timestamp, get_timestamp, check_alias, get_best_dbms
+
+import logging
+
+import threading
+
+logger = logging.getLogger('PopularService')
 
 
 class PopularService(object):
     field_names = []
 
     @staticmethod
-    @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
-    def get_daily_rank(end_date, db_alias=DBMS.DBMS1):
-        return Popular.get(update_time=end_date, temporalGranularity='daily')
+    def get_model(dbms: str):
+        class Model(Popular):
+            meta = {
+                'db_alias': dbms,
+                'collection': 'popular'
+            }
+            pass
 
-    @staticmethod
-    @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
-    def get_weekly_rank(end_date, db_alias=DBMS.DBMS1):
-        return Popular.get(update_time=end_date, temporalGranularity='weekly')
+        return Model
 
-    @staticmethod
-    @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
-    def get_monthly_rank(end_date, db_alias=DBMS.DBMS1):
-        return Popular.get(update_time=end_date, temporalGranularity='monthly')
+    def __update_rank(self, rank, articles, db_alias):
+        rank.articleAidDict = {}
+        for title, count in articles:
+            if ArticleService().has_article(title, db_alias):
+                rank.articleAidDict[str(title)] = count
 
-    @staticmethod
-    @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
-    def _update_rank(rank, articles, temporal, db_alias=DBMS.DBMS1):
-        if rank is None:
-            rank = Popular()
-            rank.temporalGranularity = temporal
-        rank.articleAidList.clear()
-        for article in articles:
-            rank.articleAidList.append(article[0])
-
-        rank.update_time = datetime.date.today()
+        rank.update_time = get_timestamp()
         rank.save()
 
-    @staticmethod
-    @switch_mongo_db(cls=Popular, default_db=DBMS.DBMS1)
-    def update_daily_rank(today, db_alias=DBMS.DBMS1):
-        rank = PopularService().get_daily_rank(today)
-        articles = ReadService().get_daily_popular(today)
-        PopularService._update_rank(rank, articles, 'daily')
+    def __update_daily_rank(self, articles, _date, db_alias):
+        rank = self.get_daily_rank(_date, db_alias)
+        if rank is None:
+            rank = self.get_model(db_alias)()
+            rank.timestamp = date_to_timestamp(_date)
+            rank.temporalGranularity = 'daily'
+            logger.info(
+                "thread: {} create new daily popular on {}, at {}".format(threading.current_thread(), db_alias, _date))
+        self.__update_rank(rank, articles, db_alias)
 
-    @staticmethod
-    @switch_mongo_db(cls=Popular)
-    def update_weekly_rank(today, db_alias=DBMS.DBMS1):
-        rank = PopularService().get_weekly_rank(today)
-        articles = ReadService().get_weekly_popular(today)
-        PopularService._update_rank(rank, articles, 'weekly')
+    def __update_weekly_rank(self, articles, _date, db_alias):
+        rank = self.get_weekly_rank(_date, db_alias)
+        if rank is None:
+            rank = self.get_model(db_alias)()
+            rank.timestamp = date_to_timestamp(_date)
+            rank.temporalGranularity = 'weekly'
+        self.__update_rank(rank, articles, db_alias)
 
-    @staticmethod
-    @switch_mongo_db(cls=Popular)
-    def update_monthly_rank(today, db_alias=DBMS.DBMS1):
-        rank = PopularService().get_monthly_rank(today)
-        articles = ReadService().get_month_popular(today)
-        PopularService._update_rank(rank, articles, 'monthly')
+    def __update_monthly_rank(self, articles, _date, db_alias):
+        rank = self.get_monthly_rank(_date, db_alias)
+        if rank is None:
+            rank = self.get_model(db_alias)()
+            rank.timestamp = date_to_timestamp(_date)
+            rank.temporalGranularity = 'monthly'
+        self.__update_rank(rank, articles, db_alias)
 
-    @staticmethod
-    def update_popular(_date=None):
+    # @switch_mongo_db(cls=Popular, allow_None=True)
+    def update_popular(self, _date=None, db_alias=None, daily_pop=None, weekly_pop=None, monthly_pop=None):
+        if isinstance(_date, datetime.datetime):
+            _date = _date.date()
         _date = _date or datetime.date.today()
-        PopularService.update_daily_rank(_date)
-        PopularService.update_monthly_rank(_date)
-        PopularService.update_weekly_rank(_date)
-        pass
+        if daily_pop is None:
+            daily_pop = ReadService().get_daily_popular(_date)
+            weekly_pop = ReadService().get_weekly_popular(_date)
+            monthly_pop = ReadService().get_monthly_popular(_date)
+        if db_alias is None:
+            for dbms in DBMS.all:
+                self.update_popular(_date=_date, db_alias=dbms,
+                                    daily_pop=daily_pop,
+                                    weekly_pop=weekly_pop,
+                                    monthly_pop=monthly_pop)
+            pass
+        else:
+
+            check_alias(db_alias)
+
+            self.__update_daily_rank(daily_pop, _date, db_alias)
+            self.__update_monthly_rank(weekly_pop, _date, db_alias)
+            self.__update_weekly_rank(monthly_pop, _date, db_alias)
+
+            logger.info("update popular on {}, date:{}".format(db_alias, _date))
+            pass
+
+    def get_daily_rank(self, _date, db_alias):
+        return self.get_model(db_alias).get(timestamp=date_to_timestamp(_date), temporalGranularity='daily')
+
+    def get_weekly_rank(self, _date, db_alias):
+        return self.get_model(db_alias).get(timestamp=date_to_timestamp(_date), temporalGranularity='weekly')
+
+    def get_monthly_rank(self, _date, db_alias):
+        return self.get_model(db_alias).get(timestamp=date_to_timestamp(_date), temporalGranularity='monthly')

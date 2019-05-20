@@ -1,6 +1,8 @@
 from test.test_base import TestBase
 
 from service.read_service import ReadService
+from service.article_service import ArticleService
+from service.user_service import UserService
 from config import DBMS
 
 
@@ -9,9 +11,9 @@ class TestReadService(TestBase):
     def setup_method(self) -> None:
         self.readService = ReadService()
 
-    def test_get_id(self):
-        rid = self.readService.get_id()
-        print("rid: ", str(rid))
+    # def test_get_id(self):
+    #     rid = self.readService.get_id()
+    #     print("rid: ", str(rid))
 
     def test_count(self):
         for dbms in DBMS.all:
@@ -19,16 +21,13 @@ class TestReadService(TestBase):
             print("count {}: {}".format(dbms, cnt))
 
     def test_save_read(self):
-        read = self.readService.save_read(1, 0, 1, 34, 2, 0, 'sdf', 1, 1)
-        if read is None:
-            read = self.readService.save_read(1, 1, 1, 34, 2, 0, 'sdf', 1, 1)
-        if read is None:
-            read = self.readService.save_read(0, 0, 1, 34, 2, 0, 'sdf', 1, 1)
-        if read is None:
-            read = self.readService.save_read(0, 1, 1, 34, 2, 0, 'sdf', 1, 1)
+        article = ArticleService().get_articles_by_title('title4')[0]
+        user = UserService().get_user_by_name('user4')
+        read = self.readService.save_read(article, user, 1, 34, 2, 0, 'sdf', 1, 1)
 
         assert read is not None
         print(read)
+        return read
 
     def test_reads_list(self):
         reads = self.readService.get_reads()
@@ -39,18 +38,21 @@ class TestReadService(TestBase):
         assert reads is not None
         self.readService.pretty_reads(reads)
 
-    def test_del_read_by_rid(self):
-        num = self.readService.del_read_by_rid(85)
+    def test_del_read_by_id(self):
+        read = self.test_save_read()
+        num = self.readService.del_read_by_id(read.id)
         print(num)
         # assert num == 1
 
     def test_del_reads_by_uid(self):
-        num = self.readService.del_reads_by_uid(35)
+        user = UserService().get_user_by_name('user4')
+        num = self.readService.del_reads_by_uid(str(user.id))
         print(num)
         # assert num > 0
 
     def test_get_history(self):
-        reads = self.readService.get_history(21)
+        user = UserService().get_user_by_name('user4')
+        reads = self.readService.get_history(str(user.id))
         self.readService.pretty_reads(reads)
 
     def test__get_popular(self):
@@ -93,5 +95,5 @@ class TestReadService(TestBase):
         from utils.func import timestamp_to_datetime
         _date = timestamp_to_datetime(1506342197000)
 
-        reads = self.readService.get_month_popular(_date.date())
+        reads = self.readService.get_monthly_popular(_date.date())
         print(reads)

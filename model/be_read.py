@@ -14,8 +14,9 @@ class BeRead(BaseDB):
     # 可以尝试使用LazyReferenceField，看能否优化查询性能
 
     meta = {
+        'abstract': True,
         'indexes': [
-            'bid',
+            # 'bid',
             'aid',
             'readNum',
             'commentNum',
@@ -24,16 +25,16 @@ class BeRead(BaseDB):
         ]
     }
 
-    bid = IntField(required=True, unique=True)
-    aid = IntField(required=True)
+    # bid = IntField(required=True, unique=True)
+    aid = StringField(required=True)
     readNum = IntField(default=0)
-    readUidList = ListField(IntField(required=False), default=list())
+    readUidList = ListField(StringField(required=False), default=list())
     commentNum = IntField(default=0)
-    commentUidList = ListField(IntField(required=False), default=list())
+    commentUidList = ListField(StringField(required=False), default=list())
     agreeNum = IntField(default=0)
-    agreeUidList = ListField(IntField(required=False), default=list())
+    agreeUidList = ListField(StringField(required=False), default=list())
     shareNum = IntField(default=0)
-    shareUidList = ListField(IntField(required=False), default=list())
+    shareUidList = ListField(StringField(required=False), default=list())
     timestamp = IntField(required=True)
     last_update_time = DateTimeField(default=datetime.utcnow)
 

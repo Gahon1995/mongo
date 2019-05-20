@@ -4,9 +4,11 @@ from db.mongodb import BaseDB
 
 class User(BaseDB):
     meta = {
+        'abstract': True,
+        # 'allow_inheritance': True,
         'index_background': True,
         'indexes': [
-            'uid',
+            # 'uid',
             'name',
         ]
     }
@@ -23,8 +25,6 @@ class User(BaseDB):
     role = StringField(required=True)
     preferTags = StringField(required=True)
     obtainedCredits = StringField(default='0')
-
-    # 尝试利用objectid来获取创建时间
     timestamp = IntField(required=True)
 
     @property

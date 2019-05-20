@@ -43,19 +43,19 @@ class TestUserService(TestBase):
         assert user is not None
         print(user)
 
-        admin = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS1)
-        assert admin is not None
+        admin1 = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS1)
 
-        admin = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS2)
-        assert admin is None
+        admin2 = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS2)
+        assert (admin1 is None) if (admin2 is not None) else (admin1 is not None)
 
     def test_get_by_uid(self):
-        user = UserService().get_user_by_uid(34)
-        # assert user is not None
+        user = UserService().get_user_by_name('user4')
+        user1 = UserService().get_user_by_id(user.id)
+        assert user1 is not None and user1.name == user.name
         print(user)
-        user = UserService().get_user_by_uid(23)
-        # assert user is not None
-        print(user)
+        # user = UserService().get_user_by_id(23)
+        # # assert user is not None
+        # print(user)
 
     def test_login(self):
         user = UserService().login('admin', 'admin')
@@ -70,7 +70,8 @@ class TestUserService(TestBase):
         assert user is None
 
     def test_update(self):
-        user = UserService().update_by_uid(0, gender='female', email='ewrqwr')
+        user = UserService().get_user_by_name('user4')
+        user = UserService().update_by_id(user.id, gender='female', email='ewrqwr')
         assert user is not None
         print(user)
 
@@ -80,7 +81,7 @@ class TestUserService(TestBase):
 
     def test_del(self):
         # UserService().del_user_by_uid(49)
-        # user = UserService().get_user_by_uid(49)
+        # user = UserService().get_user_by_id(49)
         # assert user is None
 
         UserService().del_user_by_name('gahon')

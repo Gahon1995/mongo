@@ -26,6 +26,10 @@ class TestBaseArticleService(TestBase):
         articles = ArticleService().get_articles_by_title('title6')
         ArticleService().pretty_articles(articles)
 
+    def test_get_articles_by_category(self):
+        articles = ArticleService().get_articles_by_category('science')
+        ArticleService().pretty_articles(articles)
+
     def test_add_an_article(self):
         re = ArticleService().add_an_article('test', 'gahon', 'science', 'asdf', 'asdfas', 'asdf', 'asdf')
         assert re
@@ -41,34 +45,36 @@ class TestBaseArticleService(TestBase):
         # re = ArticleService().del_by_aid(308)
         # assert re
         #
-        # article = ArticleService().get_article_by_aid(308)
+        # article = ArticleService().get_an_article_by_id(308)
         # assert article is None
 
         re = ArticleService().add_an_article('test_article', 'gahon', 'science', 'asdf', 'asdfas', 'asdf', 'asdf')
         assert re
         articles = ArticleService().get_articles_by_title('test_article')
         ArticleService().pretty_articles(articles)
-        aid = articles[0].aid
+        _id = articles[0].id
         re = ArticleService().del_article(articles[0])
         assert re
-        article = ArticleService().get_article_by_aid(aid)
+        article = ArticleService().get_an_article_by_id(_id)
         assert article is None
 
     def test_articles_list(self):
-        articles = ArticleService().get_articles()
+        articles = ArticleService().get_articles(db_alias=DBMS.DBMS2)
         ArticleService.pretty_articles(articles)
 
     def test_get_by_aid(self):
-        article = ArticleService().get_article_by_aid(1)
+        article = ArticleService().get_articles_by_title('title5')[0]
+        article1 = ArticleService().get_an_article_by_id(article.id)
         ArticleService.pretty_articles([article])
-        assert article is not None
+        assert article1 is not None and article.title == article1.title
 
-    def test_update_article_by_aid(self):
-        article = ArticleService().get_article_by_aid(1)
+    def test_update_article_by_id(self):
+        a = ArticleService().get_articles_by_title('title5')[0]
+        article = ArticleService().get_an_article_by_id(a.id)
         ArticleService.pretty_articles([article])
 
-        ArticleService().update_an_article(article.aid, {"title": "update24", "language": 'zh'})
+        ArticleService().update_an_article(article, {"title": "update24", "language": 'zh'})
 
-        article = ArticleService().get_article_by_aid(1)
+        article = ArticleService().get_an_article_by_id(a.id)
         ArticleService.pretty_articles([article])
         assert article.language == 'zh'
