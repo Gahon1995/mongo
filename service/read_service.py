@@ -207,9 +207,9 @@ class ReadService(object):
         end = get_date_timestamp(end_date)
         for dbms in DBMS.all:
             #  TODO 比较 aggregate 和 item_frequencies 的性能差距
-            # freq = self.__get_popular_by_freq(start, end, top_n * 2, db_alias=dbms)
+            freq = self.__get_popular_by_freq(start, end, top_n * 2, db_alias=dbms)
             # print(freq)
-            freq = self.__get_popular_by_aggregate(start, end, top_n * 2, db_alias=dbms)
+            # freq = self.__get_popular_by_aggregate(start, end, top_n * 2, db_alias=dbms)
             freq_all = merge_dict(freq_all, freq)
 
         return sort_dict(freq_all)[:top_n]
