@@ -15,8 +15,8 @@ class Popular(BaseDB):
     meta = {
         'abstract': True,
         'indexes': [
-            'temporalGranularity',
-            'timestamp',
+            # 'temporalGranularity',
+            # 'timestamp',
             ('temporalGranularity', 'timestamp')
         ]
     }

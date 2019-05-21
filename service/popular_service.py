@@ -19,7 +19,7 @@ logger = logging.getLogger('PopularService')
 
 @singleton
 class PopularService(object):
-    field_names = []
+    field_names = ['temporalGranularity', 'articleAidDict', 'timestamp', 'update_time']
 
     @staticmethod
     def get_model(dbms: str):
@@ -87,8 +87,8 @@ class PopularService(object):
             check_alias(db_alias)
 
             self.__update_daily_rank(daily_pop, _date, db_alias)
-            self.__update_monthly_rank(weekly_pop, _date, db_alias)
-            self.__update_weekly_rank(monthly_pop, _date, db_alias)
+            self.__update_weekly_rank(weekly_pop, _date, db_alias)
+            self.__update_monthly_rank(monthly_pop, _date, db_alias)
 
             logger.info("update popular on {}, date:{}".format(db_alias, _date))
             pass
@@ -101,3 +101,36 @@ class PopularService(object):
 
     def get_monthly_rank(self, _date, db_alias):
         return self.get_model(db_alias).get(timestamp=date_to_timestamp(_date), temporalGranularity='monthly')
+
+    def get_daily_articles(self, _date, db_alias):
+        rank = self.get_daily_rank(_date, db_alias)
+
+        populars = list()
+
+        for aid, count in rank.articleAidDict.items():
+            article = ArticleService().get_an_article_by_aid(int(aid), db_alias=db_alias)
+            article.count = count
+            populars.append(article)
+        return populars
+
+    def get_weekly_articles(self, _date, db_alias):
+        rank = self.get_weekly_rank(_date, db_alias)
+
+        populars = list()
+
+        for aid, count in rank.articleAidDict.items():
+            article = ArticleService().get_an_article_by_aid(int(aid), db_alias=db_alias)
+            article.count = count
+            populars.append(article)
+        return populars
+
+    def get_monthly_articles(self, _date, db_alias):
+        rank = self.get_monthly_rank(_date, db_alias)
+
+        populars = list()
+
+        for aid, count in rank.articleAidDict.items():
+            article = ArticleService().get_an_article_by_aid(int(aid), db_alias=db_alias)
+            article.count = count
+            populars.append(article)
+        return populars

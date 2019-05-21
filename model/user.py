@@ -1,4 +1,5 @@
 from mongoengine import *
+
 from db.mongodb import BaseDB
 
 
@@ -8,7 +9,7 @@ class User(BaseDB):
         # 'allow_inheritance': True,
         'index_background': True,
         'indexes': [
-            # 'uid',
+            'uid',
             'name',
         ]
     }

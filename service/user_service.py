@@ -16,7 +16,7 @@ logger = logging.getLogger('userService')
 
 @singleton
 class UserService(object):
-    field_names = ['id', 'name', 'pwd', 'gender', 'email', 'phone', 'dept', 'grade',
+    field_names = ['uid', 'name', 'pwd', 'gender', 'email', 'phone', 'dept', 'grade',
                    'language', 'region', 'role', 'preferTags', 'obtainedCredits', 'create_time']
 
     def __init__(self):
@@ -289,7 +289,7 @@ class UserService(object):
         :param kwargs:      更新的字段和对应的值
         :return:
         """
-        forbid = ('name', 'id', '_id', 'region')
+        forbid = ('name', 'id', 'uid', 'region')
         if user is None:
             logger.info("用户不存在")
             return None

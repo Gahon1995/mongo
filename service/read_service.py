@@ -200,27 +200,28 @@ class ReadService(object):
 
         def get_date_timestamp(_date):
             # 根据date计算第二天0点的timestamp
-            _re = datetime.datetime.strptime(str("{}-{}-{}".format(_date.year, _date.month, _date.day + 1)), '%Y-%m-%d')
+            _date = _date + datetime.timedelta(days=1)
+            _re = datetime.datetime.strptime(str("{}-{}-{}".format(_date.year, _date.month, _date.day)), '%Y-%m-%d')
             return int(_re.timestamp() * 1000)
 
         start = get_date_timestamp(end_date - datetime.timedelta(days=before_days))
         end = get_date_timestamp(end_date)
         for dbms in DBMS.all:
             #  TODO 比较 aggregate 和 item_frequencies 的性能差距
-            freq = self.__get_popular_by_freq(start, end, top_n * 2, db_alias=dbms)
+            # freq = self.__get_popular_by_freq(start, end,  db_alias=dbms)
             # print(freq)
-            # freq = self.__get_popular_by_aggregate(start, end, top_n * 2, db_alias=dbms)
+            freq = self.__get_popular_by_aggregate(start, end, db_alias=dbms)
             freq_all = merge_dict(freq_all, freq)
 
         return sort_dict(freq_all)[:top_n]
 
-    def __get_popular_by_freq(self, start, end, top_n=20, db_alias=None):
+    def __get_popular_by_freq(self, start, end, db_alias=None):
         check_alias(db_alias)
 
         return self.get_model(db_alias).objects(timestamp__gte=start, timestamp__lte=end).item_frequencies('aid')
         pass
 
-    def __get_popular_by_aggregate(self, start, end, top_n=20, db_alias=None):
+    def __get_popular_by_aggregate(self, start, end, db_alias=None):
         check_alias(db_alias)
         #  TODO 比较 aggregate 和 item_frequencies 的性能差距
         freq = self.get_model(db_alias).objects(timestamp__gte=start, timestamp__lte=end).aggregate(

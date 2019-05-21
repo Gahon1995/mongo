@@ -366,11 +366,15 @@ def date_to_timestamp(_date: datetime.date):
     return int(_datetime.timestamp() * 1000)
 
 
+def str_to_datetime(_date: str):
+    return datetime.datetime.strptime(_date, '%Y-%m-%d')
+
+
 def get_timestamp():
     return int(datetime.datetime.now().timestamp() * 1000)
 
 
-def pretty_models(models: list, field_names: list):
+def pretty_models(models, field_names: list):
     from prettytable import PrettyTable
     from datetime import datetime
 

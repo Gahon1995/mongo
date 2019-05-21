@@ -7,13 +7,13 @@ from service.read_service import ReadService
 from service.user_service import UserService
 from utils.func import timestamp_to_datetime, print_run_time
 
-USERS_NUM = 10000
-ARTICLES_NUM = 200000
-READS_NUM = 1000000
+# USERS_NUM = 10000
+# ARTICLES_NUM = 200000
+# READS_NUM = 1000000
 
-# USERS_NUM = 100
-# ARTICLES_NUM = 200
-# READS_NUM = 1000
+USERS_NUM = 1000
+ARTICLES_NUM = 20000
+READS_NUM = 100000
 
 # uid_region = {}
 # aid_lang = {}
@@ -163,6 +163,7 @@ def gen_populars():
     timeBegin = 1506332297000
     timeEnd = timeBegin + READS_NUM * 10000
     for timestamp in range(timeBegin, timeEnd, 86400000):
+        print('gen popular on date: {}'.format(timestamp_to_datetime(timestamp).date()))
         PopularService().update_popular(_date=timestamp_to_datetime(timestamp).date())
 
 
@@ -233,7 +234,12 @@ def create_by_threads(target, NUM):
     for i in range(thread_num):
         # gen_users_by_thread(i * part, (i + 1) * part)
         pool.apply_async(target, args=(i * part, min(NUM, (i + 1) * part)))
-        # print(i * part, (i + 1) * part)
+    #     thread = threading.Thread(target=target, args=(i * part, min(NUM, (i + 1) * part)))
+    #     thread.setDaemon(True)
+    #     thread.start()
+    #     threads.append(thread)
+    # for thread in threads:
+    #     thread.join()
     pool.close()
     pool.join()
     print('finish')
@@ -323,4 +329,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    from main import init
+
+    init()
+    gen_populars()

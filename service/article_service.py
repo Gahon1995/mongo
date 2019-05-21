@@ -43,10 +43,12 @@ class ArticleService(object):
         check_alias(db_alias)
         return self.get_model(db_alias).count(**kwargs)
 
-    def get_articles_by_title(self, title, db_alias=None) -> list:
+    def get_articles_by_title(self, title, page_num=1, page_size=20, db_alias=None) -> list:
         """
             根据文章标题进行搜索
             # TODO 测试该方法是否有用
+        :param page_size:
+        :param page_num:
         :param db_alias:
         :param title:
         :return: list, 里边存的article
@@ -57,28 +59,32 @@ class ArticleService(object):
 
         if db_alias is None:
             for dbms in DBMS.all:
-                tmp_articles = self.__search_by_title(title, db_alias=dbms)
+                # tmp_articles = self.__search_by_title(title, db_alias=dbms)
+                tmp_articles = self.get_articles(title__contains=title, page_num=page_num, page_size=page_size,
+                                                 db_alias=dbms)
                 for article in tmp_articles:
                     # 判断是否已经在其他DBMS中出现过了
                     if article.title not in titles:
                         articles.append(article)
                         titles.append(article.title)
         else:
-            articles = self.__search_by_title(title, db_alias=db_alias)
+            # articles = self.__search_by_title(title, db_alias=db_alias)
+            articles = self.get_articles(title__contains=title, page_num=page_num, page_size=page_size,
+                                         db_alias=db_alias)
         return articles
 
-    def __search_by_title(self, title, db_alias=None) -> list:
-        """
-            因为DBMS2上存有所有的文章，所以默认直接在DBMS2上搜索就行
-            # TODO 测试该方法是否有用
-        :param title:
-        :param db_alias:
-        :return: list, 里边存的article
-        """
-        check_alias(db_alias)
-        return self.get_model(db_alias).objects(title__contains=title)
+    # def __search_by_title(self, title, db_alias=None) -> list:
+    #     """
+    #         因为DBMS2上存有所有的文章，所以默认直接在DBMS2上搜索就行
+    #         # TODO 测试该方法是否有用
+    #     :param title:
+    #     :param db_alias:
+    #     :return: list, 里边存的article
+    #     """
+    #     check_alias(db_alias)
+    #     return self.get_model(db_alias).objects(title__contains=title)
 
-    def get_articles_by_category(self, category, db_alias=None) -> list:
+    def get_articles_by_category(self, category, page_num=1, page_size=20, db_alias=None) -> list:
         """
             根据文章标题进行搜索
             # TODO 测试该方法是否有用
@@ -91,27 +97,29 @@ class ArticleService(object):
         titles = list()  # 保存在查询过程中已经出现过的文章
 
         if db_alias is None:
-            for dbms in DBMS.all:
-                tmp_articles = self.__search_by_category(category, db_alias=dbms)
+            for dbms in get_dbms_by_category(category):
+                # tmp_articles = self.__search_by_category(category, db_alias=dbms)
+                tmp_articles = self.get_articles(category=category, page_num=page_num, page_size=page_size,
+                                                 db_alias=dbms)
                 for article in tmp_articles:
                     # 判断是否已经在其他DBMS中出现过了
                     if article.title not in titles:
                         articles.append(article)
                         titles.append(article.title)
         else:
-            articles = self.__search_by_category(category, db_alias=db_alias)
+            # articles = self.__search_by_category(category, db_alias=db_alias)
+            articles = self.get_articles(category=category, page_num=page_num, page_size=page_size, db_alias=db_alias)
         return articles
 
-    def __search_by_category(self, category, db_alias=None) -> list:
-        """
-            因为DBMS2上存有所有的文章，所以默认直接在DBMS2上搜索就行
-            # TODO 测试该方法是否有用
-        :param category:
-        :param db_alias:
-        :return: list, 里边存的article
-        """
-        check_alias(db_alias)
-        return self.get_model(db_alias).objects(category=category)
+    # def __search_by_category(self, category, db_alias=None) -> list:
+    #     """
+    #         # TODO 测试该方法是否有用
+    #     :param category:
+    #     :param db_alias:
+    #     :return: list, 里边存的article
+    #     """
+    #     check_alias(db_alias)
+    #     return self.get_model(db_alias).objects(category=category)
 
     def add_an_article(self, title, authors, category, abstract, articleTags, language, text, image=None,
                        video=None, timestamp=None):
@@ -203,21 +211,24 @@ class ArticleService(object):
         check_alias(db_alias)
         if not isinstance(_id, ObjectId):
             _id = ObjectId(_id)
-        return self.get_model(db_alias).objects(id=_id).first()
+        return self.get_model(db_alias).get(id=_id)
 
-    def get_an_article_by_aid(self, aid):
-        # TODO 修改实现方法
-        article = None
-        for dbms in DBMS.all:
-            article = self.__get_an_article_by_aid(aid, db_alias=dbms)
-            if article is not None:
-                break
-        return article
+    def get_an_article_by_aid(self, aid, db_alias=None):
+        if db_alias is None:
+            # TODO 修改实现方法
+            article = None
+            for dbms in DBMS.all:
+                article = self.get_an_article_by_aid(aid, db_alias=dbms)
+                if article is not None:
+                    break
+            return article
+        else:
+            check_alias(db_alias)
+            return self.get_model(db_alias).get(aid=aid)
 
-    def __get_an_article_by_aid(self, aid, db_alias=None):
-        check_alias(db_alias)
-
-        return self.get_model(db_alias).objects(aid=aid).first()
+    # def __get_an_article_by_aid(self, aid, db_alias=None):
+    #     check_alias(db_alias)
+    #     return self.get_model(db_alias).get(aid=aid)
 
     def update_an_article(self, article, condition: dict):
         """
@@ -228,11 +239,11 @@ class ArticleService(object):
         :return:
         """
         for dbms in get_dbms_by_category(article.category):
-            self.__update_article(article, condition, db_alias=dbms)
+            self.__update_article(article.id, condition, db_alias=dbms)
 
-    def __update_article(self, article, condition: dict, db_alias=None):
+    def __update_article(self, id, condition: dict, db_alias=None):
         check_alias(db_alias)
-        article = self.__get_an_article_by_id(article.id, db_alias=db_alias)
+        article = self.__get_an_article_by_id(id, db_alias=db_alias)
         if article is None:
             return
 

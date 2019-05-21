@@ -18,10 +18,10 @@ class BeRead(BaseDB):
         'indexes': [
             'bid',
             'aid',
-            'readNum',
-            'commentNum',
-            'agreeNum',
-            'shareNum'
+            # 'readNum',
+            # 'commentNum',
+            # 'agreeNum',
+            # 'shareNum'
         ]
     }
 

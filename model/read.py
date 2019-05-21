@@ -11,10 +11,10 @@ class Read(BaseDB):
             'uid',
             'aid',
             ('aid', 'uid'),
-            ('aid', 'readOrNot'),
-            ('aid', 'agreeOrNot'),
-            ('aid', 'commentOrNot'),
-            ('aid', 'shareOrNot'),
+            # ('aid', 'readOrNot'),
+            # ('aid', 'agreeOrNot'),
+            # ('aid', 'commentOrNot'),
+            # ('aid', 'shareOrNot'),
         ]
     }
 

@@ -25,10 +25,12 @@ class TestBaseArticleService(TestBase):
     def test_search_by_title(self):
         articles = ArticleService().get_articles_by_title('title6')
         ArticleService().pretty_articles(articles)
+        print(len(articles))
 
     def test_get_articles_by_category(self):
         articles = ArticleService().get_articles_by_category('science')
         ArticleService().pretty_articles(articles)
+        print(len(articles))
 
     def test_add_an_article(self):
         re = ArticleService().add_an_article('test', 'gahon', 'science', 'asdf', 'asdfas', 'asdf', 'asdf')
@@ -42,7 +44,7 @@ class TestBaseArticleService(TestBase):
         ArticleService().pretty_articles(articles)
 
     def test_del_article(self):
-        ArticleService().add_an_article('test123', 'gahon', 'science', 'asdf', 'asdfas', 'asdf', 'asdf')
+        ArticleService().add_an_article('test_article', 'gahon', 'science', 'asdf', 'asdfas', 'asdf', 'asdf')
         articles = ArticleService().get_articles_by_title('test_article')
         _aid = articles[0].aid
         re1 = ArticleService().del_by_aid(_aid)

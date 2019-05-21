@@ -26,9 +26,8 @@ class Article(BaseDB):
             'aid',
             'title',
             'category',
-            'articleTags',
-            'authors',
-            'language'
+            # 'articleTags',
+            'authors'
         ]
     }
 
