@@ -3,7 +3,6 @@
 # @Time    : 2019-05-03 14:22
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
-from datetime import datetime
 
 from mongoengine import *
 
@@ -36,7 +35,7 @@ class BeRead(BaseDB):
     shareNum = IntField(default=0)
     shareUidList = ListField(IntField(required=False), default=list())
     timestamp = IntField(required=True)
-    last_update_time = DateTimeField(default=datetime.utcnow)
+    last_update_time = DateTimeField(required=True)
 
     # @property
     # def create_time(self):

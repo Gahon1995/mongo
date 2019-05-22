@@ -19,22 +19,24 @@ class BaseDB(Document):
         #     # 重写str方法， 将ObjectId 和datetime格式正确的输出
         return convert_mongo_2_json(self)
 
-    def get_create_time(self):
-        if self.id is None:
-            return None
-        return self.id.generation_time
-
     @classmethod
-    def list_by_page(cls, page_num=1, page_size=20, **kwargs):
+    def list_by_page(cls, page_num=1, page_size=20, only: list = None, exclude: list = None, **kwargs):
         """
             分页数据查询
 
+        :param exclude: 查询结果中不包含指定字段, list：字段名
+        :param only:    查询结果中只包含指定字段, list：字段名
         :param page_num: 查询的页码，默认第一页
         :param page_size: 每一页显示的数量
         :param kwargs: 查询的条件
         :return: 符合条件的分页数后据
         """
         offset = (page_num - 1) * page_size
+        if only is not None:
+            return cls.objects(**kwargs).only(*only).skip(offset).limit(page_size)
+        if exclude is not None:
+            return cls.objects(**kwargs).exclude(*exclude).skip(offset).limit(page_size)
+
         return cls.objects(**kwargs).skip(offset).limit(page_size)
 
     @classmethod
@@ -46,26 +48,36 @@ class BaseDB(Document):
         return cls.objects(**kwargs).count()
 
     @classmethod
-    def find(cls, **kwargs):
+    def find(cls, only: list = None, exclude: list = None, **kwargs):
         """
             查询所有数据（未分页）
         :param kwargs: 查询条件
         :return:
         """
+        if only is not None:
+            return cls.objects(**kwargs).only(*only)
+        if exclude is not None:
+            return cls.objects(**kwargs).exclude(*exclude)
+
         return cls.objects(**kwargs)
 
     @classmethod
-    def find_one(cls, **kwargs):
+    def find_first(cls, only: list = None, exclude: list = None, **kwargs):
         """
         返回符合条件的所有值的第一个
 
         :param kwargs: 查询条件
         :return:
         """
-        return cls.objects(**kwargs).first()
+        if only is not None:
+            return cls.objects(**kwargs).only(*only).limit(1).first()
+        if exclude is not None:
+            return cls.objects(**kwargs).exclude(*exclude).limit(1).first()
+
+        return cls.objects(**kwargs).limit(1).first()
 
     @classmethod
-    def get(cls, **kwargs):
+    def get_one(cls, only: list = None, exclude: list = None, **kwargs):
         """
         获取一个unique的项
 
@@ -73,10 +85,30 @@ class BaseDB(Document):
         :return:
         """
         try:
-            user = cls.objects(**kwargs).get()
-            return user
+            if only is not None:
+                return cls.objects.only(*only).get(**kwargs)
+            if exclude is not None:
+                return cls.objects.exclude(*exclude).get(**kwargs)
+
+            return cls.objects(**kwargs).get()
         except DoesNotExist:
             return None
+
+    @classmethod
+    def get_many_by_ids(cls, ids: list, only: list = None, exclude: list = None, **kwargs):
+        """
+        获取一个unique的项
+
+        :param kwargs: 查询条件
+        :return:
+        """
+
+        if only is not None:
+            return cls.objects.only(*only).in_bulk(ids)
+        if exclude is not None:
+            return cls.objects.exclude(*exclude).in_bulk(ids)
+
+        return cls.objects(**kwargs).in_bulk(ids)
 
     @classmethod
     def insert_one(cls, data):

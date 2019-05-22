@@ -40,6 +40,18 @@ class PopularService(object):
     def get_model(self, dbms):
         return self.classes[dbms]
 
+    def update_many(self, models=None, db_alias=None):
+
+        if db_alias is None:
+            for dbms in DBMS.all:
+                self.update_many(models, db_alias=dbms)
+        else:
+            if models is None:
+                models = self.models[db_alias]
+                if models is not None:
+                    self.get_model(db_alias).update_many(models)
+                    self.models[db_alias].clear()
+
     def __update_rank(self, rank, articles, db_alias):
         rank.articleAidDict = {}
         for aid, count in articles:
@@ -100,46 +112,69 @@ class PopularService(object):
             pass
 
     def get_daily_rank(self, _date, db_alias):
-        return self.get_model(db_alias).get(timestamp=date_to_timestamp(_date), temporalGranularity='daily')
+        return self.get_model(db_alias).get_one(timestamp=date_to_timestamp(_date), temporalGranularity='daily')
 
     def get_weekly_rank(self, _date, db_alias):
-        return self.get_model(db_alias).get(timestamp=date_to_timestamp(_date), temporalGranularity='weekly')
+        return self.get_model(db_alias).get_one(timestamp=date_to_timestamp(_date), temporalGranularity='weekly')
 
     def get_monthly_rank(self, _date, db_alias):
-        return self.get_model(db_alias).get(timestamp=date_to_timestamp(_date), temporalGranularity='monthly')
+        return self.get_model(db_alias).get_one(timestamp=date_to_timestamp(_date), temporalGranularity='monthly')
 
     def get_daily_articles(self, _date, db_alias):
         rank = self.get_daily_rank(_date, db_alias)
+        return self.__get_articles_by_rank(rank, db_alias)
+        # populars = list()
+        # aids = list(int(aid) for aid in rank.articleAidDict.keys())
+        # articles = ArticleService().get_articles_by_aids(aids, only=['title'], db_alias=db_alias)
+        # for aid, count in rank.articleAidDict.items():
+        #     articles[int(aid)].count = count
+        #     populars.append(articles[int(aid)])
 
-        populars = list()
-
-        for aid, count in rank.articleAidDict.items():
-            article = ArticleService().get_an_article_by_aid(int(aid), db_alias=db_alias)
-            article.count = count
-            populars.append(article)
-        return populars
+        # populars = list()
+        #
+        # for aid, count in rank.articleAidDict.items():
+        #     article = ArticleService().get_one_by_aid(int(aid), db_alias=db_alias)
+        #     article.count = count
+        #     populars.append(article)
+        # return populars
 
     def get_weekly_articles(self, _date, db_alias):
         rank = self.get_weekly_rank(_date, db_alias)
-
-        populars = list()
-        aids = list(int(aid) for aid in rank.articleAidDict.keys())
-        articles = ArticleService().get_articles_by_aids(aids, fields={'title': 1}, db_alias=db_alias)
-        for aid, count in rank.articleAidDict.items():
-            articles[int(aid)].count = count
-            populars.append(articles[int(aid)])
-        #     article = ArticleService().get_an_article_by_aid(int(aid), db_alias=db_alias)
-        #     article.count = count
-        #     populars.append(article)
-        return populars
+        return self.__get_articles_by_rank(rank, db_alias)
+        # populars = list()
+        # aids = list(int(aid) for aid in rank.articleAidDict.keys())
+        # articles = ArticleService().get_articles_by_aids(aids, only=['title'], db_alias=db_alias)
+        # for aid, count in rank.articleAidDict.items():
+        #     articles[int(aid)].count = count
+        #     populars.append(articles[int(aid)])
+        # #     article = ArticleService().get_an_article_by_aid(int(aid), db_alias=db_alias)
+        # #     article.count = count
+        # #     populars.append(article)
+        # return populars
 
     def get_monthly_articles(self, _date, db_alias):
         rank = self.get_monthly_rank(_date, db_alias)
 
-        populars = list()
+        return self.__get_articles_by_rank(rank, db_alias)
+        # populars = list()
+        # aids = list(int(aid) for aid in rank.articleAidDict.keys())
+        # articles = ArticleService().get_articles_by_aids(aids, only=['title'], db_alias=db_alias)
+        # for aid, count in rank.articleAidDict.items():
+        #     articles[int(aid)].count = count
+        #     populars.append(articles[int(aid)])
+        # populars = list()
+        #
+        # for aid, count in rank.articleAidDict.items():
+        #     article = ArticleService().get_one_by_aid(int(aid), db_alias=db_alias)
+        #     article.count = count
+        #     populars.append(article)
+        # return populars
 
+    def __get_articles_by_rank(self, rank, db_alias):
+        populars = list()
+        aids = list(int(aid) for aid in rank.articleAidDict.keys())
+        articles = ArticleService().get_articles_by_aids(aids, only=['title'], db_alias=db_alias)
         for aid, count in rank.articleAidDict.items():
-            article = ArticleService().get_an_article_by_aid(int(aid), db_alias=db_alias)
-            article.count = count
-            populars.append(article)
+            articles[int(aid)].count = count
+            populars.append(articles[int(aid)])
         return populars

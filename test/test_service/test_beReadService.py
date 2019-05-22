@@ -19,7 +19,7 @@ class TestBeReadService(TestBase):
 
     def test_get_by_aid(self):
         article = ArticleService().get_articles_by_title('title5')[0]
-        beread = self.beReadService.get_by_aid(article.aid)
+        beread = self.beReadService.get_one_by_aid(article.aid)
         print(beread)
 
     # def test_get_by_bid(self):
@@ -35,5 +35,11 @@ class TestBeReadService(TestBase):
 
     def test_get_total_popular(self):
         from utils.func import pretty_models
-        populars = self.beReadService.get_total_popular()
-        pretty_models(populars, self.beReadService.field_names)
+        populars = self.beReadService.get_tops_reads()
+        pretty_models(populars, ['bid', 'aid', 'readNum'])
+        populars = self.beReadService.get_tops_comments()
+        pretty_models(populars, ['bid', 'aid', 'commentNum'])
+        populars = self.beReadService.get_tops_agrees()
+        pretty_models(populars, ['bid', 'aid', 'agreeNum'])
+        populars = self.beReadService.get_tops_shares()
+        pretty_models(populars, ['bid', 'aid', 'shareNum'])

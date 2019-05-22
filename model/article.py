@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from mongoengine import *
 
 from db.mongodb import BaseDB
@@ -15,9 +13,9 @@ class Article(BaseDB):
     authors = StringField(required=True)
     language = StringField(required=True)
     text = StringField(required=True)
-    image = StringField(default='')
-    video = StringField(default='')
-    update_time = DateTimeField(default=datetime.utcnow)
+    image = StringField()
+    video = StringField()
+    update_time = DateTimeField(required=True)
     timestamp = IntField(required=True)
 
     meta = {

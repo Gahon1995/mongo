@@ -4,8 +4,8 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 from service.article_service import ArticleService
-from service.read_service import ReadService
 from service.popular_service import PopularService
+from service.read_service import ReadService
 from utils.func import *
 
 
@@ -152,7 +152,7 @@ def read_an_article(user, article):
         elif mode == '4':
             time_read_end = time.time()
             new_read.readTimeLength = time_read_end - time_read_start
-            ReadService.save_read(new_read)
+            ReadService.add_one(new_read)
             return
         else:
             print("输入错入，请重新输入")
@@ -346,7 +346,7 @@ def update_an_article(role, user):
             return
         try:
             con = json.loads(update_info)
-            if ArticleService.update_an_article(article, con):
+            if ArticleService.update_one(article, con):
                 print("更新成功")
         except json.JSONDecodeError:
             print("输入不是json格式")

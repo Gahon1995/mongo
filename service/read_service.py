@@ -38,6 +38,18 @@ class ReadService(object):
     def get_model(self, dbms):
         return self.classes[dbms]
 
+    def update_many(self, models=None, db_alias=None):
+
+        if db_alias is None:
+            for dbms in DBMS.all:
+                self.update_many(models, db_alias=dbms)
+        else:
+            if models is None:
+                models = self.models[db_alias]
+                if models is not None:
+                    self.get_model(db_alias).update_many(models)
+                    self.models[db_alias].clear()
+
     @staticmethod
     def get_id():
         """
@@ -57,8 +69,8 @@ class ReadService(object):
         return self.get_model(db_alias).count(**kwargs)
 
     @auto_reconnect
-    def save_read(self, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot, commentDetail, agreeOrNot,
-                  shareOrNot, timestamp=None, is_multi=False):
+    def add_one(self, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot, commentDetail, agreeOrNot,
+                shareOrNot, timestamp=None, is_multi=False):
         """
             保存一个新的read记录
         :param aid:
@@ -76,7 +88,7 @@ class ReadService(object):
         # logger.info('save read:{}'.format(new_read))
 
         # 根据user的region去得到正确的rid， 因为read表分布和user的region分布式一样的
-        user = UserService().get_user_by_uid(uid)
+        user = UserService().get_user_by_uid(uid, only=['region'])
         if user is None:
             return None
         rid = self.get_id()
@@ -84,20 +96,20 @@ class ReadService(object):
         new_read = None
         # 根据用户的region去查询当前region对应的所有数据库
         for dbms in get_dbms_by_region(user.region):
-            new_read = self.__save_read(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot,
-                                        commentDetail, agreeOrNot, shareOrNot, timestamp, db_alias=dbms,
-                                        is_multi=is_multi)
+            new_read = self.__save(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot,
+                                   commentDetail, agreeOrNot, shareOrNot, timestamp, db_alias=dbms,
+                                   is_multi=is_multi)
             if new_read is None:
                 break
 
         # 待修改
-        BeReadService().add_be_read_record(aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp,
-                                           is_multi=is_multi)
+        BeReadService().add_one(aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp,
+                                is_multi=is_multi)
 
         return new_read
 
-    def __save_read(self, rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot, commentDetail,
-                    agreeOrNot, shareOrNot, timestamp=None, db_alias=None, is_multi=False):
+    def __save(self, rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot, commentDetail,
+               agreeOrNot, shareOrNot, timestamp=None, db_alias=None, is_multi=False):
         # 在db_alias 所选中的数据库中 建立实例保存read数据
         check_alias(db_alias)
 
@@ -181,7 +193,7 @@ class ReadService(object):
             del_num = self.get_model(db_alias).objects(uid=uid).delete()
         return del_num
 
-    def get_history(self, uid, page_num=1, page_size=20):
+    def get_history(self, uid, page_num=1, page_size=20, **kwargs):
         """
                 查询uid的所有历史记录，默认20分页
         :param uid:
@@ -190,14 +202,14 @@ class ReadService(object):
         :return:
         """
         # 选择一个连接最好的节点进行历史记录查询
-        user = UserService().get_user_by_uid(uid)
+        user = UserService().get_user_by_uid(uid, only=['region'])
         if user is None:
             return []
-        return self.__get_history(uid, page_num, page_size, db_alias=get_best_dbms_by_region(user.region))
+        return self.__get_history(uid, page_num, page_size, db_alias=get_best_dbms_by_region(user.region), **kwargs)
 
-    def __get_history(self, uid, page_num=1, page_size=20, db_alias=None):
+    def __get_history(self, uid, page_num=1, page_size=20, db_alias=None, **kwargs):
         check_alias(db_alias)
-        return self.get_model(db_alias).list_by_page(page_num, page_size, uid=uid)
+        return self.get_model(db_alias).list_by_page(page_num, page_size, uid=uid, **kwargs)
 
     def compute_popular(self, end_date: datetime.date, before_days, top_n=10):
         """
@@ -221,8 +233,9 @@ class ReadService(object):
         for dbms in DBMS.all:
             #  TODO 比较 aggregate 和 item_frequencies 的性能差距
             # freq = self.__get_popular_by_freq(start, end,  db_alias=dbms)
-            # print(freq)
             freq = self.__get_popular_by_aggregate(start, end, db_alias=dbms)
+            # print(freq)
+
             freq_all = merge_dict(freq_all, freq)
 
         return sort_dict(freq_all)[:top_n]
@@ -263,3 +276,28 @@ class ReadService(object):
     @staticmethod
     def pretty_reads(reads):
         pretty_models(reads, ReadService.field_names)
+
+    def import_from_dict(self, data):
+        user = UserService().get_user_by_uid(data['uid'], only=['region'])
+
+        for db_alias in get_dbms_by_region(user.region):
+            new_read = self.get_model(db_alias)()
+            new_read.rid = int(data['rid'])
+            new_read.aid = int(data['aid'])
+            new_read.uid = int(data['uid'])
+            new_read.readOrNot = int(data['readOrNot'])
+            new_read.readTimeLength = int(data['readTimeLength'])
+            new_read.readSequence = int(data['readSequence'])
+            new_read.commentOrNot = int(data['commentOrNot'])
+            new_read.commentDetail = data['commentDetail']
+            new_read.agreeOrNot = int(data['agreeOrNot'])
+            new_read.shareOrNot = int(data['shareOrNot'])
+            new_read.timestamp = data['timestamp']
+
+            self.models[db_alias].append(new_read)
+
+            BeReadService().add_one(int(data['aid']), int(data['uid']), int(data['readOrNot']),
+                                    int(data['commentOrNot']),
+                                    int(data['agreeOrNot']), int(data['shareOrNot']), data['timestamp'],
+                                    is_multi=True)
+        pass

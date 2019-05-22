@@ -41,16 +41,16 @@ class TestPopularService(TestBase):
         _date = str_to_datetime(self._date)
         populars = PopularService().get_daily_articles(_date, DBMS.DBMS2)
 
-        pretty_models(populars, ['aid', 'title', 'authors', 'abstract', 'count'])
+        pretty_models(populars, ['aid', 'title', 'count'])
 
     def test_get_weekly_articles(self):
         _date = str_to_datetime(self._date)
         populars = PopularService().get_weekly_articles(_date, DBMS.DBMS2)
 
-        pretty_models(populars, ['aid', 'title', 'authors', 'abstract', 'count'])
+        pretty_models(populars, ['aid', 'title', 'count'])
 
     def test_get_monthly_articles(self):
         _date = str_to_datetime(self._date)
         populars = PopularService().get_monthly_articles(_date, DBMS.DBMS2)
 
-        pretty_models(populars, ['aid', 'title', 'authors', 'abstract', 'count'])
+        pretty_models(populars, ['aid', 'title', 'count'])

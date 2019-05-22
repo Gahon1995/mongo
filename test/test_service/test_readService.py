@@ -18,7 +18,7 @@ class TestReadService(TestBase):
     def test_save_read(self):
         article = ArticleService().get_articles_by_title('title4')[0]
         user = UserService().get_user_by_name('user4')
-        read = self.readService.save_read(article.aid, user.uid, 1, 34, 2, 0, 'sdf', 1, 1)
+        read = self.readService.add_one(article.aid, user.uid, 1, 34, 2, 0, 'sdf', 1, 1)
 
         assert read is not None
         print(read)

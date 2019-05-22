@@ -59,6 +59,7 @@ class UserService(object):
                  obtainedCredits, timestamp=None, is_multi=False):
         """
             用户注册，返回注册结果和信息
+        :param is_multi: 是不是批量注册， 批量注册的话不会自动保存，主要用于导入数据
         :param timestamp:
         :param name:  用户名
         :param pwd:     密码
@@ -74,10 +75,11 @@ class UserService(object):
         :param obtainedCredits:
         :return: list[True or False, msg]
         """
-        user = self.get_user_by_name(name)
-        if user is not None:
+
+        if self.is_name_used(name):
             logger.info('用户名已存在')
             return False, '用户名已存在'
+
         re = False, ''
 
         uid = self.get_uid()
@@ -119,10 +121,13 @@ class UserService(object):
                 return True, '用户：{} 注册成功'.format(name)
             return False, '保存至数据库失败'
 
-    def users_list(self, page_num=1, page_size=20, db_alias=None, **kwargs) -> list:
+    def users_list(self, page_num=1, page_size=20, only: list = None, exclude: list = None, db_alias=None,
+                   **kwargs) -> list:
         """
             获取db_alias 所对应的数据库里边的用户列表，采用分页
             可以通过**kwargs进行高级查询，
+        :param exclude: 在查询结果中排出某些字段
+        :param only:    只查询指定字段的值
         :param page_num:    查询页码
         :param page_size:   每页的数据量大小
         :param db_alias:    数据库的别名
@@ -130,7 +135,7 @@ class UserService(object):
         :return:
         """
         check_alias(db_alias)
-        return self.get_model(db_alias).list_by_page(page_num, page_size, **kwargs)
+        return self.get_model(db_alias).list_by_page(page_num, page_size, only=only, exclude=exclude, **kwargs)
 
     def count(self, db_alias=None, **kwargs):
         """
@@ -153,7 +158,19 @@ class UserService(object):
             count += self.count(db_alias=dbms, **kwargs)
         return count
 
-    def get_user_by_name(self, name: str, db_alias: str = None) -> User:
+    def is_name_used(self, name: str, db_alias: str = None):
+        used = False
+        if db_alias is None:
+            for dbms in DBMS.all:
+                used = self.is_name_used(name, db_alias=dbms)
+                if used:
+                    break
+            return used
+        else:
+            check_alias(db_alias)
+            return self.get_model(db_alias).count(name=name) != 0
+
+    def get_user_by_name(self, name: str, db_alias: str = None, **kwargs) -> User:
         """
             通过用户名进行查询
         :param name:    查询的用户名
@@ -163,13 +180,13 @@ class UserService(object):
         user = None
         if db_alias is None:
             for dbms in DBMS.all:
-                user = self.get_user_by_name(name, db_alias=dbms)
+                user = self.get_user_by_name(name, db_alias=dbms, **kwargs)
                 if user is not None:
                     break
             return user
         else:
             check_alias(db_alias)
-            return self.get_model(db_alias).get(name=name)
+            return self.get_model(db_alias).get_one(name=name, **kwargs)
 
     # def get_user_by_uid(self, _id, db_alias=None) -> User:
     #     """
@@ -191,7 +208,7 @@ class UserService(object):
     #             _id = ObjectId(_id)
     #         return self.get_model(db_alias).get(id=_id)
 
-    def get_user_by_uid(self, uid, db_alias=None) -> User:
+    def get_user_by_uid(self, uid, db_alias=None, **kwargs) -> User:
         """
             根据id进行用户查询
         :param db_alias:
@@ -201,13 +218,13 @@ class UserService(object):
         if db_alias is None:
             user = None
             for dbms in DBMS.all:
-                user = self.get_user_by_uid(uid=uid, db_alias=dbms)
+                user = self.get_user_by_uid(uid=uid, db_alias=dbms, **kwargs)
                 if user is not None:
                     break
             return user
         else:
             check_alias(db_alias)
-            return self.get_model(db_alias).get(uid=uid)
+            return self.get_model(db_alias).get_one(uid=uid, **kwargs)
 
     def login(self, username, password) -> User:
         """
@@ -225,7 +242,7 @@ class UserService(object):
 
     def __login(self, username, password, db_alias=None):
         check_alias(db_alias)
-        user = self.get_model(db_alias).get(name=username, pwd=password)
+        user = self.get_model(db_alias).get_one(name=username, pwd=password)
         if user is not None:
             logger.info("用户 {} 登录成功".format(username))
             return user
@@ -245,14 +262,15 @@ class UserService(object):
         :param kwargs:  更新的数据
         :return:
         """
-        user = self.get_user_by_uid(uid, db_alias=db_alias)
-        if user is None:
-            if db_alias is None:
-                logger.info("uid:{}不存在".format(uid))
-            else:
-                logger.info("数据不同步， DBMS: {}中找不到{}的信息".format(db_alias, uid))
-            return None
         if db_alias is None:
+            user = self.get_user_by_uid(uid, only=['region'])
+            if user is None:
+                if db_alias is None:
+                    logger.info("uid:{}不存在".format(uid))
+                else:
+                    logger.info("数据不同步， DBMS: {}中找不到{}的信息".format(db_alias, uid))
+                return None
+
             # TODO 如何判断更新失败？（例如更新时网络异常）
             for dbms in get_dbms_by_region(user.region):
                 user = self.update_by_uid(uid, db_alias=dbms, **kwargs)
@@ -261,6 +279,7 @@ class UserService(object):
             return user
         else:
             check_alias(db_alias)
+            user = self.get_user_by_uid(uid, db_alias=db_alias)
             return self.update_user(user, **kwargs)
 
     def update_by_name(self, name, db_alias=None, **kwargs):
@@ -290,6 +309,18 @@ class UserService(object):
             check_alias(db_alias)
             return self.update_user(user, **kwargs)
 
+    def update_many(self, models=None, db_alias=None):
+
+        if db_alias is None:
+            for dbms in DBMS.all:
+                self.update_many(models, db_alias=dbms)
+        else:
+            if models is None:
+                models = self.models[db_alias]
+                if models is not None:
+                    self.get_model(db_alias).update_many(models)
+                    self.models[db_alias].clear()
+
     def update_user(self, user: User, **kwargs):
         """
             根据user实例进行更新用户数据
@@ -312,7 +343,7 @@ class UserService(object):
 
     def del_user_by_name(self, name, db_alias=None):
 
-        user = self.get_user_by_name(name=name, db_alias=db_alias)
+        user = self.get_user_by_name(name=name, db_alias=db_alias, only=['region'])
 
         if user is not None:
             if db_alias is None:
@@ -339,7 +370,7 @@ class UserService(object):
     #         return user.delete()
 
     def del_user_by_uid(self, uid, db_alias=None):
-        user = self.get_user_by_uid(uid=uid, db_alias=db_alias)
+        user = self.get_user_by_uid(uid=uid, db_alias=db_alias, only=['region'])
         if db_alias is None:
             if user is not None:
                 for dbms in get_dbms_by_region(user.region):
@@ -354,6 +385,7 @@ class UserService(object):
     @staticmethod
     def pretty_users(users):
         pretty_models(users, UserService.field_names)
+
     # ============================= 待调整     =======================
 
     # @staticmethod
@@ -373,6 +405,26 @@ class UserService(object):
     #         user.delete()
     #         return True
     #     return False
+
+    def import_user_from_dict(self, data):
+        for dbms in get_dbms_by_region(data['region']):
+            user = self.get_model(dbms)()
+            user.uid = int(data['uid'])
+            user.name = data['name']
+            user.pwd = data['pwd']
+            user.gender = data['gender']
+            user.email = data['email']
+            user.phone = data['phone']
+            user.dept = data['dept']
+            user.grade = data['grade']
+            user.language = data['language']
+            user.region = data['region']
+            user.role = data['role']
+            user.preferTags = data['preferTags']
+            user.obtainedCredits = data['obtainedCredits']
+            user.timestamp = int(data['timestamp'])
+            self.models[dbms].append(user)
+        pass
 
 
 if __name__ == '__main__':

@@ -7,10 +7,10 @@
 import json
 import logging
 
-from service.user_service import UserService
+from main import init
 from service.article_service import ArticleService
 from service.read_service import ReadService, Read
-from main import init
+from service.user_service import UserService
 from .genTable import USERS_NUM, ARTICLES_NUM, READS_NUM
 
 data_path = './db/gen/'
@@ -75,7 +75,7 @@ def read():
             new_read.commentDetail = data['commentDetail']
             new_read.agreeOrNot = int(data['agreeOrNot'])
             new_read.shareOrNot = int(data['shareOrNot'])
-            ReadService.save_read(new_read)
+            ReadService.add_one(new_read)
 
             i += 1
             print_bar(i, READS_NUM)

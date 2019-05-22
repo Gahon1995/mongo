@@ -50,7 +50,7 @@ class TestBaseArticleService(TestBase):
         re1 = ArticleService().del_by_aid(_aid)
         assert re1
         #
-        article = ArticleService().get_an_article_by_aid(_aid)
+        article = ArticleService().get_one_by_aid(_aid)
         assert article is None
 
         re = ArticleService().add_an_article('test_article', 'gahon', 'science', 'asdf', 'asdfas', 'asdf', 'asdf')
@@ -61,7 +61,7 @@ class TestBaseArticleService(TestBase):
         aid = articles[0].aid
         re = ArticleService().del_article(articles[0])
         assert re
-        article = ArticleService().get_an_article_by_aid(aid)
+        article = ArticleService().get_one_by_aid(aid)
         assert article is None
 
     def test_articles_list(self):
@@ -70,23 +70,23 @@ class TestBaseArticleService(TestBase):
 
     def test_get_by_aid(self):
         article = ArticleService().get_articles_by_title('title5')[0]
-        article1 = ArticleService().get_an_article_by_aid(article.aid)
+        article1 = ArticleService().get_one_by_aid(article.aid)
         ArticleService.pretty_articles([article])
         assert article1 is not None and article.title == article1.title
 
     def test_update_article_by_aid(self):
         a = ArticleService().get_articles_by_title('title5')[0]
-        article = ArticleService().get_an_article_by_aid(a.aid)
+        article = ArticleService().get_one_by_aid(a.aid)
         ArticleService.pretty_articles([article])
 
-        ArticleService().update_an_article(article, {"title": "update24", "language": 'zh'})
+        ArticleService().update_one(article, {"title": "update24", "language": 'zh'})
 
-        article = ArticleService().get_an_article_by_aid(a.aid)
+        article = ArticleService().get_one_by_aid(a.aid)
         ArticleService.pretty_articles([article])
         assert article.language == 'zh'
 
     def test_get_articles_by_aids(self):
         aids = [0, 1, 2, 3]
-        articles = ArticleService().get_articles_by_aids(aids, db_alias=DBMS.DBMS2)
+        articles = ArticleService().get_articles_by_aids(aids, db_alias=DBMS.DBMS2, only=['title'])
 
         ArticleService.pretty_articles(list(articles[aid] for aid in aids))

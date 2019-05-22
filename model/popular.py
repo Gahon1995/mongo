@@ -30,4 +30,4 @@ class Popular(BaseDB):
     @property
     def create_time(self):
         # 创建时间
-        return self.get_create_time()
+        return self.id.generation_time

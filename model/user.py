@@ -25,7 +25,7 @@ class User(BaseDB):
     region = StringField(required=True)
     role = StringField(required=True)
     preferTags = StringField(required=True)
-    obtainedCredits = StringField(default='0')
+    obtainedCredits = StringField(required=True)
     timestamp = IntField(required=True)
 
     # @property

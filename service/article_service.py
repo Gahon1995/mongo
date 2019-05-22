@@ -35,6 +35,18 @@ class ArticleService(object):
     def get_model(self, dbms):
         return self.classes[dbms]
 
+    def update_many(self, models=None, db_alias=None):
+
+        if db_alias is None:
+            for dbms in DBMS.all:
+                self.update_many(models, db_alias=dbms)
+        else:
+            if models is None:
+                models = self.models[db_alias]
+                if models is not None:
+                    self.get_model(db_alias).update_many(models)
+                    self.models[db_alias].clear()
+
     @staticmethod
     def get_id():
 
@@ -47,7 +59,7 @@ class ArticleService(object):
         check_alias(db_alias)
         return self.get_model(db_alias).count(**kwargs)
 
-    def get_articles_by_title(self, title, page_num=1, page_size=20, db_alias=None) -> list:
+    def get_articles_by_title(self, title, page_num=1, page_size=20, db_alias=None, **kwargs) -> list:
         """
             根据文章标题进行搜索
             # TODO 测试该方法是否有用
@@ -65,7 +77,7 @@ class ArticleService(object):
             for dbms in DBMS.all:
                 # tmp_articles = self.__search_by_title(title, db_alias=dbms)
                 tmp_articles = self.get_articles(title__contains=title, page_num=page_num, page_size=page_size,
-                                                 db_alias=dbms)
+                                                 db_alias=dbms, **kwargs)
                 for article in tmp_articles:
                     # 判断是否已经在其他DBMS中出现过了
                     if article.title not in titles:
@@ -74,7 +86,7 @@ class ArticleService(object):
         else:
             # articles = self.__search_by_title(title, db_alias=db_alias)
             articles = self.get_articles(title__contains=title, page_num=page_num, page_size=page_size,
-                                         db_alias=db_alias)
+                                         db_alias=db_alias, **kwargs)
         return articles
 
     # def __search_by_title(self, title, db_alias=None) -> list:
@@ -88,7 +100,7 @@ class ArticleService(object):
     #     check_alias(db_alias)
     #     return self.get_model(db_alias).objects(title__contains=title)
 
-    def get_articles_by_category(self, category, page_num=1, page_size=20, db_alias=None) -> list:
+    def get_articles_by_category(self, category, page_num=1, page_size=20, db_alias=None, **kwargs) -> list:
         """
             根据文章标题进行搜索
             # TODO 测试该方法是否有用
@@ -104,7 +116,7 @@ class ArticleService(object):
             for dbms in get_dbms_by_category(category):
                 # tmp_articles = self.__search_by_category(category, db_alias=dbms)
                 tmp_articles = self.get_articles(category=category, page_num=page_num, page_size=page_size,
-                                                 db_alias=dbms)
+                                                 db_alias=dbms, **kwargs)
                 for article in tmp_articles:
                     # 判断是否已经在其他DBMS中出现过了
                     if article.title not in titles:
@@ -112,7 +124,8 @@ class ArticleService(object):
                         titles.append(article.title)
         else:
             # articles = self.__search_by_category(category, db_alias=db_alias)
-            articles = self.get_articles(category=category, page_num=page_num, page_size=page_size, db_alias=db_alias)
+            articles = self.get_articles(category=category, page_num=page_num, page_size=page_size, db_alias=db_alias,
+                                         **kwargs)
         return articles
 
     # def __search_by_category(self, category, db_alias=None) -> list:
@@ -169,6 +182,7 @@ class ArticleService(object):
         be_read.aid = aid
         be_read.bid = bid
         be_read.timestamp = timestamp or get_timestamp()
+        be_read.last_update_time = datetime.datetime.utcnow()
         if is_multi:
             BeReadService().models[db_alias].append(be_read)
         else:
@@ -210,7 +224,7 @@ class ArticleService(object):
         check_alias(db_alias)
         return self.get_model(db_alias).list_by_page(page_num, page_size, **kwargs)
 
-    def get_articles_by_aids(self, aids: list, db_alias: str = None, fields: dict = None) -> dict:
+    def get_articles_by_aids(self, aids: list, db_alias: str = None, **kwargs) -> dict:
         """
             根据aids列表一次性返回对应的article信息
 
@@ -223,10 +237,12 @@ class ArticleService(object):
         """
         # TODO 去掉默认db设置，在所有数据库中，根据数量进行分页以及返回相关数据
         check_alias(db_alias)
-        if fields is not None and isinstance(fields, dict):
-            return self.get_model(db_alias).objects.fields(**fields).in_bulk(aids)
-        else:
-            return self.get_model(db_alias).objects.in_bulk(aids)
+        # if fields is not None and isinstance(fields, dict):
+        #     return self.get_model(db_alias).objects.fields(**fields).in_bulk(aids)
+        # else:
+        #     return self.get_model(db_alias).objects.in_bulk(aids)
+
+        return self.get_model(db_alias).get_many_by_ids(aids, **kwargs)
 
     # def get_an_article_by_id(self, _id):
     #     # TODO 修改实现方法
@@ -243,24 +259,24 @@ class ArticleService(object):
     #         aid = ObjectId(aid)
     #     return self.get_model(db_alias).get(id=aid)
 
-    def get_an_article_by_aid(self, aid, db_alias=None):
+    def get_one_by_aid(self, aid, db_alias=None, **kwargs):
         if db_alias is None:
             # TODO 修改实现方法
             article = None
             for dbms in DBMS.all:
-                article = self.get_an_article_by_aid(aid, db_alias=dbms)
+                article = self.get_one_by_aid(aid, db_alias=dbms, **kwargs)
                 if article is not None:
                     break
             return article
         else:
             check_alias(db_alias)
-            return self.get_model(db_alias).get(aid=aid)
+            return self.get_model(db_alias).get_one(aid=aid, **kwargs)
 
     # def __get_an_article_by_aid(self, aid, db_alias=None):
     #     check_alias(db_alias)
     #     return self.get_model(db_alias).get(aid=aid)
 
-    def update_an_article(self, article, condition: dict):
+    def update_one(self, article, condition: dict):
         """
             根据aid更新文章
 
@@ -269,11 +285,11 @@ class ArticleService(object):
         :return:
         """
         for dbms in get_dbms_by_category(article.category):
-            self.__update_article(article.id, condition, db_alias=dbms)
+            self.__update(article.id, condition, db_alias=dbms)
 
-    def __update_article(self, aid, condition: dict, db_alias=None):
+    def __update(self, aid, condition: dict, db_alias=None):
         check_alias(db_alias)
-        article = self.get_an_article_by_aid(aid, db_alias=db_alias)
+        article = self.get_one_by_aid(aid, db_alias=db_alias)
         if article is None:
             return
 
@@ -289,6 +305,34 @@ class ArticleService(object):
     @staticmethod
     def pretty_articles(articles: list):
         pretty_models(articles, ArticleService.field_names)
+
+    def import_from_dict(self, data):
+        for dbms in get_dbms_by_category(data['category']):
+            article = self.get_model(dbms)()
+            article.aid = int(data['aid'])
+            article.title = data['title']
+            article.authors = data['authors']
+            article.category = data['category']
+            article.abstract = data['abstract']
+            article.articleTags = data['articleTags']
+            article.language = data['language']
+            article.text = data['text']
+            article.image = data['image']
+            article.video = data['video']
+            article.update_time = datetime.datetime.utcnow()
+            article.timestamp = int(data['timestamp'])
+            self.models[dbms].append(article)
+
+            from service.be_read_service import BeReadService
+
+            be_read = BeReadService().get_model(dbms)()
+            be_read.aid = int(data['aid'])
+            be_read.bid = int(data['aid'])
+            be_read.timestamp = int(data['timestamp'])
+            be_read.last_update_time = datetime.datetime.utcnow()
+            BeReadService().models[dbms].append(be_read)
+
+        pass
 
 
 if __name__ == '__main__':

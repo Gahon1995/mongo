@@ -16,14 +16,14 @@ logger = logging.getLogger('IdsService')
 @singleton
 class IdsService(object):
 
-    def init(self, db_alias):
+    def init(self, db_alias, uid=0, aid=0, rid=0, bid=0):
         if self.get_model(db_alias).count(ids=0) == 0:
             ids = self.get_model(db_alias)()
             ids.ids = 0
-            ids.uid = 0
-            ids.aid = 0
-            ids.rid = 0
-            ids.bid = 0
+            ids.uid = uid
+            ids.aid = aid
+            ids.rid = rid
+            ids.bid = bid
             ids.pid = 0
             ids.save()
             return ids
@@ -59,4 +59,4 @@ class IdsService(object):
         kwargs = {
             name: value
         }
-        self.get_model(db_alias).get(ids=0).update(**kwargs)
+        self.get_model(db_alias).get_one(ids=0).update(**kwargs)

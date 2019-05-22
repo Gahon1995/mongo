@@ -7,19 +7,22 @@
 from config import DBMS
 from service.user_service import UserService
 from test.test_base import TestBase
+from utils.func import pretty_models
 
 
 class TestUserService(TestBase):
 
     def test_user_list(self):
-        users = UserService().users_list(db_alias=DBMS.DBMS1)
-        UserService().pretty_users(users)
-
+        only = ['uid', 'name']
+        users = UserService().users_list(only=only, db_alias=DBMS.DBMS1)
+        # UserService().pretty_users(users)
+        pretty_models(users, only)
         print('total: {}'.format(len(users)))
 
-        users = UserService().users_list(db_alias=DBMS.DBMS2)
-        UserService().pretty_users(users)
-
+        exclude = ['pwd']
+        users = UserService().users_list(exclude=exclude, db_alias=DBMS.DBMS2)
+        # UserService().pretty_users(users)
+        pretty_models(users, list(x for x in UserService.field_names if x not in exclude))
         print('total: {}'.format(len(users)))
 
     def test_register(self):
@@ -39,13 +42,15 @@ class TestUserService(TestBase):
         print('all: ', cnt)
 
     def test_get_user_by_name(self):
-        user = UserService().get_user_by_name('user4')
+        user = UserService().get_user_by_name('user4', exclude=['pwd'])
         assert user is not None
         print(user)
 
-        admin1 = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS1)
+        admin1 = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS1, only=['name'])
+        print(admin1)
 
-        admin2 = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS2)
+        admin2 = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS2, exclude=['name'])
+        print(admin2)
         assert (admin1 is None) if (admin2 is not None) else (admin1 is not None)
 
     def test_get_by_uid(self):

@@ -84,7 +84,7 @@ def convert_mongo_2_json(o):
                         convert(l)
             else:
                 if isinstance(value, ObjectId):
-                    dic_data[key] = str(dic_data.get(key))
+                    dic_data[key] = str(dic_data.get_one(key))
         return dic_data
 
     ret = {}

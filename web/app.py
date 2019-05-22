@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request
 
-from service.user_service import UserService
-
 from main import init_connect
+from service.user_service import UserService
 
 app = Flask(__name__)
 
@@ -17,9 +16,9 @@ def index(is_login=False, user=None):
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    remember = request.form.get('remember')
+    username = request.form.get_one('username')
+    password = request.form.get_one('password')
+    remember = request.form.get_one('remember')
     user = None
     if username and password:
         user = UserService.login(username, password)
@@ -38,8 +37,8 @@ def admin(is_login=False):
 
 @app.route('/admin/login', methods=['post', 'get'])
 def admin_login():
-    username = request.form.get('username')
-    password = request.form.get('password')
+    username = request.form.get_one('username')
+    password = request.form.get_one('password')
     success = False
     if username == 'admin' and password:
         success = UserService.login(username, password)

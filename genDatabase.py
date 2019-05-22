@@ -3,13 +3,13 @@ from random import random
 from config import DBMS
 from utils.func import timestamp_to_datetime, print_run_time
 
-# USERS_NUM = 10000
-# ARTICLES_NUM = 200000
-# READS_NUM = 1000000
+USERS_NUM = 10000
+ARTICLES_NUM = 200000
+READS_NUM = 1000000
 
-USERS_NUM = 100
-ARTICLES_NUM = 2000
-READS_NUM = 10000
+# USERS_NUM = 100
+# ARTICLES_NUM = 2000
+# READS_NUM = 10000
 
 uid_region = {}
 aid_lang = {}
@@ -123,9 +123,11 @@ def gen_users():
     for i in range(USERS_NUM):
         print_bar(i, USERS_NUM)
         data = gen_an_user(i)
-        UserService().register(data['name'], data['pwd'], data['gender'], data['email'], data['phone'], data['dept'],
-                               data['grade'], data['language'], data['region'], data['role'], data['preferTags'],
-                               data['obtainedCredits'], int(data['timestamp']), is_multi=True)
+        UserService().import_user_from_dict(data)
+    UserService().update_many()
+    # UserService().register(data['name'], data['pwd'], data['gender'], data['email'], data['phone'], data['dept'],
+    #                        data['grade'], data['language'], data['region'], data['role'], data['preferTags'],
+    #                        data['obtainedCredits'], int(data['timestamp']), is_multi=True)
 
 
 @print_run_time
@@ -133,10 +135,13 @@ def gen_articles():
     for i in range(ARTICLES_NUM):
         print_bar(i, ARTICLES_NUM)
         data = gen_an_article(i)
-        ArticleService().add_an_article(title=data['title'], authors=data['authors'], category=data['category'],
-                                        abstract=data['abstract'], articleTags=data['articleTags'],
-                                        language=data['language'], text=data['text'], image=data['image'],
-                                        video=data['video'], timestamp=int(data['timestamp']), is_multi=True)
+        ArticleService().import_from_dict(data)
+        ArticleService().update_many()
+        BeReadService().update_many()
+        # ArticleService().add_an_article(title=data['title'], authors=data['authors'], category=data['category'],
+        #                                 abstract=data['abstract'], articleTags=data['articleTags'],
+        #                                 language=data['language'], text=data['text'], image=data['image'],
+        #                                 video=data['video'], timestamp=int(data['timestamp']), is_multi=True)
 
 
 @print_run_time
@@ -145,15 +150,21 @@ def gen_reads():
         print_bar(i, READS_NUM)
         data = gen_an_read(i)
 
-        article = ArticleService().get_articles_by_title(title='title' + data['aid'], db_alias=DBMS.DBMS2)[0]
+        data['rid'] = i
 
-        name = 'user' + data['uid'] if data['uid'] != '0' else 'admin'
-        user = UserService().get_user_by_name(name=name)
-
-        ReadService().save_read(article.aid, user.uid, int(data['readOrNot']), int(data['readTimeLength']),
-                                int(data['readSequence']), int(data['commentOrNot']),
-                                data['commentDetail'], int(data['agreeOrNot']), int(data['shareOrNot']),
-                                timestamp=int(data["timestamp"]), is_multi=True)
+        ReadService().import_from_dict(data)
+    ReadService().update_many()
+    BeReadService().update_many()
+    # article = ArticleService().get_articles_by_title(title='title' + data['aid'], only=['aid'], page_size=1,
+    #                                                  db_alias=DBMS.DBMS2)[0]
+    #
+    # name = 'user' + data['uid'] if data['uid'] != '0' else 'admin'
+    # user = UserService().get_user_by_name(name=name, only=['uid'])
+    #
+    # ReadService().add_one(article.aid, user.uid, int(data['readOrNot']), int(data['readTimeLength']),
+    #                       int(data['readSequence']), int(data['commentOrNot']),
+    #                       data['commentDetail'], int(data['agreeOrNot']), int(data['shareOrNot']),
+    #                       timestamp=int(data["timestamp"]), is_multi=True)
 
 
 @print_run_time
@@ -208,14 +219,16 @@ def gen_reads_by_threads(start, end):
         # print_bar(i - start, end - start)
         data = gen_an_read(i)
 
-        article = ArticleService().get_articles_by_title(title='title' + data['aid'], db_alias=DBMS.DBMS2)[0]
-        name = 'user' + data['uid'] if data['uid'] != '0' else 'admin'
-        user = UserService().get_user_by_name(name=name)
+        article = ArticleService().get_articles_by_title(title='title' + data['aid'], only=['aid'], page_size=1,
+                                                         db_alias=DBMS.DBMS2)[0]
 
-        ReadService().save_read(article.aid, user.uid, int(data['readOrNot']), int(data['readTimeLength']),
-                                int(data['readSequence']), int(data['commentOrNot']),
-                                data['commentDetail'], int(data['agreeOrNot']), int(data['shareOrNot']),
-                                timestamp=int(data["timestamp"]))
+        name = 'user' + data['uid'] if data['uid'] != '0' else 'admin'
+        user = UserService().get_user_by_name(name=name, only=['uid'])
+
+        ReadService().add_one(article.aid, user.uid, int(data['readOrNot']), int(data['readTimeLength']),
+                              int(data['readSequence']), int(data['commentOrNot']),
+                              data['commentDetail'], int(data['agreeOrNot']), int(data['shareOrNot']),
+                              timestamp=int(data["timestamp"]))
 
     print("finish gen reads range ({}, {})".format(start, end))
 
@@ -316,34 +329,38 @@ def gen_data():
 
     print('\n生成article数据...')
     gen_articles()
-    print('\n导入user 和 article数据...')
-    for dbms in DBMS.all:
-        print('\n导入user数据... in ', dbms)
-        UserService().get_model(dbms).update_many(UserService().models[dbms])
-        print('\n导入article数据... in ', dbms)
-        ArticleService().get_model(dbms).update_many(ArticleService().models[dbms])
-        print('\n导入BeRead数据... in ', dbms)
 
-        BeReadService().get_model(dbms).update_many(BeReadService().models[dbms])
-
-        UserService().models[dbms].clear()
-        ArticleService().models[dbms].clear()
-        BeReadService().models[dbms].clear()
-        ReadService().models[dbms].clear()
-
-    save_data()
+    # print('\n导入user 和 article数据...')
+    # for dbms in DBMS.all:
+    #     print('\n导入user数据... in ', dbms)
+    #     UserService().get_model(dbms).update_many(UserService().models[dbms])
+    #     print('\n导入article数据... in ', dbms)
+    #     ArticleService().get_model(dbms).update_many(ArticleService().models[dbms])
+    #     print('\n导入BeRead数据... in ', dbms)
+    # 
+    #     BeReadService().get_model(dbms).update_many(BeReadService().models[dbms])
+    # 
+    #     UserService().models[dbms].clear()
+    #     ArticleService().models[dbms].clear()
+    #     BeReadService().models[dbms].clear()
+    #     ReadService().models[dbms].clear()
+    #
+    # save_data()
     print('\n生成read数据...')
     gen_reads()
-    print('\n导入read数据...')
-    for dbms in DBMS.all:
-        ReadService().get_model(dbms).update_many(ReadService().models[dbms])
-        BeReadService().get_model(dbms).update_many(BeReadService().models[dbms])
 
-        ReadService().models[dbms].clear()
-        BeReadService().models[dbms].clear()
+    IdsService().init(uid=USERS_NUM, aid=ARTICLES_NUM, rid=READS_NUM, bid=ARTICLES_NUM, db_alias=DBMS.DBMS1)
 
-    print('\n导入populars数据...')
-    gen_populars()
+    # # print('\n导入read数据...')
+    # # for dbms in DBMS.all:
+    # #     ReadService().get_model(dbms).update_many(ReadService().models[dbms])
+    # #     BeReadService().get_model(dbms).update_many(BeReadService().models[dbms])
+    # #
+    # #     ReadService().models[dbms].clear()
+    # #     BeReadService().models[dbms].clear()
+    #
+    # print('\n导入populars数据...')
+    # gen_populars()
 
 
 def save_data():
