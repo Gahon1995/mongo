@@ -45,7 +45,7 @@ class IdsService(object):
         kwargs = {
             'inc__' + name: 1
         }
-        ids = model.objects(ids=0).modify(upsert=True, **kwargs)
+        ids = model.objects(ids=0).only(name).modify(upsert=True, **kwargs)
         # logger.debug('set {}: {}'.format(name, getattr(ids, name)))
         return getattr(ids, name)
 

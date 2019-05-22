@@ -9,11 +9,11 @@ class User(BaseDB):
         # 'allow_inheritance': True,
         'index_background': True,
         'indexes': [
-            'uid',
+            # 'uid',
             'name',
         ]
     }
-    uid = IntField(required=True, unique=True)  # Beijing 偶数， hk 奇数
+    uid = IntField(primary_key=True)  # Beijing 偶数， hk 奇数
     name = StringField(required=True, unique=True)
     pwd = StringField(required=True)
     gender = StringField(required=True)
@@ -28,10 +28,10 @@ class User(BaseDB):
     obtainedCredits = StringField(default='0')
     timestamp = IntField(required=True)
 
-    @property
-    def create_time(self):
-        # 创建时间
-        return self.get_create_time()
+    # @property
+    # def create_time(self):
+    #     # 创建时间
+    #     return self.get_create_time()
 
     def update(self, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
                obtainedCredits: int):

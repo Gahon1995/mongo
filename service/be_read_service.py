@@ -7,7 +7,6 @@
 
 # from model.be_read import BeRead
 
-import logging
 
 from model.be_read import BeRead
 from service.article_service import ArticleService
@@ -22,8 +21,14 @@ class BeReadService(object):
     field_names = ["aid", "readNum", "readUidList", "commentNum", "commentUidList", "agreeNum", "agreeUidList",
                    "shareNum", "shareUidList", "timestamp", "last_update_time"]
 
-    @staticmethod
-    def get_model(dbms: str):
+    def __init__(self):
+        self.models = dict()
+        self.classes = dict()
+        for dbms in DBMS.all:
+            self.models[dbms] = list()
+            self.classes[dbms] = self.__gen_model(dbms)
+
+    def __gen_model(self, dbms):
         class Model(BeRead):
             meta = {
                 'db_alias': dbms,
@@ -32,6 +37,9 @@ class BeReadService(object):
             pass
 
         return Model
+
+    def get_model(self, dbms):
+        return self.classes[dbms]
 
     @staticmethod
     def get_bid():
@@ -45,7 +53,8 @@ class BeReadService(object):
             check_alias(db_alias)
             return self.get_model(db_alias).get(aid=aid)
 
-    def add_be_read_record(self, aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp=None):
+    def add_be_read_record(self, aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp=None,
+                           is_multi=False):
 
         article = ArticleService().get_an_article_by_aid(aid)
         if article is None:
@@ -55,14 +64,14 @@ class BeReadService(object):
         be_read = None
         # bid = self.get_bid() if be_read is None else be_read.bid
         for dbms in get_dbms_by_category(article.category):
-            logger.info("save be read to : {} uid: {}".format(dbms, uid))
+            # logger.info("save be read to : {} uid: {}".format(dbms, uid))
             be_read = self.__save_be_read(aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp,
-                                          db_alias=dbms)
+                                          db_alias=dbms, is_multi=is_multi)
 
         return be_read
 
     def __save_be_read(self, aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp=None,
-                       db_alias=None):
+                       db_alias=None, is_multi=False):
         check_alias(db_alias)
 
         be_read = self.get_by_aid(aid, db_alias=db_alias)
@@ -92,7 +101,10 @@ class BeReadService(object):
                 be_read.shareUidList.append(uid)
 
         be_read.last_update_time = datetime.datetime.utcnow()
-        be_read.save()
+        if is_multi:
+            self.models[db_alias].append(be_read)
+        else:
+            be_read.save()
         return be_read
 
     def get_total_popular(self, top_n=20, **kwargs):

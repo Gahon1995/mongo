@@ -3,9 +3,6 @@
 # @Time    : 2019-04-28 20:13
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
-import logging
-
-from bson import ObjectId
 
 from model.user import User
 from service.ids_service import IdsService
@@ -17,21 +14,28 @@ logger = logging.getLogger('userService')
 @singleton
 class UserService(object):
     field_names = ['uid', 'name', 'pwd', 'gender', 'email', 'phone', 'dept', 'grade',
-                   'language', 'region', 'role', 'preferTags', 'obtainedCredits', 'create_time']
+                   'language', 'region', 'role', 'preferTags', 'obtainedCredits', 'timestamp']
 
     def __init__(self):
         self.user = User
+        self.models = dict()
+        self.classes = dict()
+        for dbms in DBMS.all:
+            self.models[dbms] = list()
+            self.classes[dbms] = self.__gen_model(dbms)
 
-    @staticmethod
-    def get_model(dbms):
-        class Users(User):
+    def __gen_model(self, dbms):
+        class Model(User):
             meta = {
                 'db_alias': dbms,
                 'collection': 'user'
             }
             pass
 
-        return Users
+        return Model
+
+    def get_model(self, dbms):
+        return self.classes[dbms]
 
     @staticmethod
     def hasattr(key):
@@ -52,7 +56,7 @@ class UserService(object):
         return IdsService().next_id('uid')
 
     def register(self, name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
-                 obtainedCredits, timestamp=None):
+                 obtainedCredits, timestamp=None, is_multi=False):
         """
             用户注册，返回注册结果和信息
         :param timestamp:
@@ -79,13 +83,13 @@ class UserService(object):
         uid = self.get_uid()
         for dbms in get_dbms_by_region(region):
             re = self.__register(uid, name, pwd, gender, email, phone, dept, grade, language, region, role,
-                                 preferTags, obtainedCredits, timestamp, db_alias=dbms)
+                                 preferTags, obtainedCredits, timestamp, db_alias=dbms, is_multi=is_multi)
             if not re[0]:
                 break
         return re
 
     def __register(self, uid, name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
-                   obtainedCredits: int, timestamp=None, db_alias=None):
+                   obtainedCredits: int, timestamp=None, db_alias=None, is_multi=False):
 
         check_alias(db_alias)
 
@@ -104,11 +108,16 @@ class UserService(object):
         user.preferTags = preferTags
         user.obtainedCredits = obtainedCredits
         user.timestamp = timestamp or get_timestamp()
-        re = user.save()
-        if re is not None:
-            logger.info('用户：{} 注册成功'.format(name))
-            return True, '用户：{} 注册成功'.format(name)
-        return False, '保存至数据库失败'
+
+        if is_multi:
+            self.models[db_alias].append(user)
+            return True, ''
+        else:
+            re = user.save()
+            if re is not None:
+                # logger.info('用户：{} 注册成功'.format(name))
+                return True, '用户：{} 注册成功'.format(name)
+            return False, '保存至数据库失败'
 
     def users_list(self, page_num=1, page_size=20, db_alias=None, **kwargs) -> list:
         """
@@ -162,25 +171,25 @@ class UserService(object):
             check_alias(db_alias)
             return self.get_model(db_alias).get(name=name)
 
-    def get_user_by_id(self, _id, db_alias=None) -> User:
-        """
-            根据id进行用户查询
-        :param db_alias:
-        :param _id:
-        :return:
-        """
-        if db_alias is None:
-            user = None
-            for dbms in DBMS.all:
-                user = self.get_user_by_id(_id=_id, db_alias=dbms)
-                if user is not None:
-                    break
-            return user
-        else:
-            check_alias(db_alias)
-            if not isinstance(_id, ObjectId):
-                _id = ObjectId(_id)
-            return self.get_model(db_alias).get(id=_id)
+    # def get_user_by_uid(self, _id, db_alias=None) -> User:
+    #     """
+    #         根据id进行用户查询
+    #     :param db_alias:
+    #     :param _id:
+    #     :return:
+    #     """
+    #     if db_alias is None:
+    #         user = None
+    #         for dbms in DBMS.all:
+    #             user = self.get_user_by_uid(_id=_id, db_alias=dbms)
+    #             if user is not None:
+    #                 break
+    #         return user
+    #     else:
+    #         check_alias(db_alias)
+    #         if not isinstance(_id, ObjectId):
+    #             _id = ObjectId(_id)
+    #         return self.get_model(db_alias).get(id=_id)
 
     def get_user_by_uid(self, uid, db_alias=None) -> User:
         """
@@ -228,25 +237,25 @@ class UserService(object):
         logger.info('用户 {} 退出登录'.format(name))
         return True
 
-    def update_by_id(self, _id, db_alias=None, **kwargs):
+    def update_by_uid(self, uid, db_alias=None, **kwargs):
         """
             根据name进行更新
         :param db_alias:
-        :param _id:
+        :param uid:
         :param kwargs:  更新的数据
         :return:
         """
-        user = self.get_user_by_id(_id, db_alias=db_alias)
+        user = self.get_user_by_uid(uid, db_alias=db_alias)
         if user is None:
             if db_alias is None:
-                logger.info("_id:{}不存在".format(_id))
+                logger.info("uid:{}不存在".format(uid))
             else:
-                logger.info("数据不同步， DBMS: {}中找不到{}的信息".format(db_alias, _id))
+                logger.info("数据不同步， DBMS: {}中找不到{}的信息".format(db_alias, uid))
             return None
         if db_alias is None:
             # TODO 如何判断更新失败？（例如更新时网络异常）
             for dbms in get_dbms_by_region(user.region):
-                user = self.update_by_id(_id, db_alias=dbms, **kwargs)
+                user = self.update_by_uid(uid, db_alias=dbms, **kwargs)
                 # if user is None:
                 #     break
             return user
@@ -316,18 +325,18 @@ class UserService(object):
                 return user.delete()
         return False
 
-    def del_user_by_id(self, _id, db_alias=None):
-        user = self.get_user_by_id(_id=_id, db_alias=db_alias)
-        if db_alias is None:
-            if user is not None:
-                for dbms in get_dbms_by_region(user.region):
-                    self.del_user_by_id(_id, db_alias=dbms)
-                    # if not success:
-                    #     return False
-            return True
-        else:
-            check_alias(db_alias)
-            return user.delete()
+    # def del_user_by_id(self, uid, db_alias=None):
+    #     user = self.get_user_by_uid(uid=uid, db_alias=db_alias)
+    #     if db_alias is None:
+    #         if user is not None:
+    #             for dbms in get_dbms_by_region(user.region):
+    #                 self.del_user_by_id(uid, db_alias=dbms)
+    #                 # if not success:
+    #                 #     return False
+    #         return True
+    #     else:
+    #         check_alias(db_alias)
+    #         return user.delete()
 
     def del_user_by_uid(self, uid, db_alias=None):
         user = self.get_user_by_uid(uid=uid, db_alias=db_alias)

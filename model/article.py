@@ -6,7 +6,7 @@ from db.mongodb import BaseDB
 
 
 class Article(BaseDB):
-    aid = IntField(required=True, unique=True)  # 通过aid的奇偶来判断存到哪一个数据库上去
+    aid = IntField(primary_key=True)  # 通过aid的奇偶来判断存到哪一个数据库上去
     title = StringField(required=True)
 
     category = StringField(required=True)
@@ -23,15 +23,15 @@ class Article(BaseDB):
     meta = {
         'abstract': True,
         'indexes': [
-            'aid',
+            # 'aid',
             'title',
             'category',
             # 'articleTags',
             'authors'
         ]
     }
-
-    @property
-    def create_time(self):
-        # 创建时间
-        return self.get_create_time()
+    #
+    # @property
+    # def create_time(self):
+    #     # 创建时间
+    #     return self.get_create_time()

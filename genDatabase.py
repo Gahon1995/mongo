@@ -1,26 +1,24 @@
 from random import random
 
 from config import DBMS
-from service.article_service import ArticleService
-from service.popular_service import PopularService
-from service.read_service import ReadService
-from service.user_service import UserService
 from utils.func import timestamp_to_datetime, print_run_time
 
 # USERS_NUM = 10000
 # ARTICLES_NUM = 200000
 # READS_NUM = 1000000
 
-USERS_NUM = 1000
-ARTICLES_NUM = 20000
-READS_NUM = 100000
+USERS_NUM = 100
+ARTICLES_NUM = 2000
+READS_NUM = 10000
 
-# uid_region = {}
-# aid_lang = {}
-from multiprocessing import Manager
+uid_region = {}
+aid_lang = {}
 
-uid_region = Manager().dict()
-aid_lang = Manager().dict()
+
+# from multiprocessing import Manager
+#
+# uid_region = Manager().dict()
+# aid_lang = Manager().dict()
 
 
 # multi_uid_region = Manager().dict(uid_region)
@@ -127,7 +125,7 @@ def gen_users():
         data = gen_an_user(i)
         UserService().register(data['name'], data['pwd'], data['gender'], data['email'], data['phone'], data['dept'],
                                data['grade'], data['language'], data['region'], data['role'], data['preferTags'],
-                               data['obtainedCredits'], int(data['timestamp']))
+                               data['obtainedCredits'], int(data['timestamp']), is_multi=True)
 
 
 @print_run_time
@@ -138,7 +136,7 @@ def gen_articles():
         ArticleService().add_an_article(title=data['title'], authors=data['authors'], category=data['category'],
                                         abstract=data['abstract'], articleTags=data['articleTags'],
                                         language=data['language'], text=data['text'], image=data['image'],
-                                        video=data['video'], timestamp=int(data['timestamp']))
+                                        video=data['video'], timestamp=int(data['timestamp']), is_multi=True)
 
 
 @print_run_time
@@ -155,7 +153,7 @@ def gen_reads():
         ReadService().save_read(article.aid, user.uid, int(data['readOrNot']), int(data['readTimeLength']),
                                 int(data['readSequence']), int(data['commentOrNot']),
                                 data['commentDetail'], int(data['agreeOrNot']), int(data['shareOrNot']),
-                                timestamp=int(data["timestamp"]))
+                                timestamp=int(data["timestamp"]), is_multi=True)
 
 
 @print_run_time
@@ -250,18 +248,20 @@ from mongoengine.context_managers import switch_db
 
 def drop(service):
     for dbms in DBMS.all:
-        model = service.get_model(dbms)
+        model = service().get_model(dbms)
         with switch_db(model, dbms):
             model.drop_collection()
 
 
+from service.user_service import UserService
+from service.article_service import ArticleService
+from service.read_service import ReadService
+from service.be_read_service import BeReadService
+from service.popular_service import PopularService
+from service.ids_service import IdsService
+
+
 def reset_db():
-    from service.user_service import UserService
-    from service.article_service import ArticleService
-    from service.read_service import ReadService
-    from service.be_read_service import BeReadService
-    from service.popular_service import PopularService
-    from service.ids_service import IdsService
     drop(UserService)
     drop(ArticleService)
     drop(ReadService)
@@ -296,6 +296,7 @@ def gen_data_by_threads():
 
     print('\n导入read数据...')
 
+    save_data()
     create_by_threads(gen_reads_by_threads, READS_NUM)
 
     init()
@@ -310,27 +311,66 @@ def gen_data():
     reset_db()
 
     # 71.67s
-    print('\n导入user数据...')
+    print('\n生成user数据...')
     gen_users()
 
-    print('\n导入article数据...')
+    print('\n生成article数据...')
     gen_articles()
+    print('\n导入user 和 article数据...')
+    for dbms in DBMS.all:
+        print('\n导入user数据... in ', dbms)
+        UserService().get_model(dbms).update_many(UserService().models[dbms])
+        print('\n导入article数据... in ', dbms)
+        ArticleService().get_model(dbms).update_many(ArticleService().models[dbms])
+        print('\n导入BeRead数据... in ', dbms)
 
-    print('\n导入read数据...')
+        BeReadService().get_model(dbms).update_many(BeReadService().models[dbms])
+
+        UserService().models[dbms].clear()
+        ArticleService().models[dbms].clear()
+        BeReadService().models[dbms].clear()
+        ReadService().models[dbms].clear()
+
+    save_data()
+    print('\n生成read数据...')
     gen_reads()
+    print('\n导入read数据...')
+    for dbms in DBMS.all:
+        ReadService().get_model(dbms).update_many(ReadService().models[dbms])
+        BeReadService().get_model(dbms).update_many(BeReadService().models[dbms])
 
+        ReadService().models[dbms].clear()
+        BeReadService().models[dbms].clear()
+
+    print('\n导入populars数据...')
     gen_populars()
+
+
+def save_data():
+    global uid_region, aid_lang
+    import json
+    with open('uid_region.data', 'w') as uid:
+        json.dump(uid_region, uid)
+    with open('aid_region.data', 'w') as aid:
+        json.dump(aid_lang, aid)
+
+
+def read_data():
+    global uid_region, aid_lang
+    import pickle
+    uid_region = pickle.load('uid_region.pickle')
+    aid_lang = pickle.load('aid_lang.pickle')
 
 
 @print_run_time
 def main():
-    # gen_data()
-    gen_data_by_threads()
+    gen_data()
+    # gen_data_by_threads()
 
 
 if __name__ == '__main__':
-    # main()
-    from main import init
-
-    init()
-    gen_populars()
+    main()
+    # from main import init
+    #
+    # init()
+    # gen_populars()

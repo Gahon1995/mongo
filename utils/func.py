@@ -7,6 +7,7 @@
 import datetime
 import functools
 import json
+import logging
 import threading
 import time
 
@@ -413,6 +414,26 @@ def print_run_time(func):
     def wrapper(*args, **kw):
         local_time = time.time()
         func(*args, **kw)
-        print('current Function [%s] run time is %.2fs' % (func.__name__, time.time() - local_time))
+        print('\ncurrent Function [%s] run time is %.2fs' % (func.__name__, time.time() - local_time))
+
+    return wrapper
+
+
+MAX_AUTO_RECONNECT_ATTEMPTS = 5
+
+
+def auto_reconnect(mongo_op_func):
+    from pymongo.errors import AutoReconnect
+    """Gracefully handle a reconnection event."""
+
+    @functools.wraps(mongo_op_func)
+    def wrapper(*args, **kwargs):
+        for attempt in range(MAX_AUTO_RECONNECT_ATTEMPTS):
+            try:
+                return mongo_op_func(*args, **kwargs)
+            except AutoReconnect as e:
+                wait_t = 0.5 * pow(2, attempt)  # exponential back off
+                logging.warning("PyMongo auto-reconnecting... %s. Waiting %.1f seconds.", str(e), wait_t)
+                time.sleep(wait_t)
 
     return wrapper

@@ -16,7 +16,7 @@ class BeRead(BaseDB):
     meta = {
         'abstract': True,
         'indexes': [
-            'bid',
+            # 'bid',
             'aid',
             # 'readNum',
             # 'commentNum',
@@ -25,7 +25,7 @@ class BeRead(BaseDB):
         ]
     }
 
-    bid = IntField(required=True, unique=True)
+    bid = IntField(primary_key=True)
     aid = IntField(required=True, unique=True)
     readNum = IntField(default=0)
     readUidList = ListField(IntField(required=False), default=list())
@@ -38,10 +38,10 @@ class BeRead(BaseDB):
     timestamp = IntField(required=True)
     last_update_time = DateTimeField(default=datetime.utcnow)
 
-    @property
-    def create_time(self):
-        # 创建时间
-        return self.get_create_time()
+    # @property
+    # def create_time(self):
+    #     # 创建时间
+    #     return self.get_create_time()
 
     @classmethod
     def add_read_record(cls, read):

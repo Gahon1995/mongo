@@ -1,8 +1,11 @@
-from mongoengine import Document, connect, register_connection, DoesNotExist
-from mongoengine.context_managers import switch_db
-from utils.func import convert_mongo_2_json, utc_2_local
 import functools
 import logging
+
+from mongoengine import Document, connect, register_connection, DoesNotExist, ValidationError
+from mongoengine.context_managers import switch_db
+from pymongo import UpdateOne
+
+from utils.func import convert_mongo_2_json
 
 logger = logging.getLogger('db')
 
@@ -76,7 +79,7 @@ class BaseDB(Document):
             return None
 
     @classmethod
-    def insert_one(cls, data: str):
+    def insert_one(cls, data):
         """
             插入一条数据
             由于加入了引用，所以该方法使用会出错
@@ -85,7 +88,7 @@ class BaseDB(Document):
         :param data: 插入的数据类容，需要符合cls的类型
         :return:
         """
-        return cls.from_json(data).save()
+        return cls.objects.insert(data)
 
     @classmethod
     def insert_many(cls, data: list):
@@ -96,11 +99,29 @@ class BaseDB(Document):
         :return:
         """
         if isinstance(data, list):
-            for d in data:
-                cls.from_json(d).save()
+            cls.objects.insert(data, load_bulk=False)
             return True
         else:
             raise BaseException('data type error, should be a list')
+
+    @classmethod
+    def update_many(cls, entities):
+        bulk_operations = []
+
+        for entity in entities:
+            try:
+                entity.validate()
+                bulk_operations.append(
+                    UpdateOne({'_id': entity.id}, {'$set': entity.to_mongo().to_dict()}, upsert=True))
+
+            except ValidationError:
+                pass
+
+        collection = None
+        if bulk_operations:
+            collection = cls._get_collection() \
+                .bulk_write(bulk_operations, ordered=False)
+        return collection
 
     @classmethod
     def delete_by(cls, **kwargs):
@@ -127,7 +148,7 @@ class BaseDB(Document):
             return int(obj.__getattribute__(_id)) + 1
 
 
-from config import Config, DBMS
+from config import DBMS
 
 
 def init_connect():

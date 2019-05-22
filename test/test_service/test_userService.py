@@ -4,9 +4,9 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 
-from test.test_base import TestBase
-from service.user_service import UserService
 from config import DBMS
+from service.user_service import UserService
+from test.test_base import TestBase
 
 
 class TestUserService(TestBase):
@@ -50,10 +50,10 @@ class TestUserService(TestBase):
 
     def test_get_by_uid(self):
         user = UserService().get_user_by_name('user4')
-        user1 = UserService().get_user_by_id(user.id)
+        user1 = UserService().get_user_by_uid(user.uid)
         assert user1 is not None and user1.name == user.name
         print(user)
-        # user = UserService().get_user_by_id(23)
+        # user = UserService().get_user_by_uid(23)
         # # assert user is not None
         # print(user)
 
@@ -71,7 +71,7 @@ class TestUserService(TestBase):
 
     def test_update(self):
         user = UserService().get_user_by_name('user4')
-        user = UserService().update_by_id(user.id, gender='female', email='ewrqwr')
+        user = UserService().update_by_uid(user.uid, gender='female', email='ewrqwr')
         assert user is not None
         print(user)
 
@@ -81,7 +81,7 @@ class TestUserService(TestBase):
 
     def test_del(self):
         # UserService().del_user_by_uid(49)
-        # user = UserService().get_user_by_id(49)
+        # user = UserService().get_user_by_uid(49)
         # assert user is None
 
         UserService().del_user_by_name('gahon')

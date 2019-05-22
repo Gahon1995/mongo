@@ -6,7 +6,6 @@
 
 import datetime
 import logging
-import threading
 
 from config import DBMS
 from model.popular import Popular
@@ -21,8 +20,14 @@ logger = logging.getLogger('PopularService')
 class PopularService(object):
     field_names = ['temporalGranularity', 'articleAidDict', 'timestamp', 'update_time']
 
-    @staticmethod
-    def get_model(dbms: str):
+    def __init__(self):
+        self.models = dict()
+        self.classes = dict()
+        for dbms in DBMS.all:
+            self.models[dbms] = list()
+            self.classes[dbms] = self.__gen_model(dbms)
+
+    def __gen_model(self, dbms):
         class Model(Popular):
             meta = {
                 'db_alias': dbms,
@@ -31,6 +36,9 @@ class PopularService(object):
             pass
 
         return Model
+
+    def get_model(self, dbms):
+        return self.classes[dbms]
 
     def __update_rank(self, rank, articles, db_alias):
         rank.articleAidDict = {}
@@ -47,8 +55,6 @@ class PopularService(object):
             rank = self.get_model(db_alias)()
             rank.timestamp = date_to_timestamp(_date)
             rank.temporalGranularity = 'daily'
-            logger.info(
-                "thread: {} create new daily popular on {}, at {}".format(threading.current_thread(), db_alias, _date))
         self.__update_rank(rank, articles, db_alias)
 
     def __update_weekly_rank(self, articles, _date, db_alias):
@@ -117,11 +123,14 @@ class PopularService(object):
         rank = self.get_weekly_rank(_date, db_alias)
 
         populars = list()
-
+        aids = list(int(aid) for aid in rank.articleAidDict.keys())
+        articles = ArticleService().get_articles_by_aids(aids, fields={'title': 1}, db_alias=db_alias)
         for aid, count in rank.articleAidDict.items():
-            article = ArticleService().get_an_article_by_aid(int(aid), db_alias=db_alias)
-            article.count = count
-            populars.append(article)
+            articles[int(aid)].count = count
+            populars.append(articles[int(aid)])
+        #     article = ArticleService().get_an_article_by_aid(int(aid), db_alias=db_alias)
+        #     article.count = count
+        #     populars.append(article)
         return populars
 
     def get_monthly_articles(self, _date, db_alias):

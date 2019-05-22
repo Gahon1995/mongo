@@ -33,9 +33,9 @@ class TestReadService(TestBase):
         assert reads is not None
         self.readService.pretty_reads(reads)
 
-    def test_del_read_by_id(self):
+    def test_del_read_by_rid(self):
         read = self.test_save_read()
-        num = self.readService.del_read_by_id(read.id)
+        num = self.readService.del_read_by_rid(read.rid)
         print(num)
         # assert num == 1
 

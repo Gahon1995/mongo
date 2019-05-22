@@ -3,9 +3,6 @@
 # @Time    : 2019-04-28 20:43
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
-import logging
-
-from bson import ObjectId
 
 from model.read import Read
 from service.be_read_service import BeReadService
@@ -21,8 +18,14 @@ class ReadService(object):
     field_names = ['aid', 'uid', 'readOrNot', 'readTimeLength', 'readSequence', 'agreeOrNot', 'commentOrNot',
                    'shareOrNot', 'commentDetail', 'timestamp']
 
-    @staticmethod
-    def get_model(dbms: str):
+    def __init__(self):
+        self.models = dict()
+        self.classes = dict()
+        for dbms in DBMS.all:
+            self.models[dbms] = list()
+            self.classes[dbms] = self.__gen_model(dbms)
+
+    def __gen_model(self, dbms):
         class Model(Read):
             meta = {
                 'db_alias': dbms,
@@ -31,6 +34,9 @@ class ReadService(object):
             pass
 
         return Model
+
+    def get_model(self, dbms):
+        return self.classes[dbms]
 
     @staticmethod
     def get_id():
@@ -50,8 +56,9 @@ class ReadService(object):
         check_alias(db_alias)
         return self.get_model(db_alias).count(**kwargs)
 
+    @auto_reconnect
     def save_read(self, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot, commentDetail, agreeOrNot,
-                  shareOrNot, timestamp=None):
+                  shareOrNot, timestamp=None, is_multi=False):
         """
             保存一个新的read记录
         :param aid:
@@ -78,17 +85,19 @@ class ReadService(object):
         # 根据用户的region去查询当前region对应的所有数据库
         for dbms in get_dbms_by_region(user.region):
             new_read = self.__save_read(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot,
-                                        commentDetail, agreeOrNot, shareOrNot, timestamp, db_alias=dbms)
+                                        commentDetail, agreeOrNot, shareOrNot, timestamp, db_alias=dbms,
+                                        is_multi=is_multi)
             if new_read is None:
                 break
 
         # 待修改
-        BeReadService().add_be_read_record(aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp)
+        BeReadService().add_be_read_record(aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp,
+                                           is_multi=is_multi)
 
         return new_read
 
     def __save_read(self, rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot, commentDetail,
-                    agreeOrNot, shareOrNot, timestamp=None, db_alias=None):
+                    agreeOrNot, shareOrNot, timestamp=None, db_alias=None, is_multi=False):
         # 在db_alias 所选中的数据库中 建立实例保存read数据
         check_alias(db_alias)
 
@@ -104,8 +113,11 @@ class ReadService(object):
         new_read.agreeOrNot = int(agreeOrNot)
         new_read.shareOrNot = int(shareOrNot)
         new_read.timestamp = timestamp or get_timestamp()
-        logger.info("save read to dbms:{}, record: aid: {}, uid: {}".format(db_alias, aid, uid))
-        new_read.save()
+        # logger.info("save read to dbms:{}, record: aid: {}, uid: {}".format(db_alias, aid, uid))
+        if is_multi:
+            self.models[db_alias].append(new_read)
+        else:
+            new_read.save()
         return new_read
 
     def get_reads(self, page_num=1, page_size=20, db_alias=None, **kwargs):
@@ -129,10 +141,10 @@ class ReadService(object):
             check_alias(db_alias)
             return self.get_model(db_alias).list_by_page(page_num, page_size, **kwargs)
 
-    def del_read_by_id(self, _id, db_alias=None):
+    def del_read_by_rid(self, rid, db_alias=None):
         """
             通过rid进行删除， 如果不指定数据库的话将在所有数据库中查询
-        :param _id:
+        :param rid:
         :param db_alias:
         :return:   1： 删除成功
                     0： 当前数据库没有rid信息
@@ -140,12 +152,12 @@ class ReadService(object):
         del_num = 0
         if db_alias is None:
             for dbms in DBMS.all:
-                del_num += self.del_read_by_id(_id, db_alias=dbms)
+                del_num += self.del_read_by_rid(rid, db_alias=dbms)
         else:
             check_alias(db_alias)
-            if not isinstance(_id, ObjectId):
-                _id = ObjectId(_id)
-            del_num = self.get_model(db_alias).objects(id=_id).delete()
+            # if not isinstance(rid, ObjectId):
+            #     rid = ObjectId(rid)
+            del_num = self.get_model(db_alias).objects(rid=rid).delete()
         return del_num
 
     def del_reads_by_uid(self, uid: int, db_alias=None):

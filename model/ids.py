@@ -12,10 +12,10 @@ class Ids(BaseDB):
     meta = {
         'abstract': True,
         'indexes': [
-            'ids',
+            # 'ids',
         ]
     }
-    ids = IntField(required=True, default=0)
+    ids = IntField(primary_key=True)
     uid = IntField(required=True, default=0)
     aid = IntField(required=True, default=0)
     rid = IntField(required=True, default=0)
