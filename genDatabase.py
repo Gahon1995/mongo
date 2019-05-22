@@ -136,12 +136,12 @@ def gen_articles():
         print_bar(i, ARTICLES_NUM)
         data = gen_an_article(i)
         ArticleService().import_from_dict(data)
-        ArticleService().update_many()
-        BeReadService().update_many()
-        # ArticleService().add_an_article(title=data['title'], authors=data['authors'], category=data['category'],
-        #                                 abstract=data['abstract'], articleTags=data['articleTags'],
-        #                                 language=data['language'], text=data['text'], image=data['image'],
-        #                                 video=data['video'], timestamp=int(data['timestamp']), is_multi=True)
+    ArticleService().update_many()
+    BeReadService().update_many()
+    # ArticleService().add_an_article(title=data['title'], authors=data['authors'], category=data['category'],
+    #                                 abstract=data['abstract'], articleTags=data['articleTags'],
+    #                                 language=data['language'], text=data['text'], image=data['image'],
+    #                                 video=data['video'], timestamp=int(data['timestamp']), is_multi=True)
 
 
 @print_run_time
@@ -359,8 +359,8 @@ def gen_data():
     # #     ReadService().models[dbms].clear()
     # #     BeReadService().models[dbms].clear()
     #
-    # print('\n导入populars数据...')
-    # gen_populars()
+    print('\n导入populars数据...')
+    gen_populars()
 
 
 def save_data():
