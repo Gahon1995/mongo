@@ -137,6 +137,7 @@ def gen_articles():
         data = gen_an_article(i)
         ArticleService().import_from_dict(data)
         if i % 50000 == 0:
+            print("\n\n saving articles")
             ArticleService().update_many()
             BeReadService().update_many()
     # ArticleService().add_an_article(title=data['title'], authors=data['authors'], category=data['category'],
@@ -155,6 +156,7 @@ def gen_reads():
 
         ReadService().import_from_dict(data)
         if i % 50000 == 0:
+            print("\n\n saving reads")
             ReadService().update_many()
             BeReadService().update_many()
     # article = ArticleService().get_articles_by_title(title='title' + data['aid'], only=['aid'], page_size=1,
