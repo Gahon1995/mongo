@@ -136,8 +136,9 @@ def gen_articles():
         print_bar(i, ARTICLES_NUM)
         data = gen_an_article(i)
         ArticleService().import_from_dict(data)
-    ArticleService().update_many()
-    BeReadService().update_many()
+        if i % 50000 == 0:
+            ArticleService().update_many()
+            BeReadService().update_many()
     # ArticleService().add_an_article(title=data['title'], authors=data['authors'], category=data['category'],
     #                                 abstract=data['abstract'], articleTags=data['articleTags'],
     #                                 language=data['language'], text=data['text'], image=data['image'],
@@ -153,8 +154,9 @@ def gen_reads():
         data['rid'] = i
 
         ReadService().import_from_dict(data)
-    ReadService().update_many()
-    BeReadService().update_many()
+        if i % 50000 == 0:
+            ReadService().update_many()
+            BeReadService().update_many()
     # article = ArticleService().get_articles_by_title(title='title' + data['aid'], only=['aid'], page_size=1,
     #                                                  db_alias=DBMS.DBMS2)[0]
     #
