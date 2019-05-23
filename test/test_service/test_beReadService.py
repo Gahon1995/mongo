@@ -10,8 +10,10 @@ from test.test_base import TestBase
 
 class TestBeReadService(TestBase):
 
-    def setup_method(self) -> None:
-        self.beReadService = BeReadService()
+    @classmethod
+    def setup_class(cls) -> None:
+        super().setup_class()
+        cls.beReadService = BeReadService()
 
     # def test_get_be_id(self):
     #     bid = self.beReadService.get_bid()

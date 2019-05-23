@@ -3,6 +3,7 @@ import logging
 
 from mongoengine import Document, connect, register_connection, DoesNotExist, ValidationError
 from mongoengine.context_managers import switch_db
+from mongoengine.pymongo_support import count_documents
 from pymongo import UpdateOne
 
 from utils.func import convert_mongo_2_json
@@ -45,7 +46,8 @@ class BaseDB(Document):
 
         :return: 当前数据的总量
         """
-        return cls.objects(**kwargs).count()
+        # return cls.objects(**kwargs).count()
+        return count_documents(cls._get_collection(), kwargs)
 
     @classmethod
     def find(cls, only: list = None, exclude: list = None, **kwargs):
@@ -155,6 +157,10 @@ class BaseDB(Document):
                 .bulk_write(bulk_operations, ordered=False)
         return collection
 
+    def delete(self, signal_kwargs=None, **write_concern):
+
+        return self._collection.delete_one(self._qs.filter(**self._object_key)._query, **write_concern).deleted_count
+
     @classmethod
     def delete_by(cls, **kwargs):
         """
@@ -162,22 +168,15 @@ class BaseDB(Document):
         :param kwargs:
         :return:
         """
-        return cls.objects(**kwargs).delete()
+        return cls._get_collection().delete_many(cls.objects(**kwargs)._query).deleted_count
 
     @classmethod
-    def get_id(cls, _id: str):
-        """
-            查询当前最大的id
-
-        :param _id: 当前class 的id 名称
-        :return:
-        """
-
-        obj = cls.objects.order_by('-' + _id).limit(1).first()
-        if obj is None:
-            return 1
+    def delete_one(cls, **kwargs):
+        if len(kwargs) != 0:
+            return cls._get_collection().delete_one(cls.objects(**kwargs)._query).deleted_count
         else:
-            return int(obj.__getattribute__(_id)) + 1
+            return 0
+        pass
 
 
 from config import DBMS

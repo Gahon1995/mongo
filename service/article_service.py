@@ -205,7 +205,7 @@ class ArticleService(object):
     def __del_by_filed(self, field, value, db_alias=None, **kwargs):
         check_alias(db_alias)
         kwargs[field] = value
-        re = self.get_model(db_alias).objects(**kwargs).delete()
+        re = self.get_model(db_alias).delete_one(**kwargs)
         return re
 
     def del_by_aid(self, aid, **kwargs):

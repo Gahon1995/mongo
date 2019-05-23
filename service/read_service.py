@@ -169,7 +169,8 @@ class ReadService(object):
             check_alias(db_alias)
             # if not isinstance(rid, ObjectId):
             #     rid = ObjectId(rid)
-            del_num = self.get_model(db_alias).objects(rid=rid).delete()
+            # del_num = self.get_model(db_alias).objects(rid=rid).delete()
+            del_num = self.get_model(db_alias).delete_one(rid=rid)
         return del_num
 
     def del_reads_by_uid(self, uid: int, db_alias=None):
@@ -190,7 +191,7 @@ class ReadService(object):
                 del_num += self.del_reads_by_uid(uid, db_alias=dbms)
         else:
             check_alias(db_alias)
-            del_num = self.get_model(db_alias).objects(uid=uid).delete()
+            del_num = self.get_model(db_alias).delete_one(uid=uid)
         return del_num
 
     def get_history(self, uid, page_num=1, page_size=20, **kwargs):

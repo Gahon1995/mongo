@@ -89,4 +89,4 @@ class TestBaseArticleService(TestBase):
         aids = [0, 1, 2, 3]
         articles = ArticleService().get_articles_by_aids(aids, db_alias=DBMS.DBMS2, only=['title'])
 
-        ArticleService.pretty_articles(list(articles[aid] for aid in aids))
+        ArticleService.pretty_articles(list(articles[aid] for aid in aids if aid in articles.keys()))

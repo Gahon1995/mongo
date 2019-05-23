@@ -3,13 +3,13 @@ from random import random
 from config import DBMS
 from utils.func import timestamp_to_datetime, print_run_time
 
-USERS_NUM = 10000
-ARTICLES_NUM = 200000
-READS_NUM = 1000000
+# USERS_NUM = 10000
+# ARTICLES_NUM = 200000
+# READS_NUM = 1000000
 
-# USERS_NUM = 100
-# ARTICLES_NUM = 2000
-# READS_NUM = 10000
+USERS_NUM = 100
+ARTICLES_NUM = 2000
+READS_NUM = 10000
 
 uid_region = {}
 aid_lang = {}
@@ -136,10 +136,12 @@ def gen_articles():
         print_bar(i, ARTICLES_NUM)
         data = gen_an_article(i)
         ArticleService().import_from_dict(data)
-        if i % 50000 == 0:
+        if (i + 1) % 50000 == 0:
             print("\n\n saving articles")
             ArticleService().update_many()
             BeReadService().update_many()
+    ArticleService().update_many()
+    BeReadService().update_many()
     # ArticleService().add_an_article(title=data['title'], authors=data['authors'], category=data['category'],
     #                                 abstract=data['abstract'], articleTags=data['articleTags'],
     #                                 language=data['language'], text=data['text'], image=data['image'],
@@ -155,10 +157,12 @@ def gen_reads():
         data['rid'] = i
 
         ReadService().import_from_dict(data)
-        if i % 50000 == 0:
+        if (i + 1) % 50000 == 0:
             print("\n\n saving reads")
             ReadService().update_many()
             BeReadService().update_many()
+    ReadService().update_many()
+    BeReadService().update_many()
     # article = ArticleService().get_articles_by_title(title='title' + data['aid'], only=['aid'], page_size=1,
     #                                                  db_alias=DBMS.DBMS2)[0]
     #
@@ -320,12 +324,19 @@ def gen_data_by_threads():
     gen_populars()
 
 
+def gen_ids():
+    ids = IdsService().get_model(DBMS.DBMS1)()
+    ids.ids = 0
+    ids.aid = ARTICLES_NUM
+    ids.uid = USERS_NUM
+    ids.rid = READS_NUM
+    ids.bid = ARTICLES_NUM
+    ids.save()
+
+
 def gen_data():
     # host = '127.0.0.1'
     # connect('mongo-new', host=host, port=27017)
-    from main import init
-    init()
-    reset_db()
 
     # 71.67s
     print('\n生成user数据...')
@@ -353,7 +364,7 @@ def gen_data():
     print('\n生成read数据...')
     gen_reads()
 
-    IdsService().init(uid=USERS_NUM, aid=ARTICLES_NUM, rid=READS_NUM, bid=ARTICLES_NUM, db_alias=DBMS.DBMS1)
+    gen_ids()
 
     # # print('\n导入read数据...')
     # # for dbms in DBMS.all:
@@ -385,6 +396,10 @@ def read_data():
 
 @print_run_time
 def main():
+    from main import init
+    init()
+    reset_db()
+
     gen_data()
     # gen_data_by_threads()
 

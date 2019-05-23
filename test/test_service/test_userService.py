@@ -12,6 +12,15 @@ from utils.func import pretty_models
 
 class TestUserService(TestBase):
 
+    def test_count(self):
+        print()
+        cnt = UserService().count(db_alias=DBMS.DBMS1)
+        print('DBMS1:', cnt)
+        cnt = UserService().count(db_alias=DBMS.DBMS2)
+        print('DBMS2:', cnt)
+        cnt = UserService().count_all()
+        print('all: ', cnt)
+
     def test_user_list(self):
         only = ['uid', 'name']
         users = UserService().users_list(only=only, db_alias=DBMS.DBMS1)
@@ -32,26 +41,17 @@ class TestUserService(TestBase):
         assert re1
         print(re1)
 
-    def test_count(self):
-        print()
-        cnt = UserService().count(db_alias=DBMS.DBMS1)
-        print('DBMS1:', cnt)
-        cnt = UserService().count(db_alias=DBMS.DBMS2)
-        print('DBMS2:', cnt)
-        cnt = UserService().count_all()
-        print('all: ', cnt)
-
     def test_get_user_by_name(self):
         user = UserService().get_user_by_name('user4', exclude=['pwd'])
         assert user is not None
         print(user)
 
-        admin1 = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS1, only=['name'])
-        print(admin1)
-
-        admin2 = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS2, exclude=['name'])
-        print(admin2)
-        assert (admin1 is None) if (admin2 is not None) else (admin1 is not None)
+        # admin1 = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS1, only=['name'])
+        # print(admin1)
+        #
+        # admin2 = UserService().get_user_by_name('admin', db_alias=DBMS.DBMS2, exclude=['name'])
+        # print(admin2)
+        # assert (admin1 is None) if (admin2 is not None) else (admin1 is not None)
 
     def test_get_by_uid(self):
         user = UserService().get_user_by_name('user4')
@@ -63,15 +63,13 @@ class TestUserService(TestBase):
         # print(user)
 
     def test_login(self):
-        user = UserService().login('admin', 'admin')
+        UserService().register('test1', 'password', 'male', 'asdf', 'asdfasdf', 'asdf', 'asdf', 'asdf',
+                               'Beijing', 'asdf', 'asdfas', '123')
+        user = UserService().login('test1', 'password')
         assert user is not None
         print(user)
 
-        user = UserService().login('gahon', 'password')
-        assert user is not None
-        print(user)
-
-        user = UserService().login('admin', 'qweqwe')
+        user = UserService().login('test1', 'qweqwe')
         assert user is None
 
     def test_update(self):

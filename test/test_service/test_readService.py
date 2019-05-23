@@ -7,8 +7,13 @@ from test.test_base import TestBase
 
 class TestReadService(TestBase):
 
-    def setup_method(self) -> None:
-        self.readService = ReadService()
+    @classmethod
+    def setup_class(cls) -> None:
+        super().setup_class()
+        cls.readService = ReadService()
+
+    # def setup_method(self) -> None:
+    #     self.readService = ReadService()
 
     def test_count(self):
         for dbms in DBMS.all:
@@ -38,6 +43,12 @@ class TestReadService(TestBase):
         num = self.readService.del_read_by_rid(read.rid)
         print(num)
         # assert num == 1
+
+    def test_del_read_by_self(self):
+        read = self.test_save_read()
+        num = read.delete()
+        print(num)
+        assert num == 1
 
     def test_del_reads_by_uid(self):
         user = UserService().get_user_by_name('user4')
