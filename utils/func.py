@@ -351,6 +351,19 @@ def timestamp_to_datetime(timestamp):
         return datetime.datetime.fromtimestamp(timestamp, tz=tz)
 
 
+def timestamp_to_str(timestamp):
+    tz = pytz.timezone("Asia/Shanghai")
+    timestamp = int(timestamp)
+    if len(str(timestamp)) == 13:
+        return datetime.datetime.fromtimestamp(timestamp / 1000, tz=tz).strftime('%Y-%m-%d %H:%M:%S')
+    else:
+        return datetime.datetime.fromtimestamp(timestamp, tz=tz).strftime('%Y-%m-%d %H:%M:%S')
+
+
+def datetime_to_str(_datetime):
+    return _datetime.strftime('%Y-%m-%d %H:%M:%S')
+
+
 def date_to_datetime(_date):
     if isinstance(_date, datetime.date):
         return datetime.datetime.strptime(str("{}-{}-{}".format(_date.year, _date.month, _date.day + 1)), '%Y-%m-%d')

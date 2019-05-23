@@ -31,7 +31,20 @@ class Read(BaseDB):
 
     timestamp = IntField(required=True)
 
-    # @property
-    # def create_time(self):
-    #     # 创建时间
-    #     return self.get_create_time()
+    def to_dict(self, include: list = None, exclude: list = None):
+        """
+            将该类数据转换为dict，以供快捷转换为str或者list
+
+        :param include: 需要返回显示的字段名，为空的话则显示全部字段
+        :param exclude: 不需要返回的字段，include为空才生效
+        :return: dict
+        """
+        # 时间处理
+
+        my_dict = super(Read, self).to_dict(include, exclude)
+
+        if 'timestamp' in my_dict.keys():
+            from utils.func import timestamp_to_str
+            my_dict['timestamp'] = timestamp_to_str(self.timestamp)
+
+        return my_dict

@@ -6,8 +6,6 @@ from mongoengine.context_managers import switch_db
 from mongoengine.pymongo_support import count_documents
 from pymongo import UpdateOne
 
-from utils.func import convert_mongo_2_json
-
 logger = logging.getLogger('db')
 
 
@@ -18,7 +16,48 @@ class BaseDB(Document):
 
     def __str__(self):
         #     # 重写str方法， 将ObjectId 和datetime格式正确的输出
-        return convert_mongo_2_json(self)
+        # return convert_mongo_2_json(self)
+        return str(self.to_dict())
+
+    def to_dict(self, include: list = None, exclude: list = None):
+        """
+            将该类数据转换为dict，以供快捷转换为str或者list
+
+        :param include: 需要返回显示的字段名，为空的话则显示全部字段
+        :param exclude: 不需要返回的字段，include为空才生效
+        :return: dict
+        """
+
+        if exclude is None:
+            exclude = list()
+        if include is None:
+            include = list()
+
+        if not isinstance(include, list) or not isinstance(exclude, list):
+            raise BaseException('传入类型不一致')
+        _fields = list(self._db_field_map.keys())
+
+        if len(include) != 0:
+            for _field in include:
+                if _field not in _fields:
+                    raise BaseException("field {} error， 不存在该字段".format(_field))
+            my_dict = self.__to_dict(include)
+
+        elif len(exclude) != 0:
+            for _field in exclude:
+                if _field in _fields[::-1]:
+                    _fields.remove(_field)
+            my_dict = self.__to_dict(_fields)
+        else:
+            my_dict = self.__to_dict(_fields)
+
+        return my_dict
+
+    def __to_dict(self, _fields):
+        my_dict = dict()
+        for filed in _fields:
+            my_dict[filed] = getattr(self, filed)
+        return my_dict
 
     @classmethod
     def list_by_page(cls, page_num=1, page_size=20, only: list = None, exclude: list = None, **kwargs):

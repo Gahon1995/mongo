@@ -31,3 +31,24 @@ class Popular(BaseDB):
     def create_time(self):
         # 创建时间
         return self.id.generation_time
+
+    def to_dict(self, include: list = None, exclude: list = None):
+        """
+            将该类数据转换为dict，以供快捷转换为str或者list
+
+        :param include: 需要返回显示的字段名，为空的话则显示全部字段
+        :param exclude: 不需要返回的字段，include为空才生效
+        :return: dict
+        """
+        # 时间处理
+
+        my_dict = super(Popular, self).to_dict(include, exclude)
+
+        from utils.func import timestamp_to_str
+        if 'last_update_time' in my_dict.keys():
+            my_dict['update_time'] = timestamp_to_str(self.update_time)
+
+        if 'timestamp' in my_dict.keys():
+            my_dict['timestamp'] = timestamp_to_str(self.timestamp)
+
+        return my_dict

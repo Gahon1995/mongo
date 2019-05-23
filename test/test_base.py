@@ -17,6 +17,7 @@ class TestBase:
     # 只在运行前执行一次
     @classmethod
     def setup_class(cls) -> None:
+        print("=" * 50 + "INIT" + "=" * 50)
         print("连接数据库")
         DBMS.db_name = 'test'
         init()
@@ -26,6 +27,7 @@ class TestBase:
         gen.READS_NUM = 100
 
         gen.gen_data()
+        print("=" * 50 + "INIT FINISH" + "=" * 50)
         pass
 
     # 运行结束以后执行的内容
@@ -35,4 +37,5 @@ class TestBase:
     @classmethod
     def teardown_class(cls) -> None:
         gen.reset_db()
+        print("=" * 50 + "FINISH" + "=" * 50)
         pass
