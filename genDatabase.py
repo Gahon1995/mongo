@@ -7,7 +7,7 @@ from utils.func import timestamp_to_datetime, print_run_time
 # ARTICLES_NUM = 200000
 # READS_NUM = 1000000
 
-USERS_NUM = 100
+USERS_NUM = 1000
 ARTICLES_NUM = 2000
 READS_NUM = 10000
 

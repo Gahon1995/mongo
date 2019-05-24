@@ -280,7 +280,7 @@ class UserService(object):
         else:
             check_alias(db_alias)
             user = self.get_user_by_uid(uid, db_alias=db_alias)
-            return self.update_user(user, **kwargs)
+            return self._update_one(user, **kwargs)
 
     def update_by_name(self, name, db_alias=None, **kwargs):
         """
@@ -307,7 +307,7 @@ class UserService(object):
             return user
         else:
             check_alias(db_alias)
-            return self.update_user(user, **kwargs)
+            return self._update_one(user, **kwargs)
 
     def update_many(self, models=None, db_alias=None):
 
@@ -321,7 +321,7 @@ class UserService(object):
                     self.get_model(db_alias).update_many(models)
                     self.models[db_alias].clear()
 
-    def update_user(self, user: User, **kwargs):
+    def _update_one(self, user: User, **kwargs):
         """
             根据user实例进行更新用户数据
         :param user:    待更新的用户数据
@@ -337,6 +337,8 @@ class UserService(object):
         for key in kwargs:
             if key not in forbid and hasattr(user, key):
                 setattr(user, key, kwargs[key])
+            else:
+                logger.info("修改不存在的字段或者禁止字段： {}".format(key))
 
         # TODO 如何判断更新失败？（例如更新时网络异常）
         return user.save()

@@ -3,17 +3,18 @@
 # @Time    : 2019-04-29 13:32
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
-from service.user_service import UserService
-from utils.func import show_next, get_dbms_by_region
-from config import DBMS
 import json
+
+from config import DBMS
+from service.user_service import UserService
+from utils.func import show_next
 
 
 class UserUI(object):
 
     @staticmethod
     def login(username, password):
-        return UserService.login(username, password)
+        return UserService().login(username, password)
 
     @staticmethod
     def user_query_all(page_num=1, page_size=20, **kwargs):
@@ -23,10 +24,10 @@ class UserUI(object):
         print("输入其他内容返回")
         mode = input("请选择操作： ")
         if mode == '1':
-            total = UserService.count(db_alias=DBMS.DBMS1, **kwargs)
+            total = UserService().count(db_alias=DBMS.DBMS1, **kwargs)
             UserUI.query_all(total, page_num, page_size, db_alias=DBMS.DBMS1, **kwargs)
         elif mode == '2':
-            total = UserService.count(db_alias=DBMS.DBMS2, **kwargs)
+            total = UserService().count(db_alias=DBMS.DBMS2, **kwargs)
             UserUI.query_all(total, page_num, page_size, db_alias=DBMS.DBMS2, **kwargs)
         elif mode == '3':
             # TODO 添加两个地区查询的方式
@@ -36,12 +37,12 @@ class UserUI(object):
     @staticmethod
     def query_all(total, page_num=1, page_size=20, db_alias=None, **kwargs):
 
-        users = UserService.users_list(page_num, page_size, db_alias=db_alias, **kwargs)
+        users = UserService().users_list(page_num, page_size, db_alias=db_alias, **kwargs)
 
         if len(users) == 0:
             print("未查找到相关用户")
             return
-        UserService.pretty_users(users)
+        UserService().pretty_users(users)
 
         show_next(page_num=page_num, page_size=page_size, db_alias=db_alias, next_func=UserUI.query_all, total=total,
                   **kwargs)
@@ -49,11 +50,11 @@ class UserUI(object):
     @staticmethod
     def user_query_by_name():
         name = input("\n请输入查询的用户名: ")
-        user = UserService.get_user_by_name(name)
+        user = UserService().get_user_by_name(name)
         if user is None:
             print("用户名不存在")
         else:
-            UserService.pretty_users([user])
+            UserService().pretty_users([user])
             input("按回车键返回")
         return None
 
@@ -64,7 +65,7 @@ class UserUI(object):
         try:
             con = json.loads(condition)
             for key, value in con.items():
-                if UserService.hasattr(key):
+                if UserService().hasattr(key):
                     kwargs[key] = value
                 else:
                     print("输入的JSON字段错误，请检查。")
@@ -78,17 +79,15 @@ class UserUI(object):
     def update_user_info():
         forbid = ['id', 'name', 'region']
         username = input("请输入要更新的用户名：")
-        user = UserService.get_user_by_name(username)
+        user = UserService().get_user_by_name(username)
         if user is None:
             print("用户不存在")
-        UserService.pretty_users([user])
+            return None
+        UserService().pretty_users([user])
         update_date = input("请输入修改的内容(json格式)： ")
         try:
             con = json.loads(update_date)
-            for key, value in con.items():
-                if key not in forbid and hasattr(user, key):
-                    setattr(user, key, value)
-            return UserService.update_user_by_admin(user, db_alias=get_dbms_by_region(user.region))
+            return UserService().update_by_uid(user.uid, **con)
         except json.JSONDecodeError:
             print("输入不是json格式")
             return None
@@ -96,14 +95,14 @@ class UserUI(object):
     @staticmethod
     def del_user():
         username = input("请输入要删除的用户名： ")
-        user = UserService.get_user_by_name(username)
+        user = UserService().get_user_by_name(username)
         if user is None:
             print("该用户不存在")
             return None
-        UserService.pretty_users([user])
+        UserService().pretty_users([user])
         choice = input("是否删除该用户？（Y or N）： ")
         if choice == 'Y' or choice == 'y' or choice == 'yes':
-            UserService.del_user(user, db_alias=get_dbms_by_region(user.region))
+            UserService().del_user_by_uid(user.uid)
             print("删除成功")
 
         return None
@@ -123,10 +122,13 @@ class UserUI(object):
         region = input("请输入region: ")
         role = input("请输入role: ")
         preferTags = input("请输入preferTags: ")
-        obtainedCredits = int(input("请输入obtainedCredits: "))
+        obtainedCredits = (input("请输入obtainedCredits: "))
 
-        UserService.register(name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
-                             obtainedCredits)
+        if region != "Beijing" and region != "Hong Kong":
+            print("输入的region错误，请重新输入！")
+            return
+        UserService().register(name, pwd, gender, email, phone, dept, grade, language, region, role, preferTags,
+                               obtainedCredits)
         print("添加用户成功")
         return
         pass
@@ -154,3 +156,10 @@ class UserUI(object):
         else:
             print("输入错误")
         UserUI.user_manage()
+
+
+if __name__ == '__main__':
+    from main import init
+
+    init()
+    UserUI.user_manage()

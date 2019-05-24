@@ -396,7 +396,10 @@ def pretty_models(models, field_names: list):
 
     if not isinstance(models, list):
         models = list(models)
-    # field_names = (
+
+    if len(models) == 0:
+        return
+        # field_names = (
     #     'aid', 'title', 'category', 'abstract', 'articleTags', 'authors', 'language', 'timestamp', 'update_time')
     x.field_names = field_names
     for model in models:

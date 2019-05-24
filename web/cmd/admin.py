@@ -4,13 +4,13 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 from service.user_service import UserService
-from web.cmd.UserUI import UserUI
 from web.cmd.ArticleUI import article_manage
+from web.cmd.UserUI import UserUI
 
 
 def login_by_admin(username, password):
     if username == 'admin' and password is not None:
-        admin = UserService.login(username, password)
+        admin = UserService().login(username, password)
         if admin is not None:
             return admin_manage(admin)
     print("用户名或密码错误，请重新输入")

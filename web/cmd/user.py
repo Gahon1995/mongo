@@ -4,6 +4,7 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 import json
+
 from service.user_service import UserService
 from web.cmd.ArticleUI import article_manage
 
@@ -11,7 +12,7 @@ from web.cmd.ArticleUI import article_manage
 def login_by_user(username, password):
     if username is None or password is None:
         return None
-    user = UserService.login(username, password)
+    user = UserService().login(username, password)
     if user is not None:
         print("登录成功。。。\n\n\n")
         return user_manage(user)
@@ -51,7 +52,7 @@ def user_manage(user):
 
 
 def show_or_update_user(user):
-    UserService.pretty_users([user])
+    UserService().pretty_users([user])
 
     while True:
         print("1. 修改个人信息")
@@ -74,7 +75,8 @@ def update_info(user, **kwargs):
         con = json.loads(update_date)
         for key, value in con.items():
             kwargs[key] = value
-        if UserService.update_user(user, **kwargs):
+        if UserService().update_by_uid(user.uid, **kwargs):
+            user.reload()
             print("更新成功")
         else:
             print("更新失败，请稍后重试")

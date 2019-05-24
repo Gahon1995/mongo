@@ -3,7 +3,6 @@ import logging
 
 from mongoengine import Document, connect, register_connection, DoesNotExist, ValidationError
 from mongoengine.context_managers import switch_db
-from mongoengine.pymongo_support import count_documents
 from pymongo import UpdateOne
 
 logger = logging.getLogger('db')
@@ -86,7 +85,16 @@ class BaseDB(Document):
         :return: 当前数据的总量
         """
         # return cls.objects(**kwargs).count()
-        return count_documents(cls._get_collection(), kwargs)
+        return cls._get_collection().count_documents(cls.objects(**kwargs)._query)
+
+    @classmethod
+    def count_documents(cls, **kwargs):
+        """
+
+        :return: 当前数据的总量
+        """
+        # return cls.objects(**kwargs).count()
+        return cls._get_collection().count_documents(cls.objects(**kwargs)._query)
 
     @classmethod
     def find(cls, only: list = None, exclude: list = None, **kwargs):

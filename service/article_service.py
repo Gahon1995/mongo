@@ -53,7 +53,7 @@ class ArticleService(object):
         return IdsService().next_id('aid')
 
     def has_article(self, aid, db_alias):
-        return self.count(aid=aid, db_alias=db_alias)
+        return self.get_model(db_alias).count_documents(aid=aid)
 
     def count(self, db_alias=None, **kwargs):
         check_alias(db_alias)
@@ -221,8 +221,19 @@ class ArticleService(object):
 
     def get_articles(self, page_num=1, page_size=20, db_alias=None, **kwargs):
         # TODO 去掉默认db设置，在所有数据库中，根据数量进行分页以及返回相关数据
-        check_alias(db_alias)
-        return self.get_model(db_alias).list_by_page(page_num, page_size, **kwargs)
+        if db_alias is None:
+            articles = []
+            aids = []
+            for dbms in DBMS.all:
+                tmp_articles = self.get_articles(page_num, page_size, db_alias=dbms, **kwargs)
+                for article in tmp_articles:
+                    if article.aid not in aids:
+                        articles.append(article)
+                        aids.append(article.aid)
+            return articles
+        else:
+            check_alias(db_alias)
+            return self.get_model(db_alias).list_by_page(page_num, page_size, **kwargs)
 
     def get_articles_by_aids(self, aids: list, db_alias: str = None, **kwargs) -> dict:
         """
@@ -284,8 +295,12 @@ class ArticleService(object):
         :param condition:  Json格式更新内容
         :return:
         """
+        art = None
         for dbms in get_dbms_by_category(article.category):
-            self.__update(article.id, condition, db_alias=dbms)
+            art = self.__update(article.aid, condition, db_alias=dbms)
+            if art is None:
+                return None
+        return art
 
     def __update(self, aid, condition: dict, db_alias=None):
         check_alias(db_alias)
@@ -293,12 +308,14 @@ class ArticleService(object):
         if article is None:
             return
 
-        forbid = ("aid", 'update_time', 'aid')
+        forbid = ("aid", 'update_time', 'category')
         for key, value in condition.items():
             if key not in forbid and hasattr(article, key):
                 setattr(article, key, value)
         article.update_time = datetime.datetime.utcnow()
         article.save()
+        article.reload()
+        return article
 
     # =============== 已测试 ===============
 

@@ -15,7 +15,7 @@ logger = logging.getLogger('ReadService')
 
 @singleton
 class ReadService(object):
-    field_names = ['aid', 'uid', 'readOrNot', 'readTimeLength', 'readSequence', 'agreeOrNot', 'commentOrNot',
+    field_names = ['rid', 'aid', 'uid', 'readOrNot', 'readTimeLength', 'readSequence', 'commentOrNot', 'agreeOrNot',
                    'shareOrNot', 'commentDetail', 'timestamp']
 
     def __init__(self):
@@ -68,6 +68,28 @@ class ReadService(object):
         check_alias(db_alias)
         return self.get_model(db_alias).count(**kwargs)
 
+    def get_by_uid_and_aid(self, uid, aid, db_alias=None, **kwargs):
+
+        if db_alias is None:
+            for dbms in DBMS.all:
+                read = self.get_by_uid_and_aid(uid, aid, db_alias=dbms, **kwargs)
+                if read is not None:
+                    return read
+        else:
+            return self.get_model(db_alias).get_one(uid=uid, aid=aid, **kwargs)
+        pass
+
+    def get_by_rid(self, rid, db_alias=None, **kwargs):
+
+        if db_alias is None:
+            for dbms in DBMS.all:
+                read = self.get_by_rid(rid, db_alias=dbms, **kwargs)
+                if read is not None:
+                    return read
+        else:
+            return self.get_model(db_alias).get_one(rid=rid, **kwargs)
+        pass
+
     @auto_reconnect
     def add_one(self, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot, commentDetail, agreeOrNot,
                 shareOrNot, timestamp=None, is_multi=False):
@@ -91,14 +113,22 @@ class ReadService(object):
         user = UserService().get_user_by_uid(uid, only=['region'])
         if user is None:
             return None
-        rid = self.get_id()
+        read = ReadService().get_by_uid_and_aid(uid=uid, aid=aid, only=['rid'])
+        if read is not None:
+            rid = read.rid
+        else:
+            rid = self.get_id()
 
         new_read = None
         # 根据用户的region去查询当前region对应的所有数据库
         for dbms in get_dbms_by_region(user.region):
-            new_read = self.__save(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot,
-                                   commentDetail, agreeOrNot, shareOrNot, timestamp, db_alias=dbms,
-                                   is_multi=is_multi)
+            if read is None:
+                new_read = self.__save(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot,
+                                       commentDetail, agreeOrNot, shareOrNot, timestamp, db_alias=dbms,
+                                       is_multi=is_multi)
+            else:
+                new_read = self.update(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot,
+                                       commentDetail, agreeOrNot, shareOrNot, db_alias=dbms)
             if new_read is None:
                 break
 
@@ -130,6 +160,28 @@ class ReadService(object):
             self.models[db_alias].append(new_read)
         else:
             new_read.save()
+        return new_read
+
+    def update(self, rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot, commentDetail,
+               agreeOrNot, shareOrNot, db_alias=None):
+        # 在db_alias 所选中的数据库中 建立实例保存read数据
+        check_alias(db_alias)
+        new_read = self.get_by_rid(rid=rid, db_alias=db_alias)
+        new_read.rid = rid
+        if new_read.aid != aid or new_read.uid != uid:
+            logger.info("update read date error,"" rid: {}, old-> uid:{}, aid:{},"
+                        " new ->: uid:{}, aid:{}".format(rid, new_read.uid, new_read.rid, uid, rid))
+            return None
+
+        new_read.readOrNot = int(readOrNot) or new_read.readOrNot
+        new_read.readTimeLength += int(readTimeLength)
+        new_read.readSequence += int(readSequence)
+        new_read.commentOrNot = int(commentOrNot) or new_read.commentOrNot
+        new_read.commentDetail += "\n" + commentDetail
+        new_read.agreeOrNot = int(agreeOrNot) or new_read.agreeOrNot
+        new_read.shareOrNot = int(shareOrNot) or new_read.shareOrNot
+        new_read.timestamp = get_timestamp()
+        new_read.save()
         return new_read
 
     def get_reads(self, page_num=1, page_size=20, db_alias=None, **kwargs):
@@ -194,7 +246,7 @@ class ReadService(object):
             del_num = self.get_model(db_alias).delete_one(uid=uid)
         return del_num
 
-    def get_history(self, uid, page_num=1, page_size=20, **kwargs):
+    def get_history(self, uid: int, page_num=1, page_size=20, **kwargs):
         """
                 查询uid的所有历史记录，默认20分页
         :param uid:

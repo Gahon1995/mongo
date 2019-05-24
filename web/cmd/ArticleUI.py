@@ -12,7 +12,7 @@ from utils.func import *
 def article_manage(role='user', user=None):
     print("\n\n" + "=" * 20)
     print("1. 查询所有文章")
-    print("2. 阅读指定文章")
+    print("2. 查看指定文章")
     print("3. 查看热门文章")
     print("4. 创建新文章")
     print('5. 查看我创建的文章')
@@ -71,88 +71,110 @@ def articles_query_all(page_num=1, page_size=20, **kwargs):
     print("输入其他内容返回")
     mode = input("请选择操作： ")
     if mode == '1':
-        total = ArticleService.count(db_alias=DBMS.DBMS1, **kwargs)
+        total = ArticleService().count(db_alias=DBMS.DBMS1, **kwargs)
         query_all(total, page_num, page_size, db_alias=DBMS.DBMS1, **kwargs)
     elif mode == '2':
-        total = ArticleService.count(db_alias=DBMS.DBMS2, **kwargs)
+        total = ArticleService().count(db_alias=DBMS.DBMS2, **kwargs)
         query_all(total, page_num, page_size, db_alias=DBMS.DBMS2, **kwargs)
     return
 
 
 def query_all(total, page_num=1, page_size=20, db_alias=None, **kwargs):
-    articles = ArticleService.get_articles(page_num, page_size, db_alias=db_alias, **kwargs)
+    articles = ArticleService().get_articles(page_num, page_size, db_alias=db_alias, **kwargs)
 
     if len(articles) == 0:
         print("未找到文章信息")
         return
 
-    ArticleService.pretty_articles(articles)
+    ArticleService().pretty_articles(articles)
     show_next(page_num, page_size, total, db_alias=db_alias, next_func=query_all, **kwargs)
 
     pass
 
 
 def choices_article(user):
-    # TODO 文章数量过多时分页显示
-    from prettytable import PrettyTable
-    keyword = input("请输入要阅读的文章部分标题： ")
-    if keyword == '':
-        return
-    articles = ArticleService.get_articles_by_title(keyword, db_alias=DBMS.DBMS2)
-    if len(articles) == 0:
-        print("未找到相关文章")
-        return
+    # from prettytable import PrettyTable
+    print("1. 根据aid查询")
+    print("2. 根据title查询")
+    print("3. 返回")
+    mode = input("请选择：")
 
-    x = PrettyTable()
-    x.field_names = ("num", "title", "authors", "abstract")
-    for index, article in enumerate(articles):
-        x.add_row([index, article.title, article.authors, article.abstract])
-    print(x)
-    while True:
-        try:
-            index = int(input("请选择要阅读的序号（ -1 退出）： "))
-        except ValueError:
-            print("输入错误")
-            return
-        if 0 <= index < len(articles):
-            read_an_article(user, articles[index])
-            break
-        elif index == -1:
-            break
+    if mode == '1':
+        aid = input("请输入要阅读的aid: ")
+        article = ArticleService().get_one_by_aid(aid=aid)
+        if article is not None:
+            print_an_article(article)
+            mode = input("是否阅读该文章：（y or n)")
+            if mode == 'y' or mode == 'Y' or mode == 'yes' or mode == 'YES':
+                read_an_article(user, article)
+            else:
+                return
         else:
-            print("输入错误，请重新输入")
+            print("未找到相关文章")
+            return
+        pass
+    elif mode == '2':
+        keyword = input("请输入要查看的文章部分标题： ")
+        if keyword == '':
+            return
+        articles = ArticleService().get_articles_by_title(keyword, db_alias=DBMS.DBMS2)
+        # TODO 文章数量过多时分页显示
+        if len(articles) == 0:
+            print("未找到相关文章")
+            return
+        x = PrettyTable()
+        x.field_names = ("num", "title", "authors", "abstract")
+        for index, article in enumerate(articles):
+            x.add_row([index, article.title, article.authors, article.abstract])
+        print(x)
+        while True:
+            try:
+                index = int(input("请选择要阅读的序号（ -1 或者不输入任何内容退出）： "))
+            except ValueError:
+                print("输入错误")
+                return
+            if 0 <= index < len(articles):
+                read_an_article(user, articles[index])
+                break
+            elif index == -1:
+                break
+            else:
+                print("输入错误，请重新输入")
+        pass
+    else:
+        return
 
 
 def read_an_article(user, article):
-    from service.read_service import Read, ReadService
+    # from service.read_service import Read, ReadService
     import time
 
     time_read_start = time.time()
-    print_an_article(article)
 
     # input("\n按回车返回")
     # TODO 阅读完后的操作，点赞、评论、分享等
-    new_read = Read()
-    new_read.aid = article
-    new_read.uid = user
+
+    aid = article.aid
+    uid = user.uid
+    commentOrNot, commentDetail, agreeOrNot, shareOrNot = 0, '', 0, 0
     while True:
         print("1. 点赞 \t2. 评论\t3. 分享\t4. 返回")
         mode = input("请选择操作: ")
         if mode == '1':
-            new_read.agreeOrNot = 1
+            agreeOrNot = 1
             print("点赞成功")
         elif mode == '2':
-            new_read.commentOrNot = 1
+            commentOrNot = 1
             detail = input("请输入评论信息： ")
-            new_read.commentDetail = detail
+            commentDetail = detail
             print("评论成功")
         elif mode == '3':
-            new_read.shareOrNot = 1
+            shareOrNot = 1
             print("分享成功")
         elif mode == '4':
             time_read_end = time.time()
-            new_read.readTimeLength = time_read_end - time_read_start
-            ReadService.add_one(new_read)
+            readTimeLength = time_read_end - time_read_start
+            ReadService().add_one(aid, uid, 1, readTimeLength, 1, commentOrNot, commentDetail, agreeOrNot, shareOrNot)
             return
         else:
             print("输入错入，请重新输入")
@@ -169,7 +191,7 @@ def print_an_article(article):
           .format(authors=article.authors,
                   tags=article.articleTags,
                   language=article.language))
-    print("time: {0}".format(article.update_time.astimezone()))
+    print("time: {0}".format(article.update_time.strftime('%Y-%m-%d %H:%M:%S')))
     print("abstract: {0}".format(article.abstract))
     print("=" * 22 + "content" + "=" * 22)
     print(article.text)
@@ -177,47 +199,77 @@ def print_an_article(article):
     pass
 
 
-def show_popular():
+def show_popular(_date=None):
+    _date = _date or datetime.date.today()
     # TODO 展示热门文章
     print('=' * 30)
-    print('1. 今日热门文章')
-    print('2. 最近一周热门文章')
-    print('3. 最近一个月热门文章')
-    print('4. 返回上一级')
+    print("当前查询日期： {}".format(_date.strftime("%Y-%m-%d")))
+    print('1. 日热门文章')
+    print('2. 周热门文章')
+    print('3. 月热门文章')
+    print('4. 查询指定日期热门')
+    print('5. 返回上一级')
     print('=' * 30)
 
     mode = input("请选择操作：")
     if mode == '1':
-        show_daily_popular()
+        show_daily_popular(_date)
         pass
     elif mode == '2':
-        show_weekly_popular()
+        show_weekly_popular(_date)
         pass
     elif mode == '3':
-        show_monthly_popular()
+        show_monthly_popular(_date)
         pass
     elif mode == '4':
+        new_date = input("请输入查询的日期： （例如 2017-09-25）: ")
+        try:
+            new_date = str_to_datetime(new_date).date()
+            return show_popular(new_date)
+        except ValueError:
+            print("输入的日期格式错误")
+        pass
+    elif mode == '5':
         return
     else:
         pass
-    show_popular()
+    show_popular(_date)
 
 
-def show_daily_popular():
-    rank = PopularService.get_daily_rank(datetime.date.today())
-    show_rank(rank)
+def show_daily_popular(_date=None):
+    _date = _date or datetime.date.today()
+    articles = PopularService().get_daily_articles(_date)
+    if len(articles) == 0:
+        print("当前并无相关记录")
+    pretty_models(articles, ['aid', 'title', 'count'])
+    # show_rank(rank)
+    input("\n按回车键返回")
     pass
 
 
-def show_weekly_popular():
-    rank = PopularService.get_weekly_rank(datetime.date.today())
-    show_rank(rank)
+def show_weekly_popular(_date=None):
+    _date = _date or datetime.date.today()
+
+    articles = PopularService().get_weekly_articles(_date)
+    if len(articles) == 0:
+        print("当前并无相关记录")
+        return
+    pretty_models(articles, ['aid', 'title', 'count'])
+    input("\n按回车键返回")
+    # show_rank(articles)
     pass
 
 
-def show_monthly_popular():
-    rank = PopularService.get_monthly_rank(datetime.date.today())
-    show_rank(rank)
+def show_monthly_popular(_date=None):
+    _date = _date or datetime.date.today()
+
+    articles = PopularService().get_monthly_articles(_date)
+    if len(articles) == 0:
+        print("当前并无相关记录")
+        return
+    pretty_models(articles, ['aid', 'title', 'count'])
+    input("\n按回车键返回")
+    # show_rank(rank)
     pass
 
 
@@ -226,10 +278,10 @@ def show_rank(rank):
         print("当前并无数据，请联系管理员生成")
         return
     x = PrettyTable()
-    x.field_names = ('index', 'aid')
-    print("\nlast update time: {}".format(rank.update_time))
-    for index, article in enumerate(rank.articleAidList):
-        x.add_row((index, article))
+    x.field_names = ('index', 'aid', 'count')
+    print("\nlast update time: {}".format(timestamp_to_str(rank.update_time)))
+    for index, aid in enumerate(rank.articleAidDict):
+        x.add_row((index, aid, rank.articleAidDict[aid]))
     print(x)
     input("\n按回车键返回")
 
@@ -241,13 +293,16 @@ def create_article(user):
     while title == '':
         title = input("输入不能为空，请重新输入: ")
     category = input("请输入category: ")
+    while category != 'science' and category != 'technology':
+        print('category 输入错误，应该为science or technology')
+        category = input("请输入category: ")
     abstract = input("请输入abstract: ")
     articleTags = input("请输入articleTags: ")
     language = input("请输入language: ")
     text = input("请输入text: ")
     image = input("请输入image: ")
     video = input("请输入video: ")
-    ArticleService.add_an_article(title, user.name, category, abstract, articleTags, language, text, image, video)
+    ArticleService().add_an_article(title, user.name, category, abstract, articleTags, language, text, image, video)
     pass
 
 
@@ -257,21 +312,26 @@ x = PrettyTable()
 
 
 def history(user):
-    total = ReadService.count(uid=user, db_alias=get_dbms_by_region(user.region))
+    total = ReadService().count(uid=user.uid, db_alias=get_best_dbms_by_region(user.region))
+    if total == 0:
+        print("当前没有任何阅读记录哟")
+        return
     show_history(user, total)
 
 
 def show_history(user, total, page_num=1, page_size=20, **kwargs):
     # TODO 数据量大时分页显示
     x.clear()
-    x.field_names = ('index', 'title', 'readTimeLength', 'readSequence',
-                     'agreeOrNot', 'commentOrNot', 'shareOrNot', 'commentDetail', 'readTime')
+    x.field_names = ('index', 'aid', 'readTimeLength', 'readSequence',
+                     'agreeOrNot', 'commentOrNot', 'shareOrNot', 'commentDetail', 'timestamp')
     # TODO 展示历史阅读数据
     #       根据Read 表的数据展示当前用户的阅读历史
-    reads = ReadService.get_history(user, page_num, page_size)
+    reads = ReadService().get_history(user.uid, page_num, page_size)
     for index, read in enumerate(reads):
-        x.add_row((index, read.aid.title, read.readTimeLength, read.readSequence,
-                   read.agreeOrNot, read.commentOrNot, read.shareOrNot, read.commentDetail, read.create_time))
+        # title = ReadService().get_by_rid(rid=read.aid)
+        x.add_row((index, read.aid, read.readTimeLength, read.readSequence,
+                   read.agreeOrNot, read.commentOrNot, read.shareOrNot, read.commentDetail,
+                   timestamp_to_str(read.timestamp)))
 
     print(x)
     show_next(page_num, page_size, total, show_history, **kwargs)
@@ -280,23 +340,33 @@ def show_history(user, total, page_num=1, page_size=20, **kwargs):
 
 
 def history_admin():
-    total = ReadService.count()
-    show_history_admin(total)
+    for index, dbms in enumerate(DBMS.all):
+        print("{}. {}".format(index + 1, dbms))
+    db = input("请选择查看的数据库: ")
+    if db == '':
+        return
+
+    while not db.isdigit() or int(db) < 1 or int(db) > len(DBMS.all):
+        db = input("输入错误，请重新选择: ")
+
+    db_alias = DBMS.all[int(db) - 1]
+    total = ReadService().count(db_alias=db_alias)
+    show_history_admin(total, db_alias=db_alias)
 
 
-def show_history_admin(total, page_num=1, page_size=20, **kwargs):
+def show_history_admin(total, page_num=1, page_size=20, db_alias=None, **kwargs):
     # TODO 数据量大时分页显示
     # x.clear()
     x.clear_rows()
-    x.field_names = ('index', 'title', 'user', 'readTimeLength', 'readSequence',
+    x.field_names = ('index', 'aid', 'uid', 'readTimeLength', 'readSequence',
                      'agreeOrNot', 'commentOrNot', 'shareOrNot', 'commentDetail', 'readTime')
     # TODO 展示历史阅读数据
     #       根据Read 表的数据展示当前用户的阅读历史
     #       目前只展示DBMS1里边的阅读数据
-    reads = ReadService.get_reads(page_num, page_size, db_alias=DBMS.DBMS2)
+    reads = ReadService().get_reads(page_num, page_size, db_alias=db_alias)
     for index, read in enumerate(reads):
-        x.add_row((index, read.aid.title, read.uid.name, read.readTimeLength, read.readSequence,
-                   read.agreeOrNot, read.commentOrNot, read.shareOrNot, read.commentDetail, read.create_time))
+        x.add_row((index, read.aid, read.uid, read.readTimeLength, read.readSequence,
+                   read.agreeOrNot, read.commentOrNot, read.shareOrNot, read.commentDetail, read.timestamp))
 
     print(x)
     show_next(page_num, page_size, total, show_history_admin, **kwargs)
@@ -309,13 +379,13 @@ def del_an_article(user, role):
     if aid == '':
         return
     if role == 'user' and user is not None:
-        article = ArticleService.get_an_article(id=aid, authors=user.name)
+        article = ArticleService().get_an_article(id=aid, authors=user.name)
         if article is None:
             print("您无权限删除该文章或者该文章不存在")
             return
-        ArticleService.del_article(article)
+        ArticleService().del_article(article)
     elif role == 'admin':
-        ArticleService.del_by_aid(_id=aid)
+        ArticleService().del_by_aid(_id=aid)
     else:
         print("用户不存在或者权限错误")
         return
@@ -332,7 +402,7 @@ def update_an_article(role, user):
         print("无输入，返回上一级")
         return
     try:
-        article = ArticleService.get_an_article(id=aid)
+        article = ArticleService().get_one_by_aid(aid=aid)
     except Exception:
         print("id不存在")
         return
@@ -346,8 +416,10 @@ def update_an_article(role, user):
             return
         try:
             con = json.loads(update_info)
-            if ArticleService.update_one(article, con):
+            if ArticleService().update_one(article, con) is not None:
                 print("更新成功")
+            else:
+                print("更新失败")
         except json.JSONDecodeError:
             print("输入不是json格式")
             return None
@@ -358,19 +430,19 @@ def update_an_article(role, user):
 
 
 def update_popular():
-    print("更新今日热门")
-    PopularService.update_daily_rank()
-    print("更新一周热门")
-    PopularService.update_monthly_rank()
-    print("更新一月热门")
-    PopularService.update_weekly_rank()
+    print("开始更新")
+    PopularService().update_popular()
+    # print("更新一周热门")
+    # PopularService().update_monthly_rank()
+    # print("更新一月热门")
+    # PopularService().update_weekly_rank()
     print("更新完成")
     pass
 
 
 def show_my_article(user):
-    articles = ArticleService.get_articles(authors=user.name)
-    ArticleService.pretty_articles(articles)
+    articles = ArticleService().get_articles(authors=user.name)
+    ArticleService().pretty_articles(articles)
 
     input("按回车返回")
     return
@@ -384,5 +456,7 @@ if __name__ == '__main__':
     # read_an_article(user)
     from service.user_service import UserService
 
-    _user = UserService.get_user_by_name('admin')
-    choices_article(_user)
+    _user = UserService().get_user_by_name('admin')
+    # print(_user)
+    # choices_article(_user)
+    article_manage('admin', _user)

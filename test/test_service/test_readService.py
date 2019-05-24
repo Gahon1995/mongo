@@ -20,13 +20,12 @@ class TestReadService(TestBase):
             cnt = self.readService.count(db_alias=dbms)
             print("count {}: {}".format(dbms, cnt))
 
-    def test_save_read(self):
-        article = ArticleService().get_articles_by_title('title4')[0]
-        user = UserService().get_user_by_name('user4')
-        read = self.readService.add_one(article.aid, user.uid, 1, 34, 2, 0, 'sdf', 1, 1)
-
+    def test_save_read(self, aid=None, uid=None):
+        aid = aid or ArticleService().get_articles_by_title('title4')[0].aid
+        uid = uid or UserService().get_user_by_name('user4').uid
+        read = self.readService.add_one(aid, uid, 1, 34, 2, 0, 'sdf', 1, 1)
         assert read is not None
-        print(read)
+        self.readService.pretty_reads([read])
         return read
 
     def test_reads_list(self):
@@ -39,7 +38,9 @@ class TestReadService(TestBase):
         self.readService.pretty_reads(reads)
 
     def test_del_read_by_rid(self):
-        read = self.test_save_read()
+        aid = ArticleService().get_articles_by_title('title5')[0].aid
+        uid = UserService().get_user_by_name('user5').uid
+        read = self.test_save_read(aid, uid)
         num = self.readService.del_read_by_rid(read.rid)
         print(num)
         # assert num == 1
@@ -103,3 +104,23 @@ class TestReadService(TestBase):
 
         reads = self.readService.get_monthly_popular(_date.date())
         print(reads)
+
+    def test_get_by_uid_and_aid(self):
+        aid = ArticleService().get_articles_by_title('title5')[0].aid
+        uid = UserService().get_user_by_name('user5').uid
+        read1 = self.test_save_read(aid, uid)
+        read = self.readService.get_by_uid_and_aid(uid, aid)
+        assert read.aid == read1.aid and read.uid == read1.uid
+
+        read = self.readService.get_by_rid(read1.rid)
+        assert read.aid == read1.aid and read.uid == read1.uid
+
+    def test_read_twice(self):
+        aid = ArticleService().get_articles_by_title('title2')[0].aid
+        uid = UserService().get_user_by_name('user2').uid
+        read1 = self.readService.add_one(aid, uid, 1, 34, 2, 0, 'sdf', 0, 1)
+        ReadService().pretty_reads([read1])
+        read2 = self.readService.add_one(aid, uid, 1, 34, 2, 1, 'asdaff', 1, 1)
+        ReadService().pretty_reads([read2])
+        read1.reload()
+        assert read1.readSequence == read2.readSequence
