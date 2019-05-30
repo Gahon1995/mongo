@@ -121,21 +121,45 @@ class UserService(object):
                 return True, '用户：{} 注册成功'.format(name)
             return False, '保存至数据库失败'
 
-    def users_list(self, page_num=1, page_size=20, only: list = None, exclude: list = None, db_alias=None,
-                   **kwargs) -> list:
-        """
-            获取db_alias 所对应的数据库里边的用户列表，采用分页
-            可以通过**kwargs进行高级查询，
-        :param exclude: 在查询结果中排出某些字段
-        :param only:    只查询指定字段的值
-        :param page_num:    查询页码
-        :param page_size:   每页的数据量大小
-        :param db_alias:    数据库的别名
-        :param kwargs:      其他的一些查询参数
-        :return:
-        """
-        check_alias(db_alias)
-        return self.get_model(db_alias).list_by_page(page_num, page_size, only=only, exclude=exclude, **kwargs)
+    # def users_list(self, page_num=1, page_size=20, only: list = None, exclude: list = None, db_alias=None,
+    #                **kwargs) -> list:
+    #     """
+    #         获取db_alias 所对应的数据库里边的用户列表，采用分页
+    #         可以通过**kwargs进行高级查询，
+    #     :param exclude: 在查询结果中排出某些字段
+    #     :param only:    只查询指定字段的值
+    #     :param page_num:    查询页码
+    #     :param page_size:   每页的数据量大小
+    #     :param db_alias:    数据库的别名
+    #     :param kwargs:      其他的一些查询参数
+    #     :return:
+    #     """
+    #     check_alias(db_alias)
+    #     return self.get_model(db_alias).list_by_page(page_num, page_size, only=only, exclude=exclude, **kwargs)
+
+    def get_users(self, page_num=1, page_size=20, only: list = None, exclude: list = None, db_alias=None, **kwargs):
+        # TODO 去掉默认db设置，在所有数据库中，根据数量进行分页以及返回相关数据
+        region = kwargs.get('region', None)
+        if region is not None:
+            db_alias = get_best_dbms_by_region(region)
+        if db_alias is None:
+            users = []
+            for region in DBMS.region['values']:
+                count = self.count(db_alias=get_best_dbms_by_region(region))
+                if count >= (page_num - 1) * page_size:
+                    us = self.get_users(page_num, page_size, only=only, exclude=exclude,
+                                        db_alias=get_best_dbms_by_region(region), **kwargs)
+                    users.extend(us)
+                if len(users) == page_size:
+                    break
+                else:
+                    page_num = (page_num * page_size - count) / (page_size - len(users))
+                    page_size = page_size - len(users)
+            return list(users)
+        else:
+            check_alias(db_alias)
+            return list(
+                self.get_model(db_alias).list_by_page(page_num, page_size, only=only, exclude=exclude, **kwargs))
 
     def count(self, db_alias=None, **kwargs):
         """
@@ -434,5 +458,5 @@ if __name__ == '__main__':
 
     init()
 
-    _users = UserService().users_list()
+    _users = UserService().get_users()
     UserService().pretty_users(_users)

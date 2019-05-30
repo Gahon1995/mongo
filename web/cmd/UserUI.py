@@ -37,7 +37,7 @@ class UserUI(object):
     @staticmethod
     def query_all(total, page_num=1, page_size=20, db_alias=None, **kwargs):
 
-        users = UserService().users_list(page_num, page_size, db_alias=db_alias, **kwargs)
+        users = UserService().get_users(page_num, page_size, db_alias=db_alias, **kwargs)
 
         if len(users) == 0:
             print("未查找到相关用户")

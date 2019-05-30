@@ -195,12 +195,25 @@ class ReadService(object):
         :return:
         """
         if db_alias is None:
-            reads = list()
-            for dbms in DBMS.all:
-                tmp = self.get_reads(page_num, page_size, db_alias=dbms, **kwargs)
-                for r in tmp:
-                    reads.append(r)
-            return reads
+            # reads = list()
+            # for dbms in DBMS.all:
+            #     tmp = self.get_reads(page_num, page_size, db_alias=dbms, **kwargs)
+            #     for r in tmp:
+            #         reads.append(r)
+            # return reads
+
+            reads = []
+            for region in DBMS.region['values']:
+                count = self.count(db_alias=get_best_dbms_by_region(region))
+                if count >= (page_num - 1) * page_size:
+                    us = self.get_reads(page_num, page_size, db_alias=get_best_dbms_by_region(region), **kwargs)
+                    reads.extend(us)
+                if len(reads) == page_size:
+                    break
+                else:
+                    page_num = (page_num * page_size - count) / (page_size - len(reads))
+                    page_size = page_size - len(reads)
+            return list(reads)
         else:
             check_alias(db_alias)
             return self.get_model(db_alias).list_by_page(page_num, page_size, **kwargs)

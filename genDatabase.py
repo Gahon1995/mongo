@@ -1,8 +1,10 @@
+import logging
 from random import random
 
 from config import DBMS
 from utils.func import timestamp_to_datetime, print_run_time
 
+logger = logging.getLogger('gen')
 # USERS_NUM = 10000
 # ARTICLES_NUM = 200000
 # READS_NUM = 1000000
@@ -115,7 +117,7 @@ def print_bar(now, total):
     print('\rprocess:\t {now} / {total}  {rate}%'.format(now=now + 1, total=total,
                                                          rate=round((now + 1) / total * 100, 2)), end='')
     if now == total:
-        print('\n\n', end='\n')
+        print('\n\n')
 
 
 @print_run_time
@@ -132,12 +134,13 @@ def gen_users():
 
 @print_run_time
 def gen_articles():
+    print()
     for i in range(ARTICLES_NUM):
         print_bar(i, ARTICLES_NUM)
         data = gen_an_article(i)
         ArticleService().import_from_dict(data)
         if (i + 1) % 50000 == 0:
-            print("\n\n saving articles")
+            logger.info("\n saving articles")
             ArticleService().update_many()
             BeReadService().update_many()
     ArticleService().update_many()
@@ -150,6 +153,7 @@ def gen_articles():
 
 @print_run_time
 def gen_reads():
+    print()
     for i in range(READS_NUM):
         print_bar(i, READS_NUM)
         data = gen_an_read(i)
@@ -158,7 +162,7 @@ def gen_reads():
 
         ReadService().import_from_dict(data)
         if (i + 1) % 50000 == 0:
-            print("\n\n saving reads")
+            logger.info("\n\n saving reads")
             ReadService().update_many()
             BeReadService().update_many()
     ReadService().update_many()
@@ -177,33 +181,34 @@ def gen_reads():
 
 @print_run_time
 def gen_populars():
+    print()
     timeBegin = 1506332297000
     timeEnd = timeBegin + READS_NUM * 10000
     for timestamp in range(timeBegin, timeEnd, 86400000):
-        print('gen popular on date: {}'.format(timestamp_to_datetime(timestamp).date()))
+        logger.info('gen popular on date: {}'.format(timestamp_to_datetime(timestamp).date()))
         PopularService().update_popular(_date=timestamp_to_datetime(timestamp).date())
 
 
 def gen_users_by_threads(start, end):
     from db.mongodb import init_connect
     init_connect()
-    print("start gen user range ({}, {})".format(start, end))
+    logger.info("start gen user range ({}, {})".format(start, end))
     for i in range(start, end):
         # print_bar(i - start, end - start)
         if i % 100 == 0:
-            print('.', end='')
+            logger.info('.', end='')
         data = gen_an_user(i)
         UserService().register(data['name'], data['pwd'], data['gender'], data['email'], data['phone'], data['dept'],
                                data['grade'], data['language'], data['region'], data['role'], data['preferTags'],
                                data['obtainedCredits'], int(data['timestamp']))
 
-    print("finish gen user range ({}, {})".format(start, end))
+    logger.info("finish gen user range ({}, {})".format(start, end))
 
 
 def gen_articles_by_threads(start, end):
     from db.mongodb import init_connect
     init_connect()
-    print("start gen articles range ({}, {})".format(start, end))
+    logger.info("start gen articles range ({}, {})".format(start, end))
     for i in range(start, end):
         if i % 100 == 0:
             print('.', end='')
@@ -213,13 +218,13 @@ def gen_articles_by_threads(start, end):
                                         abstract=data['abstract'], articleTags=data['articleTags'],
                                         language=data['language'], text=data['text'], image=data['image'],
                                         video=data['video'], timestamp=int(data['timestamp']))
-    print("finish gen articles range ({}, {})".format(start, end))
+    logger.info("finish gen articles range ({}, {})".format(start, end))
 
 
 def gen_reads_by_threads(start, end):
     from db.mongodb import init_connect
     init_connect()
-    print("start gen reads range ({}, {})".format(start, end))
+    logger.info("start gen reads range ({}, {})".format(start, end))
     for i in range(start, end):
         if i % 100 == 0:
             print('.', end='')
@@ -238,7 +243,7 @@ def gen_reads_by_threads(start, end):
                               data['commentDetail'], int(data['agreeOrNot']), int(data['shareOrNot']),
                               timestamp=int(data["timestamp"]))
 
-    print("finish gen reads range ({}, {})".format(start, end))
+    logger.info("finish gen reads range ({}, {})".format(start, end))
 
 
 @print_run_time
@@ -246,7 +251,7 @@ def create_by_threads(target, NUM):
     from multiprocessing import Pool
 
     pool = Pool()
-    print('start')
+    logger.info('start')
     threads = []
     thread_num = 4
     part = int(NUM / thread_num) if NUM % thread_num == 0 else int(NUM / thread_num + 1)
@@ -261,7 +266,7 @@ def create_by_threads(target, NUM):
     #     thread.join()
     pool.close()
     pool.join()
-    print('finish')
+    logger.info('finish')
 
 
 from mongoengine.context_managers import switch_db
@@ -309,13 +314,13 @@ def gen_data_by_threads():
     connection._dbs = {}
 
     # 85.79s 116.59s
-    print('\n导入user数据...')
+    logger.info('\n导入user数据...')
     create_by_threads(gen_users_by_threads, USERS_NUM)
 
-    print('\n导入article数据...')
+    logger.info('\n导入article数据...')
     create_by_threads(gen_articles_by_threads, ARTICLES_NUM)
 
-    print('\n导入read数据...')
+    logger.info('\n导入read数据...')
 
     save_data()
     create_by_threads(gen_reads_by_threads, READS_NUM)
@@ -339,10 +344,10 @@ def gen_data():
     # connect('mongo-new', host=host, port=27017)
 
     # 71.67s
-    print('\n生成user数据...')
+    logger.info('\n生成user数据...')
     gen_users()
 
-    print('\n生成article数据...')
+    logger.info('\n生成article数据...')
     gen_articles()
 
     # print('\n导入user 和 article数据...')
@@ -361,7 +366,7 @@ def gen_data():
     #     ReadService().models[dbms].clear()
     #
     # save_data()
-    print('\n生成read数据...')
+    logger.info('\n生成read数据...')
     gen_reads()
 
     gen_ids()
@@ -374,7 +379,7 @@ def gen_data():
     # #     ReadService().models[dbms].clear()
     # #     BeReadService().models[dbms].clear()
     #
-    print('\n导入populars数据...')
+    logger.info('\n导入populars数据...')
     gen_populars()
 
 

@@ -23,16 +23,25 @@ class TestUserService(TestBase):
 
     def test_user_list(self):
         only = ['uid', 'name']
-        users = UserService().users_list(only=only, db_alias=DBMS.DBMS1)
+        # users = UserService().users_list(only=only, db_alias=DBMS.DBMS1)
+        users = UserService().get_users(only=only, db_alias=DBMS.DBMS1)
         # UserService().pretty_users(users)
         pretty_models(users, only)
         print('total: {}'.format(len(users)))
 
         exclude = ['pwd']
-        users = UserService().users_list(exclude=exclude, db_alias=DBMS.DBMS2)
+        # users = UserService().users_list(exclude=exclude, db_alias=DBMS.DBMS2)
+        users = UserService().get_users(exclude=exclude, db_alias=DBMS.DBMS2)
         # UserService().pretty_users(users)
         pretty_models(users, list(x for x in UserService.field_names if x not in exclude))
         print('total: {}'.format(len(users)))
+
+    def test_users(self):
+        users = UserService().get_users(page_num=4)
+        # UserService().pretty_users(users)
+        pretty_models(users, UserService.field_names)
+        print('total: {}'.format(len(users)))
+        assert len(users) == 20
 
     def test_register(self):
         re1 = UserService().register('gahon', 'password', 'male', 'asdf', 'asdfasdf', 'asdf', 'asdf', 'asdf',

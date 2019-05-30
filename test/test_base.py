@@ -18,7 +18,7 @@ class TestBase:
     @classmethod
     def setup_class(cls) -> None:
         print("=" * 50 + "INIT" + "=" * 50)
-        print("连接数据库")
+        # print("连接数据库")
         DBMS.db_name = 'test'
         init()
 
@@ -27,6 +27,7 @@ class TestBase:
         gen.READS_NUM = 100
 
         gen.gen_data()
+        print()
         print("=" * 50 + "INIT FINISH" + "=" * 50)
         pass
 

@@ -32,10 +32,12 @@ class TestReadService(TestBase):
         reads = self.readService.get_reads()
         assert reads is not None
         self.readService.pretty_reads(reads)
+        assert len(reads) == 20
 
         reads = self.readService.get_reads(db_alias=DBMS.DBMS1)
         assert reads is not None
         self.readService.pretty_reads(reads)
+        assert len(reads) == 20
 
     def test_del_read_by_rid(self):
         aid = ArticleService().get_articles_by_title('title5')[0].aid

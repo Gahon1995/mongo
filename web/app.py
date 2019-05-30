@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, current_user
 
 from main import init_connect
 from service.user_service import UserService
@@ -16,12 +16,17 @@ jwt = JWTManager(app)
 
 def init_app():
     app.config['JSON_SORT_KEYS'] = False  # 使返回的字段不排序， 完成开发后可删除
-
-    from web.api.user import UserGetUpdateDelete, UsersList
-    app.add_url_rule('/users/<uid>/', view_func=UserGetUpdateDelete.as_view('user'))
-    app.add_url_rule('/users/', view_func=UsersList.as_view('users'))
-
+    api_rules()
     app.run()
+
+
+def api_rules():
+    from web.api.user import UserGetUpdateDelete, UsersList
+    from web.api.article import ArticleList, ArticleCURD
+    app.add_url_rule('/api/users/<uid>', view_func=UserGetUpdateDelete.as_view('user'))
+    app.add_url_rule('/api/users', view_func=UsersList.as_view('users'))
+    app.add_url_rule('/api/articles/<aid>', view_func=ArticleCURD.as_view('article'))
+    app.add_url_rule('/api/articles', view_func=ArticleList.as_view('articles'))
 
 
 def get_jwt_user():
@@ -30,10 +35,23 @@ def get_jwt_user():
     return user
 
 
+@jwt.user_loader_callback_loader
+def user_loader_callback(identity):
+    return UserService().get_user_by_uid(identity['uid'], db_alias=get_best_dbms_by_region(identity['region']))
+
+
+@jwt.user_loader_error_loader
+def custom_user_loader_error(identity):
+    ret = {
+        "msg": "User {} not found".format(identity)
+    }
+    return jsonify(ret), 404
+
+
 @app.route('/protected')
 @jwt_required
 def protected():
-    user = get_jwt_user()
+    user = current_user
     return '%s' % user
 
 
@@ -73,11 +91,13 @@ def login():
         return jsonify({"msg": "Missing JSON in request"}), 400
     username = request.json.get('username')
     password = request.json.get('password')
+    print(username, password)
     user = None
     if username and password:
         user = UserService().login(username, password)
     if user:
-        access_token = create_access_token(identity=user.to_dict(include=['uid', 'name', 'region']))
+        access_token = create_access_token(identity=user.to_dict(include=['uid', 'name', 'region']),
+                                           expires_delta=False)
         return Result.gen_success({"token": access_token})
     else:
         return Result.gen_failed(404, "用户名或密码错误")

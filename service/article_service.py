@@ -221,6 +221,9 @@ class ArticleService(object):
 
     def get_articles(self, page_num=1, page_size=20, db_alias=None, **kwargs):
         # TODO 去掉默认db设置，在所有数据库中，根据数量进行分页以及返回相关数据
+        category = kwargs.get('category', None)
+        if category is not None:
+            db_alias = get_best_dbms_by_category(category)
         if db_alias is None:
             articles = []
             aids = []
@@ -230,10 +233,10 @@ class ArticleService(object):
                     if article.aid not in aids:
                         articles.append(article)
                         aids.append(article.aid)
-            return articles
+            return list(articles)
         else:
             check_alias(db_alias)
-            return self.get_model(db_alias).list_by_page(page_num, page_size, **kwargs)
+            return list(self.get_model(db_alias).list_by_page(page_num, page_size, **kwargs))
 
     def get_articles_by_aids(self, aids: list, db_alias: str = None, **kwargs) -> dict:
         """
@@ -271,6 +274,9 @@ class ArticleService(object):
     #     return self.get_model(db_alias).get(id=aid)
 
     def get_one_by_aid(self, aid, db_alias=None, **kwargs):
+        category = kwargs.get('category', None)
+        if category is not None:
+            db_alias = get_best_dbms_by_category(category)
         if db_alias is None:
             # TODO 修改实现方法
             article = None

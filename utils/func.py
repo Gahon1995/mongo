@@ -16,6 +16,8 @@ from mongoengine.base import BaseDocument
 
 from config import DBMS
 
+logger = logging.getLogger('utils')
+
 
 def singleton(cls):
     """
@@ -402,14 +404,20 @@ def pretty_models(models, field_names: list):
         # field_names = (
     #     'aid', 'title', 'category', 'abstract', 'articleTags', 'authors', 'language', 'timestamp', 'update_time')
     x.field_names = field_names
-    for model in models:
-        # 需要对时间进行时区转换
-        x.add_row(list(model.__getattribute__(key).astimezone()
-                       if isinstance(model.__getattribute__(key), datetime)
-                       else model.__getattribute__(key)
-                       for key in field_names
-                       ))
-    print(x)
+    if isinstance(models[0], dict):
+        for model in models:
+            # 需要对时间进行时区转换
+            x.add_row(list(model[key] for key in field_names))
+        print(x)
+    else:
+        for model in models:
+            # 需要对时间进行时区转换
+            x.add_row(list(model.__getattribute__(key).astimezone()
+                           if isinstance(model.__getattribute__(key), datetime)
+                           else model.__getattribute__(key)
+                           for key in field_names
+                           ))
+        print(x)
     pass
 
 
@@ -430,7 +438,7 @@ def print_run_time(func):
     def wrapper(*args, **kw):
         local_time = time.time()
         func(*args, **kw)
-        print('\ncurrent Function [%s] run time is %.2fs' % (func.__name__, time.time() - local_time))
+        logger.info('\ncurrent Function [%s] run time is %.2fs' % (func.__name__, time.time() - local_time))
 
     return wrapper
 

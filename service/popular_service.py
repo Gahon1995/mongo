@@ -60,7 +60,7 @@ class PopularService(object):
                 rank.articleAidDict[str(aid)] = count
 
         rank.update_time = get_timestamp()
-        print(rank.articleAidDict)
+        # print(rank.articleAidDict)
         rank.save()
 
     def __update_daily_rank(self, articles, _date, db_alias):
