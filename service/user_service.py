@@ -177,6 +177,9 @@ class UserService(object):
         :param kwargs:  制定特殊查询参数
         :return:
         """
+        if 'region' in kwargs.keys():
+            return self.count(db_alias=get_best_dbms_by_region(kwargs.get('region')))
+        
         count = 0
         for dbms in DBMS.all:
             count += self.count(db_alias=dbms, **kwargs)

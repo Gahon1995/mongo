@@ -73,3 +73,55 @@ class DBMS:
         'science': [DBMS1, DBMS2],
         'technology': [DBMS2]
     }
+
+    def get_all_dbms_by_category(self):
+        """
+            返回每个category对应的一个数据库地址
+        :return: list， 每个category一个数据库
+        """
+        dbs = list()
+        for category in self.category['values']:
+            dbs.append(self.get_best_dbms_by_category(category))
+
+        return dbs
+
+    def get_all_dbms_by_region(self):
+        """
+            返回每个region对应的一个数据库地址
+        :return: list， 每个region一个数据库
+        """
+        dbs = list()
+        for region in self.region['values']:
+            dbs.append(self.get_best_dbms_by_region(region))
+
+        return dbs
+
+    def get_dbms_by_region(self, region):
+        """
+            通过region的值返回其内容存储的所有数据库地址
+            # TODO 通过读取配置文件来进行返回
+        :param region:
+        :return:
+        """
+        return self.region[region]
+
+    def get_best_dbms_by_region(self, region):
+        """
+            该方法用于返回当前region最好的服务器地址，目前默认为第一个
+            TODO 返回当前region所对应的可连接的DBMS
+        :param region:
+        :return:
+        """
+        return self.get_dbms_by_region(region)[0]
+
+    def get_dbms_by_category(self, category):
+        return self.category[category]
+
+    def get_best_dbms_by_category(self, category):
+        """
+            category，目前默认为第一个
+            TODO 返回当前category所对应的可连接的DBMS
+        :param category:
+        :return:
+        """
+        return self.get_dbms_by_category(category)[0]

@@ -1,11 +1,11 @@
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, current_user
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
 
 from main import init_connect
 from service.user_service import UserService
 from utils.func import get_best_dbms_by_region
-from utils.result import Result
+from web.api.result import Result
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -14,7 +14,7 @@ app.config['JWT_SECRET_KEY'] = 'sfwertyad'
 jwt = JWTManager(app)
 
 
-def init_app():
+def create_app():
     app.config['JSON_SORT_KEYS'] = False  # 使返回的字段不排序， 完成开发后可删除
     api_rules()
     app.run()
@@ -23,10 +23,15 @@ def init_app():
 def api_rules():
     from web.api.user import UserGetUpdateDelete, UsersList
     from web.api.article import ArticleList, ArticleCURD
+    from web.api.read import ReadsList, ReadCURD
     app.add_url_rule('/api/users/<uid>', view_func=UserGetUpdateDelete.as_view('user'))
     app.add_url_rule('/api/users', view_func=UsersList.as_view('users'))
+
     app.add_url_rule('/api/articles/<aid>', view_func=ArticleCURD.as_view('article'))
     app.add_url_rule('/api/articles', view_func=ArticleList.as_view('articles'))
+
+    app.add_url_rule('/api/reads/<rid>', view_func=ReadCURD.as_view('read'))
+    app.add_url_rule('/api/reads', view_func=ReadsList.as_view('reads'))
 
 
 def get_jwt_user():
@@ -47,37 +52,6 @@ def custom_user_loader_error(identity):
     }
     return jsonify(ret), 404
 
-
-@app.route('/protected')
-@jwt_required
-def protected():
-    user = current_user
-    return '%s' % user
-
-
-# @app.route('/')
-# def index(is_login=False, user=None):
-#     if not is_login:
-#         return render_template('login.html')
-#
-#     return render_template('index.html', user=user)
-#
-#
-# @app.route('/login.html', methods=['POST', 'GET'])
-# def login():
-#     username = request.form.get('username')
-#     password = request.form.get('password')
-#     remember = request.form.get('remember')
-#     user = None
-#     if username and password:
-#         user = UserService().login(username, password)
-#     if user:
-#         print(user)
-#         print(user.to_dict())
-#         return index(True, user.to_dict())
-#     else:
-#         return render_template('login.html', message="登录失败")
-#
 
 @app.before_request
 def cors():
@@ -101,10 +75,6 @@ def login():
         return Result.gen_success({"token": access_token})
     else:
         return Result.gen_failed(404, "用户名或密码错误")
-    # if user:
-    #     return index(True, user)
-    # else:
-    #     return render_template('login.html', message="登录失败")
 
 
 @app.route('/api/user/info', methods=['GET'])
@@ -149,4 +119,4 @@ def admin_login():
 
 if __name__ == '__main__':
     init_connect()
-    init_app()
+    create_app()

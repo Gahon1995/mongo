@@ -68,6 +68,17 @@ class ReadService(object):
         check_alias(db_alias)
         return self.get_model(db_alias).count(**kwargs)
 
+    def count_all(self, **kwargs):
+        """
+            统计所有数据库中的用户总量
+        :param kwargs:  制定特殊查询参数
+        :return:
+        """
+        count = 0
+        for dbms in DBMS().get_all_dbms_by_region():
+            count += self.count(db_alias=dbms, **kwargs)
+        return count
+
     def get_by_uid_and_aid(self, uid, aid, db_alias=None, **kwargs):
 
         if db_alias is None:

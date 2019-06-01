@@ -153,16 +153,6 @@ class PopularService(object):
         else:
             rank = self._get_weekly_rank(_date, db_alias)
             return self.__get_articles_by_rank(rank, db_alias)
-        # populars = list()
-        # aids = list(int(aid) for aid in rank.articleAidDict.keys())
-        # articles = ArticleService().get_articles_by_aids(aids, only=['title'], db_alias=db_alias)
-        # for aid, count in rank.articleAidDict.items():
-        #     articles[int(aid)].count = count
-        #     populars.append(articles[int(aid)])
-        # #     article = ArticleService().get_an_article_by_aid(int(aid), db_alias=db_alias)
-        # #     article.count = count
-        # #     populars.append(article)
-        # return populars
 
     def get_monthly_articles(self, _date, db_alias=None):
         if db_alias is None:

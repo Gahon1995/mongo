@@ -1,55 +1,58 @@
 from flask import request
 from flask.views import MethodView
 
-from service.user_service import UserService
+from service.read_service import ReadService
 from utils.func import check_alias, DbmsAliasError
 from web.api.result import Result
 
 
-class UserGetUpdateDelete(MethodView):
-    def get(self, uid):
-        user = UserService().get_user_by_uid(uid=uid)
-        if user is None:
+class ReadCURD(MethodView):
+    def get(self, rid):
+        read = ReadService().get_by_rid(rid=rid)
+        if read is None:
             return Result.gen_failed(404, 'user not found')
-        return Result.gen_success(user.to_dict())
+        return Result.gen_success(read.to_dict())
         pass
 
-    def put(self, uid):
+    def put(self, rid):
         pass
 
-    def delete(self, uid):
-        if uid is None:
+    def delete(self, rid):
+        if rid is None:
             return Result.gen_failed('404', 'uid not found')
 
         return Result.gen_success('删除成功')
 
 
-class UsersList(MethodView):
+class ReadsList(MethodView):
     # @jwt_required
     def get(self):
         page_num = int(request.args.get('page', 1))
         page_size = int(request.args.get('size', 20))
+        region = request.args.get('region')
+        uid = request.args.get('uid')
+        rid = request.args.get('rid')
+
         dbms = request.args.get('dbms')
         try:
             check_alias(db_alias=dbms)
         except DbmsAliasError:
             return Result.gen_failed('404', 'dbms error')
 
-        region = request.args.get('region')
         cons = {
-            'region': region
+            'region': region,
+            'uid': uid,
+            'rid': rid
         }
         kwargs = {}
         for key, value in cons.items():
             if value is not None:
                 kwargs[key] = value
 
-        res = UserService().get_users(page_num=page_num, page_size=page_size, db_alias=dbms, **kwargs)
-        users = list()
-        total = UserService().count(db_alias=dbms)
-        for user in res:
-            users.append(user.to_dict())
-        data = {'total': total, 'list': list(users)}
+        res = ReadService().get_reads(page_num=page_num, page_size=page_size, db_alias=dbms, **kwargs)
+        reads = list(read.to_dict() for read in res)
+        total = ReadService().count(db_alias=dbms)
+        data = {'total': total, 'list': reads}
         return Result.gen_success(data)
 
     # def post(self):
@@ -65,5 +68,10 @@ class UsersList(MethodView):
     def put(self):
         pass
 
-    def delete(self):
-        pass
+    def delete(self, rid):
+        if rid is None:
+            return Result.gen_failed('404', 'aid not found')
+
+        # ReadService().del_read_by_rid(rid)
+
+        return Result.gen_success('删除成功')

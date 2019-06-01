@@ -1,24 +1,19 @@
 from flask import request
 from flask.views import MethodView
 
-from service.article_service import ArticleService
-from utils.func import get_best_dbms_by_category, check_alias, DbmsAliasError
+from config import DBMS
+from service.popular_service import PopularService
+from utils.func import get_best_dbms_by_category
 from web.api.result import Result
 
 
-class ArticleList(MethodView):
+class PopularList(MethodView):
     def get(self):
         page_num = int(request.args.get('page', 1))
         page_size = int(request.args.get('size', 20))
-        dbms = request.args.get('dbms')
-        try:
-            check_alias(db_alias=dbms)
-        except DbmsAliasError:
-            return Result.gen_failed('404', 'dbms error')
-
-        arts = ArticleService().get_articles(page_num=page_num, page_size=page_size, db_alias=dbms)
+        arts = PopularService().get_daily_articles(_date=123)
         arts = list(art.to_dict() for art in arts)
-        total = ArticleService().count(db_alias=dbms)
+        total = PopularService().count(db_alias=DBMS.DBMS1)
         data = {
             'total': total,
             'list': arts
