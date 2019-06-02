@@ -2,12 +2,14 @@ from flask import request
 from flask.views import MethodView
 
 from service.read_service import ReadService
+from service.redis_service import RedisService
 from utils.func import check_alias, DbmsAliasError
 from web.api.result import Result
 
 
 class ReadCURD(MethodView):
     def get(self, rid):
+        # _REDIS_KEY_ = f"READ:{rid}"
         read = ReadService().get_by_rid(rid=rid)
         if read is None:
             return Result.gen_failed(404, 'user not found')
@@ -29,9 +31,6 @@ class ReadsList(MethodView):
     def get(self):
         page_num = int(request.args.get('page', 1))
         page_size = int(request.args.get('size', 20))
-        region = request.args.get('region')
-        uid = request.args.get('uid')
-        rid = request.args.get('rid')
 
         dbms = request.args.get('dbms')
         try:
@@ -39,20 +38,26 @@ class ReadsList(MethodView):
         except DbmsAliasError:
             return Result.gen_failed('404', 'dbms error')
 
+        uid = request.args.get('uid')
+        aid = request.args.get('aid')
         cons = {
-            'region': region,
             'uid': uid,
-            'rid': rid
+            'aid': aid
         }
         kwargs = {}
         for key, value in cons.items():
-            if value is not None:
+            if value is not None and value != '':
                 kwargs[key] = value
 
-        res = ReadService().get_reads(page_num=page_num, page_size=page_size, db_alias=dbms, **kwargs)
-        reads = list(read.to_dict() for read in res)
-        total = ReadService().count(db_alias=dbms)
-        data = {'total': total, 'list': reads}
+        _REDIS_KEY_ = f"READ_LIST:{dbms}:{page_num}:{page_size}:{kwargs}"
+        data = RedisService().get_redis(dbms).get_dict(_REDIS_KEY_)
+        if data is None or data == {}:
+            res = ReadService().get_reads(page_num=page_num, page_size=page_size, db_alias=dbms, **kwargs)
+            reads = list(read.to_dict() for read in res)
+            total = ReadService().count(db_alias=dbms, **kwargs)
+            data = {'total': total, 'list': reads}
+
+            RedisService().get_redis(dbms).set_dict(_REDIS_KEY_, data)
         return Result.gen_success(data)
 
     # def post(self):
@@ -68,10 +73,10 @@ class ReadsList(MethodView):
     def put(self):
         pass
 
-    def delete(self, rid):
-        if rid is None:
-            return Result.gen_failed('404', 'aid not found')
-
-        # ReadService().del_read_by_rid(rid)
-
-        return Result.gen_success('删除成功')
+    # def delete(self, rid):
+    #     if rid is None:
+    #         return Result.gen_failed('404', 'aid not found')
+    #
+    #     # ReadService().del_read_by_rid(rid)
+    #
+    #     return Result.gen_success('删除成功')

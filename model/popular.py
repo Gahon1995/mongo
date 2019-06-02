@@ -45,10 +45,11 @@ class Popular(BaseDB):
         my_dict = super(Popular, self).to_dict(include, exclude)
 
         from utils.func import timestamp_to_str
-        if 'last_update_time' in my_dict.keys():
+        if 'update_time' in my_dict.keys():
             my_dict['update_time'] = timestamp_to_str(self.update_time)
 
         if 'timestamp' in my_dict.keys():
-            my_dict['timestamp'] = timestamp_to_str(self.timestamp)
+            my_dict['timestamp'] = timestamp_to_str(self.timestamp)[:10]
 
+        my_dict['id'] = str(my_dict['id'])
         return my_dict

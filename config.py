@@ -10,7 +10,7 @@ import logging
 class Config(object):
     # logging 配置
     debug_level = logging.DEBUG
-    log_in_file = True
+    log_in_file = False
     log_file_name = './mongo.log'
 
     #  MongoDB 相关配置
@@ -31,9 +31,9 @@ class Config(object):
     # hk_mongo_port = 27018
 
     # Redis 配置
-    redis_host = '127.0.0.1'
-    redis_port = 6379
-    redis_password = ''
+    # redis_host = '127.0.0.1'
+    # redis_port = 6379
+    # redis_password = ''
 
 
 class DBMS:
@@ -44,6 +44,24 @@ class DBMS:
     all = [DBMS1, DBMS2]
 
     db_name = 'mongo'
+
+    redis = {
+        DBMS1: {
+            'host': '127.0.0.1',
+            'port': 6379,
+            'redis_password': ''
+        },
+        DBMS2: {
+            'host': '127.0.0.1',
+            'port': 6380,
+            'redis_password': ''
+        },
+        DBMS3: {
+            'host': '127.0.0.1',
+            'port': 6381,
+            'redis_password': ''
+        }
+    }
 
     configs = {
         DBMS1: {

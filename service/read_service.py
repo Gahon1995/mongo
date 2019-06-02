@@ -227,7 +227,7 @@ class ReadService(object):
             return list(reads)
         else:
             check_alias(db_alias)
-            return self.get_model(db_alias).list_by_page(page_num, page_size, **kwargs)
+            return self.get_model(db_alias).get_all(page_num, page_size, **kwargs)
 
     def del_read_by_rid(self, rid, db_alias=None):
         """
@@ -286,7 +286,7 @@ class ReadService(object):
 
     def __get_history(self, uid, page_num=1, page_size=20, db_alias=None, **kwargs):
         check_alias(db_alias)
-        return self.get_model(db_alias).list_by_page(page_num, page_size, uid=uid, **kwargs)
+        return self.get_model(db_alias).get_all(page_num, page_size, uid=uid, **kwargs)
 
     def compute_popular(self, end_date: datetime.date, before_days, top_n=10):
         """

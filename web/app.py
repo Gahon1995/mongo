@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, current_user
 
-from main import init_connect
 from service.user_service import UserService
 from utils.func import get_best_dbms_by_region
 from web.api.result import Result
@@ -24,6 +23,7 @@ def api_rules():
     from web.api.user import UserGetUpdateDelete, UsersList
     from web.api.article import ArticleList, ArticleCURD
     from web.api.read import ReadsList, ReadCURD
+    from web.api.popular import PopularList, PopularCURD
     app.add_url_rule('/api/users/<uid>', view_func=UserGetUpdateDelete.as_view('user'))
     app.add_url_rule('/api/users', view_func=UsersList.as_view('users'))
 
@@ -33,12 +33,15 @@ def api_rules():
     app.add_url_rule('/api/reads/<rid>', view_func=ReadCURD.as_view('read'))
     app.add_url_rule('/api/reads', view_func=ReadsList.as_view('reads'))
 
+    app.add_url_rule('/api/populars/<pid>', view_func=PopularCURD.as_view('popular'))
+    app.add_url_rule('/api/populars', view_func=PopularList.as_view('populars'))
 
-def get_jwt_user():
-    info = get_jwt_identity()
-    user = UserService().get_user_by_uid(uid=info['uid'], db_alias=get_best_dbms_by_region(info['region']))
-    return user
 
+# def get_jwt_user():
+#     info = get_jwt_identity()
+#     user = UserService().get_user_by_uid(uid=info['uid'], db_alias=get_best_dbms_by_region(info['region']))
+#     return user
+#
 
 @jwt.user_loader_callback_loader
 def user_loader_callback(identity):
@@ -80,7 +83,7 @@ def login():
 @app.route('/api/user/info', methods=['GET'])
 @jwt_required
 def info():
-    user = get_jwt_user()
+    user = current_user
     user.avatar = "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
     info = user.to_dict()
     info['avatar'] = "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
@@ -93,6 +96,55 @@ def info():
 def logout():
     # user = get_jwt_user()
     return Result.gen_success("")
+    pass
+
+
+@app.route('/api/dashboard', methods=['GET'])
+def dashboard():
+    from config import DBMS
+    from service.user_service import UserService
+    from service.article_service import ArticleService
+    from service.read_service import ReadService
+    from service.popular_service import PopularService
+    dbms = request.args.get('dbms')
+    nums = {
+        'users': UserService().count(db_alias=dbms),
+        'articles': ArticleService().count(db_alias=dbms),
+        'reads': ReadService().count(db_alias=dbms),
+        'populars': PopularService().count(temporalGranularity='daily', db_alias=dbms)
+    }
+
+    charts = {
+        'users': [],
+        'articles': [],
+        'reads': []
+    }
+
+    for dbms in DBMS().get_all_dbms_by_region():
+        charts['users'].append({'name': dbms, 'value': UserService().count(db_alias=dbms)})
+        charts['articles'].append({'name': dbms, 'value': ArticleService().count(db_alias=dbms)})
+        charts['reads'].append({'name': dbms, 'value': ReadService().count(db_alias=dbms)})
+
+    data = {
+        'nums': nums,
+        'charts': charts
+    }
+
+    # if dbms == 'Beijing':
+    #     data = {
+    #         'users': 12354,
+    #         'articles': 533366,
+    #         'reads': 23424,
+    #         'populars': 90372
+    #     }
+    # else:
+    #     data = {
+    #         'users': 63234,
+    #         'articles': 1284,
+    #         'reads': 724933,
+    #         'populars': 8422
+    #     }
+    return Result.gen_success(data=data)
     pass
 
 
@@ -118,5 +170,7 @@ def admin_login():
 
 
 if __name__ == '__main__':
-    init_connect()
+    from main import init
+
+    init()
     create_app()

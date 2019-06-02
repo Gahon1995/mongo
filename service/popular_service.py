@@ -7,6 +7,8 @@
 import datetime
 import logging
 
+from bson import ObjectId
+
 from config import DBMS
 from model.popular import Popular
 from service.article_service import ArticleService
@@ -39,6 +41,47 @@ class PopularService(object):
 
     def get_model(self, dbms):
         return self.classes[dbms]
+
+    def del_by_filed(self, field, value, **kwargs):
+        re = None
+        for dbms in DBMS.all:
+            re = self.__del_by_filed(field, value, db_alias=dbms, **kwargs)
+            pass
+        return re
+
+    def __del_by_filed(self, field, value, db_alias=None, **kwargs):
+        check_alias(db_alias)
+        kwargs[field] = value
+        re = self.get_model(db_alias).delete_one(**kwargs)
+        return re
+
+    def del_by_id(self, pid, **kwargs):
+        if not isinstance(pid, ObjectId):
+            pid = ObjectId(pid)
+        re = self.del_by_filed('id', pid, **kwargs)
+
+        return re
+
+    def count(self, db_alias=None, **kwargs):
+        """
+            计算db_alias所对应的的数据库下满足条件的用户数量
+        :param db_alias:
+        :param kwargs:  查询参数字典， 为空则统计所有用户数量
+        :return:
+        """
+        check_alias(db_alias)
+        return self.get_model(db_alias).count(**kwargs)
+
+    def get_ranks(self, temporalGranularity, db_alias, page_num=1, page_size=20, only: list = None,
+                  exclude: list = None, sort_by=None, **kwargs):
+        check_alias(db_alias)
+        return self.get_model(db_alias).get_all(page_num, page_size, only=only, exclude=exclude, sort_by=sort_by,
+                                                temporalGranularity=temporalGranularity, **kwargs)
+        pass
+
+    # def get_daily_ranks(self, page_num, page_size, only: list = None, exclude: list = None, sort_by=None,
+    #                     db_alias=None):
+    #     self.get_ranks(page_num, page_size, only, exclude, sort_by, db_alias, temporalGranularity='daily')
 
     def update_many(self, models=None, db_alias=None):
 

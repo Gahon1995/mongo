@@ -18,8 +18,8 @@ class Result(object):
         pass
 
     @classmethod
-    def gen_success(cls, data):
-        return cls(200, "", data).to_json()
+    def gen_success(cls, data=None, msg=None):
+        return cls(200, msg, data).to_json()
 
     @classmethod
     def gen_failed(cls, code, msg=None, data=None):

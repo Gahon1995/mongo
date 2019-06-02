@@ -59,10 +59,11 @@ class BaseDB(Document):
         return my_dict
 
     @classmethod
-    def list_by_page(cls, page_num=1, page_size=20, only: list = None, exclude: list = None, **kwargs):
+    def get_all(cls, page_num=1, page_size=20, only: list = None, exclude: list = None, sort_by=None, **kwargs):
         """
             分页数据查询
 
+        :param sort_by: 根据某个字段排序
         :param exclude: 查询结果中不包含指定字段, list：字段名
         :param only:    查询结果中只包含指定字段, list：字段名
         :param page_num: 查询的页码，默认第一页
@@ -71,12 +72,18 @@ class BaseDB(Document):
         :return: 符合条件的分页数后据
         """
         offset = (page_num - 1) * page_size
-        if only is not None:
-            return cls.objects(**kwargs).only(*only).skip(offset).limit(page_size)
-        if exclude is not None:
-            return cls.objects(**kwargs).exclude(*exclude).skip(offset).limit(page_size)
-
-        return cls.objects(**kwargs).skip(offset).limit(page_size)
+        if sort_by is not None:
+            if only is not None:
+                return cls.objects(**kwargs).order_by(sort_by).only(*only).skip(offset).limit(page_size)
+            if exclude is not None:
+                return cls.objects(**kwargs).order_by(sort_by).exclude(*exclude).skip(offset).limit(page_size)
+            return cls.objects(**kwargs).order_by(sort_by).skip(offset).limit(page_size)
+        else:
+            if only is not None:
+                return cls.objects(**kwargs).only(*only).skip(offset).limit(page_size)
+            if exclude is not None:
+                return cls.objects(**kwargs).exclude(*exclude).skip(offset).limit(page_size)
+            return cls.objects(**kwargs).skip(offset).limit(page_size)
 
     @classmethod
     def count(cls, **kwargs):

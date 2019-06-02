@@ -6,23 +6,16 @@
 import pickle
 
 from redis import Redis as PyRedis
-from config import Config
-from utils.func import singleton, available_value
+
+from utils.func import available_value
 
 
-@singleton
 class Redis(PyRedis):
     # session = None
 
-    def __init__(self, *args):
-        args = {
-            'host': Config.redis_host,
-            'port': Config.redis_port,
-            'db': 0,
-            'password': Config.redis_password,
-            'decode_responses': True
-        }
-        super().__init__(**args)
+    def __init__(self, host, port, db=None, redis_password=None, decode_responses=True):
+        # print(host, str(port))
+        super().__init__(host=host, port=port, db=db, password=redis_password, decode_responses=decode_responses)
 
     def get(self, name, default=None):
         res = super().get(name)
@@ -53,6 +46,9 @@ class Redis(PyRedis):
     # def smembers(self, name, default=[]):
     #     res = super().smembers(name)
     #     return [val.decode() for val in list(res)] if res else default
+
+    def delete_by_pattern(self, pattern):
+        return self.delete(*self.keys(pattern=pattern))
 
 
 if __name__ == '__main__':

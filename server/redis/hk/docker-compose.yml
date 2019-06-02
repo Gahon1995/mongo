@@ -5,9 +5,9 @@ services:
 
   redis:
     image: redis
-    container_name: my_redis
+    container_name: redis_hk
     command: redis-server
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - ./data:/data
