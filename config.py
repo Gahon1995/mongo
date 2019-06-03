@@ -10,8 +10,10 @@ import logging
 class Config(object):
     # logging 配置
     debug_level = logging.DEBUG
-    log_in_file = True
+    log_in_file = False
     log_file_name = './mongo.log'
+
+    redis_enable = True
 
     #  MongoDB 相关配置
     # mongo_db_name = 'mongo-new'
@@ -43,23 +45,26 @@ class DBMS:
 
     all = [DBMS1, DBMS2]
 
-    db_name = 'mongo_all'
+    db_name = 'mongo'
 
     redis = {
         DBMS1: {
             'host': '127.0.0.1',
             'port': 6379,
-            'redis_password': ''
+            'redis_password': '',
+            'enable': Config.redis_enable
         },
         DBMS2: {
             'host': '127.0.0.1',
             'port': 6380,
-            'redis_password': ''
+            'redis_password': '',
+            'enable': Config.redis_enable
         },
         DBMS3: {
             'host': '127.0.0.1',
             'port': 6381,
-            'redis_password': ''
+            'redis_password': '',
+            'enable': Config.redis_enable
         }
     }
 

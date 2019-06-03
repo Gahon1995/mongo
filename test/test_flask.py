@@ -1,3 +1,4 @@
+from service.redis_service import RedisService
 from service.user_service import UserService
 from test.test_base import TestBase
 from utils.func import pretty_models
@@ -29,5 +30,16 @@ class TestFlask(TestBase):
         print(res.data)
 
     def test_populars(self):
-        response = self.client.get('/api/populars', query_string={'dbms': 'Beijing', 'temporalGranularity': 'daily'})
+        RedisService().get_redis('Hong Kong').delete_by_pattern('POPULAR*')
+        response = self.client.get('/api/populars', query_string={'dbms': 'Hong Kong', 'level': 'weekly'})
+        RedisService().get_redis('Hong Kong').delete_by_pattern('POPULAR*')
+        print(response.data)
+
+    def test_popular_today(self):
+        query = {
+            'dbms': 'Beijing',
+            'level': 'daily',
+            't': 1506268800000
+        }
+        response = self.client.get('/api/public/populars', query_string=query)
         print(response.data)

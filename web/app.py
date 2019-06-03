@@ -23,7 +23,7 @@ def api_rules():
     from web.api.user import UserGetUpdateDelete, UsersList
     from web.api.article import ArticleList, ArticleCURD
     from web.api.read import ReadsList, ReadCURD
-    from web.api.popular import PopularList, PopularCURD
+    from web.api.popular import PopularList, PopularCURD, PopuparToday
     app.add_url_rule('/api/users/<uid>', view_func=UserGetUpdateDelete.as_view('user'))
     app.add_url_rule('/api/users', view_func=UsersList.as_view('users'))
 
@@ -35,6 +35,7 @@ def api_rules():
 
     app.add_url_rule('/api/populars/<pid>', view_func=PopularCURD.as_view('popular'))
     app.add_url_rule('/api/populars', view_func=PopularList.as_view('populars'))
+    app.add_url_rule('/api/public/populars', view_func=PopuparToday.as_view('popular_today'))
 
 
 # def get_jwt_user():

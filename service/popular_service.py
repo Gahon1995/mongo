@@ -166,10 +166,16 @@ class PopularService(object):
         return self.get_model(db_alias).get_one(timestamp=date_to_timestamp(_date), temporalGranularity='monthly')
 
     def get_daily_articles(self, _date, db_alias=None):
+        """
+            获取每日热门文章
+        :param _date:   当前日期， timestamp 或 date都行
+        :param db_alias:
+        :return:
+        """
         if db_alias is None:
             articles = []
             aids = []
-            for dbms in DBMS.all:
+            for dbms in DBMS().get_all_dbms_by_category():
                 pops = self.get_daily_articles(_date, db_alias=dbms)
                 for article in pops:
                     if article.aid not in aids:
@@ -228,7 +234,7 @@ class PopularService(object):
 
     def __get_articles_by_rank(self, rank, db_alias):
         populars = list()
-        if rank is None:
+        if rank is None or rank.articleAidDict == []:
             return populars
         aids = list(int(aid) for aid in rank.articleAidDict.keys())
         articles = ArticleService().get_articles_by_aids(aids, only=['title'], db_alias=db_alias)
@@ -236,3 +242,29 @@ class PopularService(object):
             articles[int(aid)].count = count
             populars.append(articles[int(aid)])
         return populars
+
+    def get_articles(self, _date, level, db_alias=None):
+        """
+            获取每日热门文章
+        :param level:  查询的级别 daily, weekly, monthly
+        :param _date:   当前日期， timestamp 或 date都行
+        :param db_alias:
+        :return:
+        """
+        if db_alias is None:
+            articles = []
+            aids = []
+            for dbms in DBMS().get_all_dbms_by_category():
+                pops = self.get_articles(_date, level, db_alias=dbms)
+                for article in pops:
+                    if article.aid not in aids:
+                        articles.append(article)
+                        aids.append(article.aid)
+            return articles
+            pass
+        else:
+            rank = self._get_rank(_date, level, db_alias)
+            return self.__get_articles_by_rank(rank, db_alias)
+
+    def _get_rank(self, _date, level, db_alias=None):
+        return self.get_model(db_alias).get_one(timestamp=date_to_timestamp(_date), temporalGranularity=level)

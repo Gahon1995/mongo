@@ -92,5 +92,14 @@ class PopuparToday(MethodView):
 
     def get(self):
         level = request.args.get('level', 'daily')
+        timestamp = request.args.get("t")
+        dbms = request.args.get('dbms')
 
-        articles = PopularService().get_daily_articles()
+        try:
+            check_alias(db_alias=dbms)
+        except DbmsAliasError:
+            return Result.gen_failed('404', 'dbms error')
+
+        articles = PopularService().get_articles(timestamp, level, db_alias=dbms)
+        articles = list(article.to_dict(include=['aid', 'title', 'count']) for article in articles)
+        return Result.gen_success(data=articles)

@@ -37,9 +37,6 @@ class BaseDB(Document):
         _fields = list(self._db_field_map.keys())
 
         if len(include) != 0:
-            for _field in include:
-                if _field not in _fields:
-                    raise BaseException("field {} error， 不存在该字段".format(_field))
             my_dict = self.__to_dict(include)
 
         elif len(exclude) != 0:

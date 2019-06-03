@@ -4,7 +4,7 @@
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
 import genDatabase as gen
-from config import DBMS
+from config import DBMS, Config
 from main import init
 
 
@@ -19,6 +19,8 @@ class TestBase:
     def setup_class(cls) -> None:
         print("=" * 50 + "INIT" + "=" * 50)
         # print("连接数据库")
+        Config.redis_enable = False
+        Config.log_in_file = False
         DBMS.db_name = 'test'
         init()
 
