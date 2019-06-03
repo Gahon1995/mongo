@@ -346,7 +346,8 @@ class UserService(object):
                 models = self.models[db_alias]
                 if models is not None:
                     self.get_model(db_alias).update_many(models)
-                    self.models[db_alias].clear()
+                    # del self.models[db_alias]
+                    self.models[db_alias] = list()
 
     def _update_one(self, user: User, **kwargs):
         """

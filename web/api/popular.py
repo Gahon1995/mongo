@@ -86,3 +86,11 @@ class PopularCURD(MethodView):
         PopularService().del_by_id(pid)
 
         return Result.gen_success('删除成功')
+
+
+class PopuparToday(MethodView):
+
+    def get(self):
+        level = request.args.get('level', 'daily')
+
+        articles = PopularService().get_daily_articles()

@@ -25,6 +25,9 @@ class ArticleList(MethodView):
         category = request.args.get('category')
         articleTags = request.args.get('articleTags')
         language = request.args.get('language')
+        detail = request.args.get('detail', '1')
+        # print(request.data)
+        # print(exclude)
 
         cons = {
             'title__contains': title,
@@ -38,6 +41,9 @@ class ArticleList(MethodView):
         for key, value in cons.items():
             if value is not None and value != '':
                 kwargs[key] = value
+
+        if detail != '1':
+            kwargs['exclude'] = ['text', 'image', 'video']
 
         # 尝试从dbms对应的Redis中获取该数据
         _REDIS_KEY_ = f"ARTICLE_LIST:{dbms}:{page_num}:{page_size}:{kwargs}"

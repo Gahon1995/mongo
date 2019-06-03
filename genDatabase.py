@@ -5,13 +5,13 @@ from config import DBMS
 from utils.func import timestamp_to_datetime, print_run_time
 
 logger = logging.getLogger('gen')
-# USERS_NUM = 10000
-# ARTICLES_NUM = 200000
-# READS_NUM = 1000000
+USERS_NUM = 10000
+ARTICLES_NUM = 200000
+READS_NUM = 1000000
 
-USERS_NUM = 1000
-ARTICLES_NUM = 2000
-READS_NUM = 10000
+# USERS_NUM = 1000
+# ARTICLES_NUM = 2000
+# READS_NUM = 10000
 
 uid_region = {}
 aid_lang = {}
@@ -140,8 +140,9 @@ def gen_articles():
         data = gen_an_article(i)
         ArticleService().import_from_dict(data)
         if (i + 1) % 50000 == 0:
-            logger.info("\n saving articles")
+            logger.info(f"\n saving articles, {i}")
             ArticleService().update_many()
+            logger.info(f"\n saving article's be read, {i}")
             BeReadService().update_many()
     ArticleService().update_many()
     BeReadService().update_many()

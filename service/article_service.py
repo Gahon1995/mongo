@@ -45,7 +45,8 @@ class ArticleService(object):
                 models = self.models[db_alias]
                 if models is not None:
                     self.get_model(db_alias).update_many(models)
-                    self.models[db_alias].clear()
+                    # del self.models[db_alias]
+                    self.models[db_alias] = list()
 
     @staticmethod
     def get_id():
@@ -55,7 +56,7 @@ class ArticleService(object):
     def has_article(self, aid, db_alias):
         return self.get_model(db_alias).count_documents(aid=aid)
 
-    def count(self, db_alias=None, **kwargs):
+    def count(self, db_alias=None, exclude=None, **kwargs):
         check_alias(db_alias)
         return self.get_model(db_alias).count(**kwargs)
 

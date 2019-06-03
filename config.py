@@ -10,7 +10,7 @@ import logging
 class Config(object):
     # logging 配置
     debug_level = logging.DEBUG
-    log_in_file = False
+    log_in_file = True
     log_file_name = './mongo.log'
 
     #  MongoDB 相关配置
@@ -43,7 +43,7 @@ class DBMS:
 
     all = [DBMS1, DBMS2]
 
-    db_name = 'mongo'
+    db_name = 'mongo_all'
 
     redis = {
         DBMS1: {
