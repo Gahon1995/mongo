@@ -372,12 +372,20 @@ def date_to_datetime(_date):
 
 
 def datetime_to_timestamp(_date: datetime.datetime):
+    if isinstance(_date, str) and len(_date) == 13:
+        return int(_date)
+    if isinstance(_date, int):
+        return _date
     # if isinstance(_date, datetime.date):
     #     _date = date_to_datetime(_date)
     return int(_date.timestamp() * 1000)
 
 
 def date_to_timestamp(_date: datetime.date):
+    if isinstance(_date, str) and len(_date) == 13:
+        return int(_date)
+    if isinstance(_date, int):
+        return _date
     _datetime = datetime.datetime.strptime(str("{}-{}-{}".format(_date.year, _date.month, _date.day)), '%Y-%m-%d')
     return int(_datetime.timestamp() * 1000)
 
