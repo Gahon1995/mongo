@@ -32,7 +32,7 @@ class Popular(BaseDB):
         # 创建时间
         return self.id.generation_time
 
-    def to_dict(self, include: list = None, exclude: list = None):
+    def to_dict(self, **kwargs):
         """
             将该类数据转换为dict，以供快捷转换为str或者list
 
@@ -42,7 +42,7 @@ class Popular(BaseDB):
         """
         # 时间处理
 
-        my_dict = super(Popular, self).to_dict(include, exclude)
+        my_dict = super(Popular, self).to_dict(**kwargs)
 
         from utils.func import timestamp_to_str
         if 'update_time' in my_dict.keys():

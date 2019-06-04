@@ -75,12 +75,19 @@ class ArticleCURD(MethodView):
         # 尝试从Redis中获取该数据
         _REDIS_KEY_ = f"ARTICLE:{aid}"
         if category is not None:
+
+            if category not in DBMS().category['values']:
+                return Result.gen_failed('404', '类别不存在')
+
             # 从category对应的dbms的redis中取数据
             article = RedisService().get_redis(get_best_dbms_by_category(category)).get_dict(_REDIS_KEY_)
             if article == {}:
+
                 article = ArticleService().get_one_by_aid(aid=aid,
-                                                          db_alias=get_best_dbms_by_category(category)).to_dict()
-                RedisService().get_redis(get_best_dbms_by_category(category)).set_dict(_REDIS_KEY_, article)
+                                                          db_alias=get_best_dbms_by_category(category))
+                if article is not None:
+                    article = article.to_dict()
+                    RedisService().get_redis(get_best_dbms_by_category(category)).set_dict(_REDIS_KEY_, article)
         else:
             article = {}
             # 尝试从所有redis中取该数据
@@ -89,8 +96,14 @@ class ArticleCURD(MethodView):
                 if article != {}:
                     break
             if article == {}:
-                article = ArticleService().get_one_by_aid(aid=aid).to_dict()
-                RedisService().get_redis(get_best_dbms_by_category(article.category)).set_dict(_REDIS_KEY_, article)
+                article = ArticleService().get_one_by_aid(aid=aid)
+                if article is not None:
+                    article = article.to_dict()
+                    RedisService().get_redis(get_best_dbms_by_category(article['category'])).set_dict(_REDIS_KEY_,
+                                                                                                      article)
+
+        if article is None:
+            return Result.gen_failed(404, '文章不存在')
         return Result.gen_success(article)
 
     def delete(self, aid):

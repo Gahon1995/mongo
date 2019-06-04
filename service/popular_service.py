@@ -237,7 +237,7 @@ class PopularService(object):
         if rank is None or rank.articleAidDict == []:
             return populars
         aids = list(int(aid) for aid in rank.articleAidDict.keys())
-        articles = ArticleService().get_articles_by_aids(aids, only=['title'], db_alias=db_alias)
+        articles = ArticleService().get_articles_by_aids(aids, only=['title', 'category'], db_alias=db_alias)
         for aid, count in rank.articleAidDict.items():
             articles[int(aid)].count = count
             populars.append(articles[int(aid)])

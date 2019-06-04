@@ -80,7 +80,7 @@ class ReadService(object):
             count += self.count(db_alias=dbms, **kwargs)
         return count
 
-    def get_by_uid_and_aid(self, uid, aid, db_alias=None, **kwargs):
+    def get_by_uid_and_aid(self, uid, aid, db_alias=None, **kwargs) -> Read:
 
         if db_alias is None:
             for dbms in DBMS.all:
@@ -270,6 +270,22 @@ class ReadService(object):
             check_alias(db_alias)
             del_num = self.get_model(db_alias).delete_one(uid=uid)
         return del_num
+
+    def get_by_rids(self, rids: list, db_alias: str = None, **kwargs) -> dict:
+        """
+            根据aids列表一次性返回对应的article信息
+
+        :param uids:    待查询的aids
+        :param db_alias:    待查询的数据库
+        :param fields:  需要显示或者不需要显示的字段， None则查询全部字段
+                            {'field name': 1}  显示该字段
+                            {'field name': 0}  不显示该字段
+        :return:
+        """
+        # TODO 去掉默认db设置，在所有数据库中，根据数量进行分页以及返回相关数据
+        check_alias(db_alias)
+
+        return self.get_model(db_alias).get_many_by_ids(rids, **kwargs)
 
     def get_history(self, uid: int, page_num=1, page_size=20, **kwargs):
         """

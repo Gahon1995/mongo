@@ -37,6 +37,9 @@ def api_rules():
     app.add_url_rule('/api/populars', view_func=PopularList.as_view('populars'))
     app.add_url_rule('/api/public/populars', view_func=PopuparToday.as_view('popular_today'))
 
+    from web.api.be_read import ArticleRecord
+    app.add_url_rule('/api/records/<aid>', view_func=ArticleRecord.as_view('record'))
+
 
 # def get_jwt_user():
 #     info = get_jwt_identity()

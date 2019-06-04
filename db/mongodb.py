@@ -18,26 +18,26 @@ class BaseDB(Document):
         # return convert_mongo_2_json(self)
         return str(self.to_dict())
 
-    def to_dict(self, include: list = None, exclude: list = None):
+    def to_dict(self, only: list = None, exclude: list = None):
         """
             将该类数据转换为dict，以供快捷转换为str或者list
 
-        :param include: 需要返回显示的字段名，为空的话则显示全部字段
-        :param exclude: 不需要返回的字段，include为空才生效
+        :param only: 需要返回显示的字段名，为空的话则显示全部字段
+        :param exclude: 不需要返回的字段，only为空才生效
         :return: dict
         """
 
         if exclude is None:
             exclude = list()
-        if include is None:
-            include = list()
+        if only is None:
+            only = list()
 
-        if not isinstance(include, list) or not isinstance(exclude, list):
+        if not isinstance(only, list) or not isinstance(exclude, list):
             raise BaseException('传入类型不一致')
         _fields = list(self._db_field_map.keys())
 
-        if len(include) != 0:
-            my_dict = self.__to_dict(include)
+        if len(only) != 0:
+            my_dict = self.__to_dict(only)
 
         elif len(exclude) != 0:
             for _field in exclude:

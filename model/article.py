@@ -30,17 +30,17 @@ class Article(BaseDB):
         ]
     }
 
-    def to_dict(self, include: list = None, exclude: list = None):
+    def to_dict(self, **kwargs):
         """
             将该类数据转换为dict，以供快捷转换为str或者list
 
-        :param include: 需要返回显示的字段名，为空的话则显示全部字段
+        :param only: 需要返回显示的字段名，为空的话则显示全部字段
         :param exclude: 不需要返回的字段，include为空才生效
         :return: dict
         """
         # 时间处理
 
-        my_dict = super(Article, self).to_dict(include, exclude)
+        my_dict = super(Article, self).to_dict(**kwargs)
 
         if 'update_time' in my_dict.keys():
             my_dict['update_time'] = self.update_time.strftime('%Y-%m-%d %H:%M:%S')

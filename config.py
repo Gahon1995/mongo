@@ -16,26 +16,6 @@ class Config(object):
     redis_enable = True
 
     #  MongoDB 相关配置
-    # mongo_db_name = 'mongo-new'
-    # mongo_host = 'gahon.xyz'  # 服务器
-    # mongo_host = '127.0.0.1'  # 宿舍
-    # mongo_host = '192.168.109.130'    # 工位
-    # mongo_port = 27017
-
-    # # bj mongo 配置
-    # # bj_mongo_host = '10.211.55.5'
-    # bj_mongo_host = '127.0.0.1'
-    # bj_mongo_port = 27017
-    #
-    # # hk mongo 配置
-    # hk_mongo_host = '127.0.0.1'
-    # # hk_mongo_host = 'gahon.xyz'
-    # hk_mongo_port = 27018
-
-    # Redis 配置
-    # redis_host = '127.0.0.1'
-    # redis_port = 6379
-    # redis_password = ''
 
 
 class DBMS:
@@ -45,7 +25,7 @@ class DBMS:
 
     all = [DBMS1, DBMS2]
 
-    db_name = 'mongo'
+    db_name = 'mongo_all'
 
     redis = {
         DBMS1: {

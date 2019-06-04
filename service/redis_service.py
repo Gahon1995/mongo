@@ -29,3 +29,7 @@ class RedisService(object):
         # decode_responses = True
         args = DBMS().redis[dbms]
         return Redis(**args)
+
+    def reset_redis(self):
+        for dbms, red in self.redis.items():
+            red.delete_by_pattern('*')

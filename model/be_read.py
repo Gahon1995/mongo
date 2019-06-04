@@ -38,7 +38,7 @@ class BeRead(BaseDB):
     timestamp = IntField(required=True)
     last_update_time = DateTimeField(required=True)
 
-    def to_dict(self, include: list = None, exclude: list = None):
+    def to_dict(self, **kwargs):
         """
             将该类数据转换为dict，以供快捷转换为str或者list
 
@@ -48,10 +48,10 @@ class BeRead(BaseDB):
         """
         # 时间处理
 
-        my_dict = super(BeRead, self).to_dict(include, exclude)
+        my_dict = super(BeRead, self).to_dict(**kwargs)
 
         if 'last_update_time' in my_dict.keys():
-            my_dict['update_time'] = self.last_update_time.strftime('%Y-%m-%d %H:%M:%S')
+            my_dict['last_update_time'] = self.last_update_time.strftime('%Y-%m-%d %H:%M:%S')
 
         if 'timestamp' in my_dict.keys():
             my_dict['timestamp'] = timestamp_to_str(self.timestamp)

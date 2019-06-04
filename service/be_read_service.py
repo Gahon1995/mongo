@@ -58,7 +58,7 @@ class BeReadService(object):
     def get_bid():
         return IdsService().next_id('bid')
 
-    def get_one_by_aid(self, aid: str, db_alias=None, **kwargs):
+    def get_one_by_aid(self, aid: str, db_alias=None, **kwargs) -> BeRead:
         if db_alias is None:
             article = ArticleService().get_one_by_aid(aid, only=['category'])
             return self.get_one_by_aid(aid, db_alias=get_best_dbms_by_category(article.category))
