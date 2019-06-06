@@ -78,23 +78,31 @@ class BeReadService(object):
         # bid = self.get_bid() if be_read is None else be_read.bid
         for dbms in get_dbms_by_category(article.category):
             # logger.info("save be read to : {} uid: {}".format(dbms, uid))
-            be_read = self.__save(aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp,
-                                  db_alias=dbms, is_multi=is_multi)
+            be_read = self.new_record(aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp,
+                                      db_alias=dbms, is_multi=is_multi)
 
         return be_read
 
-    def __save(self, aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp=None,
-               db_alias=None, is_multi=False):
+    def new_record(self, aid, uid, readOrNot=1, commentOrNot=0, agreeOrNot=0, shareOrNot=0, timestamp=None,
+                   db_alias=None, is_multi=False):
         check_alias(db_alias)
 
         be_read = self.get_one_by_aid(aid, db_alias=db_alias)
         if be_read is None:
             logger.info("没有 {} 关联的beread记录".format(aid))
-            return None
-            # be_read = self.get_model(db_alias)()
-            # be_read.aid = aid
-            # be_read.bid = bid
-            # be_read.timestamp = timestamp or get_timestamp()
+            # return None
+            be_read = self.get_model(db_alias)()
+            be_read.aid = aid
+            be_read.bid = self.get_bid()
+            be_read.readNum = 0
+            be_read.readUidList = []
+            be_read.commentNum = 0
+            be_read.commentUidList = []
+            be_read.agreeNum = 0
+            be_read.agreeUidList = []
+            be_read.shareNum = 0
+            be_read.shareUidList = []
+            be_read.timestamp = timestamp or get_timestamp()
 
         if readOrNot:
             be_read.readNum += 1

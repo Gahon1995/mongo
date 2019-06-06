@@ -251,7 +251,10 @@ class UserService(object):
             return user
         else:
             check_alias(db_alias)
-            return self.get_model(db_alias).get_one(uid=uid, **kwargs)
+            user = self.get_model(db_alias).get_one(uid=uid, **kwargs)
+            if user is not None:
+                user.avatar = "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
+            return user
 
     def login(self, username, password) -> User:
         """

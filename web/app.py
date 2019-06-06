@@ -49,7 +49,8 @@ def api_rules():
 
 @jwt.user_loader_callback_loader
 def user_loader_callback(identity):
-    return UserService().get_user_by_uid(identity['uid'], db_alias=get_best_dbms_by_region(identity['region']))
+    user = UserService().get_user_by_uid(identity['uid'], db_alias=get_best_dbms_by_region(identity['region']))
+    return user
 
 
 @jwt.user_loader_error_loader
@@ -77,7 +78,7 @@ def login():
     if username and password:
         user = UserService().login(username, password)
     if user:
-        access_token = create_access_token(identity=user.to_dict(include=['uid', 'name', 'region']),
+        access_token = create_access_token(identity=user.to_dict(only=['uid', 'name', 'region']),
                                            expires_delta=False)
         return Result.gen_success({"token": access_token})
     else:
@@ -88,9 +89,12 @@ def login():
 @jwt_required
 def info():
     user = current_user
-    user.avatar = "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
-    info = user.to_dict()
-    info['avatar'] = "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
+    info = user.to_dict(other=['avatar'])
+    if info['name'] == 'admin':
+        info['roles'] = ['admin']
+    else:
+        info['roles'] = ['user']
+    # info['avatar'] = "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
     return Result.gen_success(info)
     pass
 

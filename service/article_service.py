@@ -11,8 +11,9 @@ from utils.func import *
 
 @singleton
 class ArticleService(object):
-    field_names = ['aid', 'title', 'category', 'abstract', 'articleTags', 'authors', 'language', 'timestamp',
-                   'update_time']
+    # fields = list(Article._db_field_map.keys())
+    field_names = list(Article._db_field_map.keys())
+    update_forbid = ['aid', 'timestamp', 'update_time', 'category']
 
     def __init__(self):
         self.logger = logging.getLogger('ArticleService')
@@ -148,7 +149,7 @@ class ArticleService(object):
             self.__add_an_article(aid, title, authors, category, abstract, articleTags, language, text, image,
                                   video, timestamp, db_alias=dbms, is_multi=is_multi)
             self.init_be_read_for_article(bid, aid, db_alias=dbms, is_multi=is_multi)
-        return True
+        return aid
 
     def __add_an_article(self, aid, title, authors, category, abstract, articleTags, language, text, image=None,
                          video=None, timestamp=None, db_alias=None, is_multi=False):
@@ -289,6 +290,17 @@ class ArticleService(object):
         else:
             check_alias(db_alias)
             return self.get_model(db_alias).get_one(aid=aid, **kwargs)
+
+    def update_by_aid(self, aid, db_alias=None, **kwargs):
+        """
+           根据aid进行内容的更新
+
+        :param aid:
+        :param db_alias:
+        :param kwargs:
+        :return:
+        """
+        self.get_model(db_alias).objects(aid=aid).update(**kwargs)
 
     # def __get_an_article_by_aid(self, aid, db_alias=None):
     #     check_alias(db_alias)

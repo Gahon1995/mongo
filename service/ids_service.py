@@ -39,7 +39,8 @@ class IdsService(object):
 
         return Model
 
-    def next_id(self, name, db_alias=DBMS.DBMS1):
+    def next_id(self, name):
+        db_alias = DBMS.DBMS1
         model = self.get_model(db_alias)
         check_alias(db_alias)
         kwargs = {

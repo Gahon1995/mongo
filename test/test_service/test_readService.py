@@ -126,3 +126,8 @@ class TestReadService(TestBase):
         ReadService().pretty_reads([read2])
         read1.reload()
         assert read1.readSequence == read2.readSequence
+
+    def test_update_by_aid_uid(self):
+        aid = 1
+        uid = 1
+        readOrNot = 0

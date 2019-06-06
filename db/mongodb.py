@@ -18,10 +18,11 @@ class BaseDB(Document):
         # return convert_mongo_2_json(self)
         return str(self.to_dict())
 
-    def to_dict(self, only: list = None, exclude: list = None):
+    def to_dict(self, only: list = None, exclude: list = None, other: list = None):
         """
             将该类数据转换为dict，以供快捷转换为str或者list
 
+        :param other:
         :param only: 需要返回显示的字段名，为空的话则显示全部字段
         :param exclude: 不需要返回的字段，only为空才生效
         :return: dict
@@ -47,6 +48,9 @@ class BaseDB(Document):
         else:
             my_dict = self.__to_dict(_fields)
 
+        if other is not None:
+            for o in other:
+                my_dict[o] = getattr(self, o)
         return my_dict
 
     def __to_dict(self, _fields):
@@ -56,7 +60,7 @@ class BaseDB(Document):
         return my_dict
 
     @classmethod
-    def get_all(cls, page_num=1, page_size=20, only: list = None, exclude: list = None, sort_by=None, **kwargs):
+    def get_all(cls, page_num=1, page_size=20, only: list = None, exclude: list = None, sort_by=None, **kwargs) -> list:
         """
             分页数据查询
 

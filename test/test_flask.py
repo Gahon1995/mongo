@@ -1,19 +1,34 @@
+import json
+
+from config import Config
+from main import init
+from service.article_service import ArticleService
 from service.redis_service import RedisService
 from service.user_service import UserService
-from test.test_base import TestBase
 from utils.func import pretty_models
 from web.app import app, api_rules
 
 
-class TestFlask(TestBase):
+def print_json(json_data):
+    print(json.dumps(json_data, indent=4, ensure_ascii=False))
+
+
+class TestFlask:
 
     @classmethod
     def setup_class(cls) -> None:
-        super().setup_class()
+        print("=" * 50 + "INIT" + "=" * 50)
+        # print("连接数据库")
+        Config.redis_enable = False
+        Config.log_in_file = False
+        # DBMS.db_name = 'test'
+        init()
+
         app.testing = True
         cls.client = app.test_client()
         cls.header = {'Content-Type': 'application/json'}
         api_rules()
+        print("=" * 50 + "INIT FINISH" + "=" * 50)
 
     def test_login(self):
         response = self.client.post('/api/user/login', json={'username': 'admin', 'password': 'admin'})
@@ -43,3 +58,32 @@ class TestFlask(TestBase):
         }
         response = self.client.get('/api/public/populars', query_string=query)
         print(response.data)
+
+    def test_article_comments(self):
+        aid = 0
+        query = {
+            'category ': 'science'
+        }
+
+        response = self.client.get(f'/api/records/{aid}', query_string=query)
+
+        print_json(response.json)
+
+    def test_article_record(self):
+        uid = 0
+        aid = 0
+        region = UserService().get_user_by_uid(uid, only=['region']).region
+        category = ArticleService().get_one_by_aid(aid, only=['category']).category
+        data = {
+            'uid': uid,
+            'aid': aid,
+            'region': region,
+            'category': category,
+            'readTimeLength': 80,
+            'commentOrNot': 1,
+            'commentDetail': '第二次评论',
+            'agreeOrNot': 1
+        }
+
+        response = self.client.post(f'/api/reads', json=data)
+        print_json(response.json)

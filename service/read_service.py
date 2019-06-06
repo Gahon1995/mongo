@@ -80,15 +80,15 @@ class ReadService(object):
             count += self.count(db_alias=dbms, **kwargs)
         return count
 
-    def get_by_uid_and_aid(self, uid, aid, db_alias=None, **kwargs) -> Read:
+    def get_by_uid_and_aid(self, uid, aid, db_alias=None, **kwargs) -> list:
 
         if db_alias is None:
             for dbms in DBMS.all:
-                read = self.get_by_uid_and_aid(uid, aid, db_alias=dbms, **kwargs)
-                if read is not None:
-                    return read
+                reads = self.get_by_uid_and_aid(uid, aid, db_alias=dbms, **kwargs)
+                if reads is not None or reads != []:
+                    return reads
         else:
-            return self.get_model(db_alias).get_one(uid=uid, aid=aid, **kwargs)
+            return self.get_model(db_alias).get_all(uid=uid, aid=aid, **kwargs)
         pass
 
     def get_by_rid(self, rid, db_alias=None, **kwargs):
@@ -103,10 +103,12 @@ class ReadService(object):
         pass
 
     @auto_reconnect
-    def add_one(self, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot, commentDetail, agreeOrNot,
-                shareOrNot, timestamp=None, is_multi=False):
+    def add_one(self, aid, uid, readOrNot=1, readTimeLength=0, readSequence=0, commentOrNot=0, commentDetail='',
+                agreeOrNot=0, shareOrNot=0, timestamp=None, is_multi=False, db_alias=None, **kwargs):
         """
             保存一个新的read记录
+        :param db_alias:
+        :param is_multi:
         :param aid:
         :param uid:
         :param readOrNot:
@@ -122,25 +124,30 @@ class ReadService(object):
         # logger.info('save read:{}'.format(new_read))
 
         # 根据user的region去得到正确的rid， 因为read表分布和user的region分布式一样的
-        user = UserService().get_user_by_uid(uid, only=['region'])
-        if user is None:
-            return None
-        read = ReadService().get_by_uid_and_aid(uid=uid, aid=aid, only=['rid'])
-        if read is not None:
-            rid = read.rid
+        dbmses = []
+        if db_alias is not None:
+            dbmses.append(db_alias)
         else:
-            rid = self.get_id()
+            user = UserService().get_user_by_uid(uid, only=['region'])
+            if user is None:
+                return None
+            dbmses.append(get_dbms_by_region(user.region))
+        # read = ReadService().get_by_uid_and_aid(uid=uid, aid=aid, only=['rid'])
+        # if read is not None:
+        #     rid = read.rid
+        # else:
+        rid = self.get_id()
 
         new_read = None
         # 根据用户的region去查询当前region对应的所有数据库
-        for dbms in get_dbms_by_region(user.region):
-            if read is None:
-                new_read = self.__save(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot,
+        for dbms in dbmses:
+            # if read is None:
+            new_read = self.new_record(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot,
                                        commentDetail, agreeOrNot, shareOrNot, timestamp, db_alias=dbms,
                                        is_multi=is_multi)
-            else:
-                new_read = self.update(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot,
-                                       commentDetail, agreeOrNot, shareOrNot, db_alias=dbms)
+            # else:
+            #     new_read = self.update(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot,
+            #                            commentDetail, agreeOrNot, shareOrNot, db_alias=dbms)
             if new_read is None:
                 break
 
@@ -150,10 +157,14 @@ class ReadService(object):
 
         return new_read
 
-    def __save(self, rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot, commentDetail,
-               agreeOrNot, shareOrNot, timestamp=None, db_alias=None, is_multi=False):
+    def new_record(self, aid, uid, rid=None, readOrNot=1, readTimeLength=0, readSequence=1, commentOrNot=0,
+                   commentDetail='', agreeOrNot=0, shareOrNot=0, timestamp=None, db_alias=None, is_multi=False,
+                   **kwargs):
         # 在db_alias 所选中的数据库中 建立实例保存read数据
+
         check_alias(db_alias)
+        if rid is None:
+            rid = self.get_id()
 
         new_read = self.get_model(db_alias)()
         new_read.rid = rid
@@ -195,6 +206,18 @@ class ReadService(object):
         new_read.timestamp = get_timestamp()
         new_read.save()
         return new_read
+
+    def update_by_uid_aid(self, uid, aid, db_alias=None, **kwargs):
+        check_alias(db_alias)
+        num = self.get_model(db_alias).objects(uid=uid, aid=aid).update_one(**kwargs)
+        if num == 0:
+            rid = IdsService().next_id('rid')
+            new_read = self.get_model(db_alias)()
+            new_read.rid = rid
+            for key, value in kwargs.items():
+                setattr(new_read, key, value)
+            new_read.save()
+        pass
 
     def get_reads(self, page_num=1, page_size=20, db_alias=None, **kwargs):
         """

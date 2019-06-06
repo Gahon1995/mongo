@@ -13,7 +13,7 @@ class Config(object):
     log_in_file = False
     log_file_name = './mongo.log'
 
-    redis_enable = True
+    redis_enable = False
 
     #  MongoDB 相关配置
 
@@ -25,7 +25,7 @@ class DBMS:
 
     all = [DBMS1, DBMS2]
 
-    db_name = 'mongo_all'
+    db_name = 'mongo'
 
     redis = {
         DBMS1: {

@@ -1,3 +1,5 @@
+import datetime
+
 from flask import request
 from flask.views import MethodView
 
@@ -14,6 +16,11 @@ class ArticleList(MethodView):
         page_num = int(request.args.get('page', 1))  # 页码
         page_size = int(request.args.get('size', 20))  # 每页数量
         dbms = request.args.get('dbms')  # 请求数据库
+        sort_by = request.args.get('sort_by')
+        if sort_by is not None and sort_by not in ArticleService.field_names:
+            if sort_by[1:] not in ArticleService.field_names:
+                sort_by = None
+
         try:  # 检查数据库地址正确性
             check_alias(db_alias=dbms)
         except DbmsAliasError:
@@ -46,12 +53,13 @@ class ArticleList(MethodView):
             kwargs['exclude'] = ['text', 'image', 'video']
 
         # 尝试从dbms对应的Redis中获取该数据
-        _REDIS_KEY_ = f"ARTICLE_LIST:{dbms}:{page_num}:{page_size}:{kwargs}"
+        _REDIS_KEY_ = f"ARTICLE_LIST:{dbms}:{page_num}:{page_size}:{kwargs}:{sort_by}"
         data = RedisService().get_redis(dbms).get_dict(_REDIS_KEY_)
         # 判断数据是否存在
         if data is None or data == {}:
             # 不存在
-            arts = ArticleService().get_articles(page_num=page_num, page_size=page_size, db_alias=dbms, **kwargs)
+            arts = ArticleService().get_articles(page_num=page_num, page_size=page_size, db_alias=dbms, sort_by=sort_by,
+                                                 **kwargs)
             arts = list(art.to_dict() for art in arts)
             total = ArticleService().count(db_alias=dbms, **kwargs)
             data = {
@@ -61,6 +69,19 @@ class ArticleList(MethodView):
             # 将该数据存入Redis中
             RedisService().get_redis(dbms).set_dict(_REDIS_KEY_, data)
         return Result.gen_success(data)
+        pass
+
+    def post(self):
+        data = request.json
+
+        for key in list(data.keys())[::-1]:
+            if key not in ArticleService.field_names:
+                data.pop(key)
+
+        print(data)
+        aid = ArticleService().add_an_article(**data)
+
+        return Result.gen_success(data={'aid': aid})
         pass
 
 
@@ -121,3 +142,22 @@ class ArticleCURD(MethodView):
         ArticleService().del_by_aid(aid)
 
         return Result.gen_success('删除成功')
+
+    def post(self, aid):
+        data = request.json
+        category = data.pop('category', None)
+        if category is None:
+            return Result.gen_failed(code=5000, msg='缺少category字段')
+
+        for key in list(data.keys())[::-1]:
+            if key not in ArticleService.field_names or key in ArticleService.update_forbid:
+                data.pop(key)
+
+        data['update_time'] = datetime.datetime.now()
+
+        print(data)
+
+        for dbms in DBMS().get_dbms_by_category(category):
+            ArticleService().update_by_aid(aid=aid, db_alias=dbms, **data)
+
+        return Result.gen_success(data={'aid': aid, 'category': category})
