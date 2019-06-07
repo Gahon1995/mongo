@@ -13,8 +13,8 @@ logger = logging.getLogger('userService')
 
 @singleton
 class UserService(object):
-    field_names = ['uid', 'name', 'pwd', 'gender', 'email', 'phone', 'dept', 'grade',
-                   'language', 'region', 'role', 'preferTags', 'obtainedCredits', 'timestamp']
+    field_names = list(User._db_field_map.keys())
+    forbid_field = ['uid', 'region', 'timestamp']
 
     def __init__(self):
         self.user = User
@@ -80,7 +80,7 @@ class UserService(object):
             logger.info('用户名已存在')
             return False, '用户名已存在'
 
-        re = False, ''
+        re = False, '注册失败'
 
         uid = self.get_uid()
         for dbms in get_dbms_by_region(region):
@@ -283,6 +283,11 @@ class UserService(object):
     def logout(self, name):
         logger.info('用户 {} 退出登录'.format(name))
         return True
+
+    def update_by_uid_with_dbms(self, uid, db_alias, **kwargs):
+        check_alias(db_alias)
+
+        return self.get_model(db_alias).objects(uid=uid).update_one(**kwargs)
 
     def update_by_uid(self, uid, db_alias=None, **kwargs):
         """

@@ -2,6 +2,7 @@ import logging
 
 from flask import request
 from flask.views import MethodView
+from flask_jwt_extended import jwt_required, current_user
 
 from config import DBMS
 from service.redis_service import RedisService
@@ -35,9 +36,40 @@ class UserGetUpdateDelete(MethodView):
         return Result.gen_success(user)
         pass
 
-    def put(self, uid):
-        # RedisService().get_redis(dbms).delete(f"USER:{uid}")
-        # RedisService().get_redis(dbms).delete_by_pattern(pattern='USER_LIST*')
+    @jwt_required
+    def post(self, uid):
+        """用户信息更新"""
+        user = current_user
+        is_admin = (user.name == 'admin')
+
+        if is_admin:
+            user = UserService().get_user_by_uid(uid)
+
+        forbid = ['uid', 'pwd', 'name', 'timestamp']
+
+        if (not is_admin) or user.uid != uid:
+            Result.gen_failed(code=50001, msg='无权限进行此操作')
+
+        if is_admin == 'admin':
+            forbid = ['uid', 'pwd', 'timestamp']
+
+        data: dict = request.json
+        for key in list(data.keys())[::-1]:
+            if key not in UserService.field_names or key in forbid:
+                data.pop(key)
+            else:
+                # print(f'data: {key}: {data.get(key)}, origin: {getattr(user, key)}')
+                if data.get(key) == getattr(user, key):
+                    data.pop(key)
+
+        print(data)
+        if data == {}:
+            return Result.gen_success(msg='无更新信息')
+
+        for dbms in DBMS().get_dbms_by_region(user.region):
+            UserService().update_by_uid_with_dbms(uid=uid, db_alias=dbms, **data)
+
+        return Result.gen_success(msg='success')
         pass
 
     def delete(self, uid):
@@ -93,15 +125,22 @@ class UsersList(MethodView):
             logger.info("get from redis")
         return Result.gen_success(data)
 
-    # def post(self):
-    #     page_num = int(request.args.get('page_num', 1))
-    #     page_size = int(request.args.get('page_size', 20))
-    #     res = UserService().get_users(page_num=page_num, page_size=page_size, db_alias=DBMS.DBMS1)
-    #     users = list()
-    #     for user in res:
-    #         users.append(user.to_dict())
-    #
-    #     return jsonify(list(users))
+    def post(self):
+        """
+            用户注册
+        :return:
+        """
+
+        data = request.json
+
+        data.pop('uid')
+        print(data)
+        success, msg = UserService().register(**data)
+
+        if not success:
+            return Result.gen_failed(code=505, msg=msg)
+
+        return Result.gen_success(msg='success')
 
     def put(self):
         pass
