@@ -36,6 +36,7 @@ def login():
 @jwt_required
 def user_info():
     user = current_user
+    print(user)
     info = user.to_dict(other=['avatar'])
     if info['name'] == 'admin':
         info['roles'] = ['admin']
@@ -77,11 +78,12 @@ def get_user(uid):
     return Result.gen_success(user)
 
 
-@jwt_required
 @users.route('/<int:uid>', methods=['POST'])
+@jwt_required
 def update_user_info(uid):
     """用户信息更新"""
     user = current_user
+    print(user)
     is_admin = (user.name == 'admin')
 
     if is_admin:
@@ -115,8 +117,8 @@ def update_user_info(uid):
     pass
 
 
-@jwt_required
 @users.route('/<int:uid>', methods=['DELETE'])
+@jwt_required
 def delete_user_info(uid):
     for dbms in DBMS().get_all_dbms_by_region():
         num = RedisService().get_redis(dbms).delete(f"USER:{uid}")
@@ -133,7 +135,6 @@ def delete_user_info(uid):
     return Result.gen_success('删除成功')
 
 
-# @jwt_required
 @users.route('', methods=['GET'])
 def get_users_list():
     page_num = int(request.args.get('page', 1))
