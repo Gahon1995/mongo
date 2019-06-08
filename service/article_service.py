@@ -282,7 +282,7 @@ class ArticleService(object):
         if db_alias is None:
             # TODO 修改实现方法
             article = None
-            for dbms in DBMS.all:
+            for dbms in DBMS().get_all_dbms_by_category():
                 article = self.get_one_by_aid(aid, db_alias=dbms, **kwargs)
                 if article is not None:
                     break

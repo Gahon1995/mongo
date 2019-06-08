@@ -43,7 +43,7 @@ class Article(BaseDB):
         my_dict = super(Article, self).to_dict(**kwargs)
 
         if 'update_time' in my_dict.keys():
-            my_dict['update_time'] = self.update_time.astimezone().strftime('%Y-%m-%d %H:%M:%S')
+            my_dict['update_time'] = self.update_time.strftime('%Y-%m-%d %H:%M:%S')
 
         if 'timestamp' in my_dict.keys():
             my_dict['timestamp'] = timestamp_to_str(self.timestamp)
