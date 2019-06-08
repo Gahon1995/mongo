@@ -117,6 +117,7 @@ def update_user_info(uid):
 
     for dbms in DBMS().get_dbms_by_region(user.region):
         RedisService().delete_key(dbms, _REDIS_KEY_)
+        RedisService().delete_key_by_pattern(dbms, pattern=f'{USERS_LIST}:*')
 
         UserService().update_by_uid_with_dbms(uid=uid, db_alias=dbms, **data)
 
@@ -131,7 +132,7 @@ def delete_user_info(uid):
 
     for dbms in DBMS().get_all_dbms_by_region():
         RedisService().delete_key(dbms, _REDIS_KEY_)
-        RedisService().delete_by_pattern(dbms, pattern=f'{USERS_LIST}:*')
+        RedisService().delete_key_by_pattern(dbms, pattern=f'{USERS_LIST}:*')
 
     if uid is None:
         return Result.gen_failed('404', 'uid not found')
