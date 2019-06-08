@@ -13,7 +13,8 @@ class Config(object):
     log_in_file = False
     log_file_name = './mongo.log'
 
-    redis_enable = False
+    redis_enable = True
+    REDIS_DEBUG = False
 
     # WEB 配置
     WEB_PORT = 5000
