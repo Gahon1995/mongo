@@ -13,6 +13,11 @@ logger = logging.getLogger("API_USER")
 
 users = Blueprint('users', __name__)
 
+USERS = "USERS"
+
+USERS_LIST = f'{USERS}:LIST'
+USERS_ITEM = f'{USERS}:ITEM'
+
 
 @users.route('/login', methods=['POST'])
 def login():
@@ -20,7 +25,7 @@ def login():
         return Result.gen_failed(400, msg='Not JSON Format')
     username = request.json.get('username')
     password = request.json.get('password')
-    print(username, password)
+    # print(username, password)
     user = None
     if username and password:
         user = UserService().login(username, password)
@@ -36,7 +41,6 @@ def login():
 @jwt_required
 def user_info():
     user = current_user
-    print(user)
     info = user.to_dict(other=['avatar'])
     if info['name'] == 'admin':
         info['roles'] = ['admin']
@@ -58,10 +62,10 @@ def logout():
 @users.route('/<int:uid>', methods=['GET'])
 def get_user(uid):
     user = {}
-    _REDIS_KEY_ = f"USER:{uid}"
+    _REDIS_KEY_ = f"{USERS_ITEM}:{uid}"
     for dbms in DBMS().get_all_dbms_by_region():
-        user = RedisService().get_redis(dbms).get_dict(_REDIS_KEY_)
-        if user != {}:
+        user = RedisService().get_dict(dbms, _REDIS_KEY_)
+        if user is not None and user != {}:
             break
 
     if user is None or user == {}:
@@ -72,9 +76,9 @@ def get_user(uid):
 
         user = user.to_dict()
 
-        RedisService().get_redis(DBMS().get_best_dbms_by_region(user['region'])).set_dict(_REDIS_KEY_, user)
-    else:
-        logger.info("get from redis")
+        for dbms in DBMS().get_dbms_by_region(user['region']):
+            RedisService().set_dict(dbms, _REDIS_KEY_, user)
+
     return Result.gen_success(user)
 
 
@@ -83,7 +87,7 @@ def get_user(uid):
 def update_user_info(uid):
     """用户信息更新"""
     user = current_user
-    print(user)
+    # print(user)
     is_admin = (user.name == 'admin')
 
     if is_admin:
@@ -106,11 +110,14 @@ def update_user_info(uid):
             if data.get(key) == getattr(user, key):
                 data.pop(key)
 
-    print(data)
     if data == {}:
         return Result.gen_success(msg='无更新信息')
 
+    _REDIS_KEY_ = f"{USERS_ITEM}:{uid}"
+
     for dbms in DBMS().get_dbms_by_region(user.region):
+        RedisService().delete_key(dbms, _REDIS_KEY_)
+
         UserService().update_by_uid_with_dbms(uid=uid, db_alias=dbms, **data)
 
     return Result.gen_success(msg='success')
@@ -120,12 +127,11 @@ def update_user_info(uid):
 @users.route('/<int:uid>', methods=['DELETE'])
 @jwt_required
 def delete_user_info(uid):
-    for dbms in DBMS().get_all_dbms_by_region():
-        num = RedisService().get_redis(dbms).delete(f"USER:{uid}")
-        RedisService().get_redis(dbms).delete_by_pattern(pattern=f'USER_LIST:{dbms}:*')
+    _REDIS_KEY_ = f"{USERS_ITEM}:{uid}"
 
-        if num > 0:
-            break
+    for dbms in DBMS().get_all_dbms_by_region():
+        RedisService().delete_key(dbms, _REDIS_KEY_)
+        RedisService().delete_by_pattern(dbms, pattern=f'{USERS_LIST}:*')
 
     if uid is None:
         return Result.gen_failed('404', 'uid not found')
@@ -156,19 +162,20 @@ def get_users_list():
         if value is not None and value != '':
             kwargs[key] = value
 
-    _REDIS_KEY_ = f"USER_LIST:{dbms}:{page_num}:{page_size}:{kwargs}"
-    data = RedisService().get_redis(dbms).get_dict(_REDIS_KEY_)
+    _REDIS_KEY_ = f"{USERS_LIST}:{page_num}:{page_size}:{kwargs}"
+    data = RedisService().get_dict(dbms, _REDIS_KEY_)
+
     if data is None or data == {}:
-        logger.info("get from mongoDB")
+
         res = UserService().get_users(page_num=page_num, page_size=page_size, db_alias=dbms, **kwargs)
-        users = list()
+        _users = list()
         total = UserService().count(db_alias=dbms, **kwargs)
         for user in res:
-            users.append(user.to_dict())
-        data = {'total': total, 'list': list(users)}
-        RedisService().get_redis(dbms).set_dict(_REDIS_KEY_, data)
-    else:
-        logger.info("get from redis")
+            _users.append(user.to_dict())
+        data = {'total': total, 'list': list(_users)}
+
+        RedisService().set_dict(dbms, _REDIS_KEY_, data)
+
     return Result.gen_success(data)
 
 
@@ -182,7 +189,12 @@ def register_new_user():
     data = request.json
 
     data.pop('uid')
-    print(data)
+
+    region = data.get('region')
+
+    for dbms in DBMS().get_dbms_by_region(region):
+        RedisService().delete_key_by_pattern(dbms, f"{USERS_LIST}:*")
+
     success, msg = UserService().register(**data)
 
     if not success:
