@@ -35,7 +35,9 @@ class Web:
     def register_blueprint(self):
         from web.api.user import users
         from web.api.dashboard import dashboard
+        from web.api.article import articles
         self.session.register_blueprint(users, url_prefix='/api/users')
+        self.session.register_blueprint(articles, url_prefix='/api/articles')
         self.session.register_blueprint(dashboard, url_prefix='/api/dashboard')
 
     @classmethod

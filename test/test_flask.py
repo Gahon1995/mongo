@@ -54,6 +54,15 @@ class TestFlask:
         res = self.client.get('/api/dashboard?dbms=Beijing')
         print(res.data)
 
+    def test_get_articles(self):
+        res = self.client.get('/api/articles', query_string={'dbms': 'Beijing'})
+        print(res.data)
+        # pretty_models(res.json['data']['list'], ArticleService.field_names)
+
+    def test_get_one_article(self):
+        res = self.client.get('/api/articles/4')
+        print(res.data)
+
     def test_populars(self):
         RedisService().get_redis('Hong Kong').delete_by_pattern('POPULAR*')
         response = self.client.get('/api/populars', query_string={'dbms': 'Hong Kong', 'level': 'weekly'})
