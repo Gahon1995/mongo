@@ -15,6 +15,10 @@ class Config(object):
 
     redis_enable = False
 
+    # WEB 配置
+    WEB_PORT = 5000
+    IS_DEBUG = False
+
     #  MongoDB 相关配置
 
 

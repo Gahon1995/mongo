@@ -214,7 +214,7 @@ def check_alias(db_alias):
     :return:
     """
     if db_alias not in DBMS.all:
-        raise DbmsAliasError("alias is wrong, please check")
+        raise DbmsAliasError(f"alias {db_alias} is wrong, please check")
 
 
 def is_odd(uid):

@@ -6,7 +6,10 @@ from service.article_service import ArticleService
 from service.redis_service import RedisService
 from service.user_service import UserService
 from utils.func import pretty_models
-from web.app import app, api_rules
+from web.my_web import Web
+
+
+# from web.app import app, api_rules
 
 
 def print_json(json_data):
@@ -24,14 +27,17 @@ class TestFlask:
         # DBMS.db_name = 'test'
         init()
 
-        app.testing = True
-        cls.client = app.test_client()
+        # app.testing = True
+        # cls.client = app.test_client()
+        Web().session.testing = True
+        # Web().run()
+        cls.client = Web().session.test_client()
         cls.header = {'Content-Type': 'application/json'}
-        api_rules()
+        # api_rules()
         print("=" * 50 + "INIT FINISH" + "=" * 50)
 
     def test_login(self):
-        response = self.client.post('/api/user/login', json={'username': 'admin', 'password': 'admin'})
+        response = self.client.post('/api/users/login', json={'username': 'admin', 'password': 'admin'})
         print(response.data)
 
     def test_users(self):
@@ -42,6 +48,10 @@ class TestFlask:
 
     def test_get_user(self):
         res = self.client.get('/api/users/1')
+        print(res.data)
+
+    def test_dashboard(self):
+        res = self.client.get('/api/dashboard?dbms=Beijing')
         print(res.data)
 
     def test_populars(self):

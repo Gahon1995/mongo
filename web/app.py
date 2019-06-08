@@ -20,12 +20,13 @@ def create_app():
 
 
 def api_rules():
-    from web.api.user import UserGetUpdateDelete, UsersList
+    # from web.api.user import UserGetUpdateDelete, UsersList
     from web.api.article import ArticleList, ArticleCURD
     from web.api.read import ReadsList, ReadCURD
     from web.api.popular import PopularList, PopularCURD, PopuparToday
-    app.add_url_rule('/api/users/<uid>', view_func=UserGetUpdateDelete.as_view('user'))
-    app.add_url_rule('/api/users', view_func=UsersList.as_view('users'))
+
+    # app.add_url_rule('/api/users/<uid>', view_func=UserGetUpdateDelete.as_view('user'))
+    # app.add_url_rule('/api/users', view_func=UsersList.as_view('users'))
 
     app.add_url_rule('/api/articles/<aid>', view_func=ArticleCURD.as_view('article'))
     app.add_url_rule('/api/articles', view_func=ArticleList.as_view('articles'))
@@ -87,7 +88,7 @@ def login():
 
 @app.route('/api/user/info', methods=['GET'])
 @jwt_required
-def info():
+def user_info():
     user = current_user
     info = user.to_dict(other=['avatar'])
     if info['name'] == 'admin':
