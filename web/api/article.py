@@ -6,7 +6,7 @@ from config import DBMS
 from service.article_service import ArticleService
 from service.redis_service import RedisService
 from utils.func import get_best_dbms_by_category, check_alias, DbmsAliasError
-from web.api.result import Result
+from web.result import Result
 
 articles = Blueprint('articles', __name__)
 

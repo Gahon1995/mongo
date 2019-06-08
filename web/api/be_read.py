@@ -11,7 +11,7 @@ from service.be_read_service import BeReadService
 from service.read_service import ReadService
 from service.user_service import UserService
 from utils.func import get_best_dbms_by_category, timestamp_to_str, sort_dict_in_list
-from web.api.result import Result
+from web.result import Result
 
 records = Blueprint('records', __name__)
 

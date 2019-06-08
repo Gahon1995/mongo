@@ -4,7 +4,7 @@ from flask.views import MethodView
 from service.popular_service import PopularService
 from service.redis_service import RedisService
 from utils.func import check_alias, DbmsAliasError
-from web.api.result import Result
+from web.result import Result
 
 populars = Blueprint('populars', __name__)
 

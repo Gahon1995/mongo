@@ -5,7 +5,7 @@
 # @Email   : Gahon1995@gmail.com
 from flask import request, Blueprint
 
-from web.api.result import Result
+from web.result import Result
 
 dashboard = Blueprint('dashboard', __name__)
 

@@ -4,7 +4,7 @@ from flask_jwt_extended import JWTManager, jwt_required, create_access_token, cu
 
 from service.user_service import UserService
 from utils.func import get_best_dbms_by_region
-from web.api.result import Result
+from web.result import Result
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)

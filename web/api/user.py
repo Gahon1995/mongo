@@ -7,7 +7,7 @@ from config import DBMS
 from service.redis_service import RedisService
 from service.user_service import UserService
 from utils.func import check_alias, DbmsAliasError
-from web.api.result import Result
+from web.result import Result
 
 logger = logging.getLogger("API_USER")
 

@@ -6,7 +6,7 @@ from service.be_read_service import BeReadService
 from service.read_service import ReadService
 from service.redis_service import RedisService
 from utils.func import check_alias, DbmsAliasError, get_dbms_by_region, get_dbms_by_category
-from web.api.result import Result
+from web.result import Result
 
 reads = Blueprint('reads', __name__)
 

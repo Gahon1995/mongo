@@ -14,7 +14,7 @@ from flask_jwt_extended import JWTManager
 from config import Config
 from service.user_service import UserService
 from utils.func import singleton, get_best_dbms_by_region
-from web.api.result import Result
+from web.result import Result
 
 
 @singleton
