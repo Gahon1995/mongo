@@ -91,7 +91,7 @@ class ReadService(object):
             return self.get_model(db_alias).get_all(uid=uid, aid=aid, **kwargs)
         pass
 
-    def get_by_rid(self, rid, db_alias=None, **kwargs):
+    def get_by_rid(self, rid, db_alias=None, **kwargs) -> Read:
 
         if db_alias is None:
             for dbms in DBMS.all:

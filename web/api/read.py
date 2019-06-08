@@ -10,6 +10,9 @@ from web.result import Result
 
 reads = Blueprint('reads', __name__)
 
+READS = "READS"
+READS_ITEM = f'{READS}:ITEM'
+
 
 @reads.route('', methods=['GET'])
 def get_reads():
@@ -37,20 +40,16 @@ def get_reads():
         if value is not None and value != '':
             kwargs[key] = value
 
-    _REDIS_KEY_ = f"READ_LIST:{dbms}:{page_num}:{page_size}:{kwargs}"
-    data = RedisService().get_redis(dbms).get_dict(_REDIS_KEY_)
-    if data is None or data == {}:
-        res = ReadService().get_reads(page_num=page_num, page_size=page_size, db_alias=dbms, **kwargs)
-        reads = list(read.to_dict() for read in res)
-        total = ReadService().count(db_alias=dbms, **kwargs)
-        data = {'total': total, 'list': reads}
+    res = ReadService().get_reads(page_num=page_num, page_size=page_size, db_alias=dbms, **kwargs)
+    _reads = list(read.to_dict() for read in res)
+    total = ReadService().count(db_alias=dbms, **kwargs)
+    data = {'total': total, 'list': _reads}
 
-        RedisService().get_redis(dbms).set_dict(_REDIS_KEY_, data)
     return Result.gen_success(data)
 
 
 @reads.route('', methods=['POST'])
-def update_reads():
+def update_read_record():
     """
         对用户的阅读行为添加记录
     :return:
@@ -104,11 +103,23 @@ def update_reads():
 
 @reads.route('<int:rid>', methods=['GET'])
 def get_read(rid):
-    # _REDIS_KEY_ = f"READ:{rid}"
-    read = ReadService().get_by_rid(rid=rid)
-    if read is None:
-        return Result.gen_failed(404, 'user not found')
-    return Result.gen_success(read.to_dict())
+    read = {}
+
+    _REDIS_KEY_ = f"{READS_ITEM}:{rid}"
+    for dbms in DBMS().get_all_dbms_by_region():
+        read = RedisService().get_dict(dbms, _REDIS_KEY_)
+
+    if read == {}:
+        read = ReadService().get_by_rid(rid=rid)
+        if read is None:
+            return Result.gen_failed(404, 'user not found')
+
+        read = read.to_dict()
+
+        for dbms in DBMS().get_all_dbms_by_region():
+            RedisService().set_dict(dbms, _REDIS_KEY_, read)
+
+    return Result.gen_success(read)
     pass
 
 
@@ -116,8 +127,13 @@ def get_read(rid):
 def delete_read(rid):
     if rid is None:
         return Result.gen_failed('404', 'uid not found')
+    _REDIS_KEY_ = f"{READS_ITEM}:{rid}"
 
-    return Result.gen_success('删除成功')
+    RedisService().delete_key_to_all(f"{READS_ITEM}:{rid}")
+
+    ReadService().del_read_by_rid(rid)
+
+    return Result.gen_success(msg='删除成功')
 
 
 @reads.route('/history/<int:uid>', methods=['GET'])
@@ -126,8 +142,6 @@ def get_user_read_history(uid):
         获取指定用户的所有read记录
     :return:
     """
-    page_num = int(request.args.get('page', 1))
-    page_size = int(request.args.get('size', 20))
 
     region = request.args.get('region')
 
@@ -148,7 +162,6 @@ def get_user_read_history(uid):
         res = ReadService().get_reads(sort_by='-timestamp',
                                       db_alias=dbms, **kwargs)
         records = {}
-        aids = []
         for read in res:
             if read.aid not in records.keys():
                 article = ArticleService().get_one_by_aid(aid=read.aid, only=['title'])
@@ -170,7 +183,6 @@ def get_user_read_history(uid):
         total = ReadService().count(db_alias=dbms, **kwargs)
         data = {'total': total, 'list': records}
 
-        # RedisService().get_redis(dbms).set_dict(_REDIS_KEY_, data)
     return Result.gen_success(data)
 
 # class ReadCURD(MethodView):

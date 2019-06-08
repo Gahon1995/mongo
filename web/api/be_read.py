@@ -29,7 +29,7 @@ def get_be_reads(aid):
     be_read = BeReadService().get_one_by_aid(aid,
                                              exclude=['readUidList', 'agreeUidList', 'shareUidList'],
                                              db_alias=get_best_dbms_by_category("technology"))
-    # print(be_read)
+
     if be_read is not None:
         record = be_read.to_dict(
             exclude=['commentUidList', 'readUidList', 'agreeUidList', 'shareUidList'])
@@ -60,6 +60,7 @@ def get_be_reads(aid):
                              'timestamp': timestamp_to_str(c.timestamp)
                              })
         record['comments'] = sort_dict_in_list(comments, sort_by='timestamp', reverse=True)
+
     return Result.gen_success(data=record)
 
 # class ArticleRecord(MethodView):
