@@ -118,7 +118,7 @@ class UserService(object):
             re = user.save()
             if re is not None:
                 # logger.info('用户：{} 注册成功'.format(name))
-                return True, '用户：{} 注册成功'.format(name)
+                return True, re
             return False, '保存至数据库失败'
 
     # def users_list(self, page_num=1, page_size=20, only: list = None, exclude: list = None, db_alias=None,

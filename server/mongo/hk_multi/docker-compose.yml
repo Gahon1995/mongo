@@ -1,0 +1,75 @@
+version: '3'
+services:
+  mongo-2-2:
+    container_name: mongo-2-2
+    image: mongo:latest
+    ports:
+      - "30012:27017"
+    volumes:
+      - ./data/mongo-2-2:/data/db
+    #      - /etc:/etc
+    command: mongod --replSet rs2 --shardsvr --port 27017  --oplogSize 16 --noprealloc --smallfiles
+    restart: always
+
+  mongo-2-3:
+    container_name: mongo-2-3
+    image: mongo:latest
+    ports:
+      - "30013:27017"
+    volumes:
+      - ./data/mongo-2-3:/data/db
+    #      - /etc:/etc
+    command: mongod --replSet rs2 --shardsvr --port 27017  --oplogSize 16 --noprealloc --smallfiles
+    restart: always
+
+  mongo-2-1:
+    container_name: mongo-2-1
+    image: mongo:latest
+    ports:
+      - "30011:27017"
+    volumes:
+      - ./data/mongo-2-1:/data/db
+    #      - /etc:/etc
+    command: mongod --replSet rs2 --shardsvr --port 27017  --oplogSize 16 --noprealloc --smallfiles
+    links:
+      - mongo-2-2:mongo-2-2
+      - mongo-2-3:mongo-2-3
+    restart: always
+
+  mongo-web-hk:
+    container_name: mongo-web-hk
+    image: mongo-express
+    links:
+      - mongo-2-1
+      - mongo-2-2
+      - mongo-2-3
+    restart: always
+    depends_on:
+      - "mongo-2-1"
+      - "mongo-2-2"
+      - "mongo-2-3"
+      - "mongo-rs2-setup"
+    ports:
+      - 8082:8081
+    environment:
+      ME_CONFIG_OPTIONS_EDITORTHEME: 3024-night
+      ME_CONFIG_MONGODB_SERVER: mongo-2-1,mongo-2-2,mongo-2-3
+      ME_CONFIG_MONGODB_PORT: 27017
+      #    ME_CONFIG_MONGODB_ENABLE_ADMIN: 0
+      # ME_CONFIG_MONGODB_AUTH_DATABASE: admin
+
+  mongo-rs2-setup:
+    container_name: "mongo-rs2-setup"
+    image: mongo:latest
+    depends_on:
+      - "mongo-2-1"
+      - "mongo-2-2"
+      - "mongo-2-3"
+    volumes:
+      - ../scripts:/scripts
+    environment:
+      - MONGO1=GahondeMBP.lan:30011
+      - MONGO2=GahondeMBP.lan:30012
+      - MONGO3=GahondeMBP.lan:30013
+      - RS=rs2
+    entrypoint: [ "/scripts/setup.sh" ]

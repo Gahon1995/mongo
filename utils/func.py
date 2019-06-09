@@ -446,7 +446,7 @@ def print_run_time(func):
     def wrapper(*args, **kw):
         local_time = time.time()
         func(*args, **kw)
-        logger.info('\ncurrent Function [%s] run time is %.2fs' % (func.__name__, time.time() - local_time))
+        logger.info('current Function [%s] run time is %.2fs' % (func.__name__, time.time() - local_time))
 
     return wrapper
 
@@ -467,5 +467,6 @@ def auto_reconnect(mongo_op_func):
                 wait_t = 0.5 * pow(2, attempt)  # exponential back off
                 logging.warning("PyMongo auto-reconnecting... %s. Waiting %.1f seconds.", str(e), wait_t)
                 time.sleep(wait_t)
+        return mongo_op_func(*args, **kwargs)
 
     return wrapper

@@ -3,7 +3,7 @@
 # @Time    : 2019-05-10 21:06
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
-import genDatabase as gen
+import genDatabase as Gen
 from config import DBMS, Config
 from main import init
 
@@ -22,13 +22,14 @@ class TestBase:
         Config.redis_enable = False
         Config.log_in_file = False
         DBMS.db_name = 'test'
+
         init()
 
-        gen.USERS_NUM = 100
-        gen.ARTICLES_NUM = 100
-        gen.READS_NUM = 100
+        Gen.USERS_NUM = 100
+        Gen.ARTICLES_NUM = 100
+        Gen.READS_NUM = 100
 
-        gen.gen_data()
+        Gen.gen_data()
         print()
         print("=" * 50 + "INIT FINISH" + "=" * 50)
         pass
@@ -39,6 +40,6 @@ class TestBase:
 
     @classmethod
     def teardown_class(cls) -> None:
-        gen.reset_db()
+        Gen.reset_db()
         print("=" * 50 + "FINISH" + "=" * 50)
         pass

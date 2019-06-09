@@ -26,3 +26,25 @@
     其值为consts里边的Region类所对应的值。
 2. 有的方法不需要传，比如登录，因为不知道该用户数据在哪个数据库里边，
        所以采用依次尝试登录的方式进行登录
+       
+db = connect(host="mongodb://127.0.0.1:30021,127.0.0.1:30022,127.0.0.1:30023/mongo?replicaSet=rs1", read_preference=ReadPreference.SECONDARY_PREFERRED)
+
+
+   var cfg = {
+        "_id": "rs1",
+        "protocolVersion": 1,
+        "members": [
+            {
+                "_id": 0,
+                "host": "GahondeMBP.lan:30021"
+            },
+            {
+                "_id": 1,
+                "host": "GahondeMBP.lan:30022"
+            },
+            {
+                "_id": 2,
+                "host": "GahondeMBP.lan:30023"
+            }
+        ]
+    };

@@ -25,7 +25,7 @@ class BeReadService(object):
         self.models = dict()
         self.classes = dict()
         for dbms in DBMS.all:
-            self.models[dbms] = list()
+            self.models[dbms] = dict()
             self.classes[dbms] = self.__gen_model(dbms)
 
     def __gen_model(self, dbms):
@@ -41,18 +41,18 @@ class BeReadService(object):
     def get_model(self, dbms):
         return self.classes[dbms]
 
-    def update_many(self, models=None, db_alias=None):
-
+    def update_many(self, db_alias=None):
         if db_alias is None:
             for dbms in DBMS.all:
-                self.update_many(models, db_alias=dbms)
+                self.update_many(db_alias=dbms)
         else:
-            if models is None:
-                models = self.models[db_alias]
-                if models is not None:
-                    self.get_model(db_alias).update_many(models)
-                    # del self.models[db_alias]
-                    self.models[db_alias] = list()
+            _models = list(self.models[db_alias].values())
+            logger.info(f'save size: {len(_models)}')
+
+            if _models is not None:
+                self.get_model(db_alias).update_many(_models)
+                del self.models[db_alias]
+                self.models[db_alias] = dict()
 
     @staticmethod
     def get_bid():
@@ -83,14 +83,30 @@ class BeReadService(object):
 
         return be_read
 
+    def import_from_dict(self, aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp=None,
+                         is_multi=False, category=None):
+
+        be_read = None
+
+        for dbms in get_dbms_by_category(category):
+            # logger.info("save be read to : {} uid: {}".format(dbms, uid))
+            be_read = self.new_record(aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp,
+                                      db_alias=dbms, is_multi=is_multi)
+
+        return be_read
+
     def new_record(self, aid, uid, readOrNot=1, commentOrNot=0, agreeOrNot=0, shareOrNot=0, timestamp=None,
                    db_alias=None, is_multi=False):
         check_alias(db_alias)
+        be_read = self.models[db_alias].get(aid, None)
 
-        be_read = self.get_one_by_aid(aid, db_alias=db_alias)
         if be_read is None:
-            logger.info("没有 {} 关联的beread记录".format(aid))
+            print('this should never get in')
+            be_read = self.get_one_by_aid(aid, db_alias=db_alias)
+
+        if be_read is None:
             # return None
+            print('this should never get in')
             be_read = self.get_model(db_alias)()
             be_read.aid = aid
             be_read.bid = self.get_bid()
@@ -121,9 +137,9 @@ class BeReadService(object):
             if uid not in be_read.shareUidList:
                 be_read.shareUidList.append(uid)
 
-        be_read.last_update_time = datetime.datetime.utcnow()
+        be_read.last_update_time = get_timestamp()
         if is_multi:
-            self.models[db_alias].append(be_read)
+            self.models[db_alias][aid] = be_read
         else:
             be_read.save()
         return be_read

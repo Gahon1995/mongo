@@ -41,6 +41,7 @@ class Web:
         from web.api.be_read import records
         from web.api.popular import populars
         from web.api.read import reads
+        from web.api.hadoop import hadoop
 
         self.session.register_blueprint(dashboard, url_prefix='/api/dashboard')
         self.session.register_blueprint(users, url_prefix='/api/users')
@@ -48,6 +49,7 @@ class Web:
         self.session.register_blueprint(records, url_prefix='/api/records')
         self.session.register_blueprint(populars, url_prefix='/api/populars')
         self.session.register_blueprint(reads, url_prefix='/api/reads')
+        self.session.register_blueprint(hadoop, url_prefix='/api/hadoop')
 
     @classmethod
     def run(cls):
@@ -89,7 +91,9 @@ class Web:
 
 if __name__ == '__main__':
     from main import init
+    from service.redis_service import RedisService
 
     init()
 
+    RedisService().reset_redis()
     Web().run()

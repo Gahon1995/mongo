@@ -76,7 +76,7 @@ class ArticleService(object):
         titles = list()  # 保存在查询过程中已经出现过的文章
 
         if db_alias is None:
-            for dbms in DBMS.all:
+            for dbms in DBMS().get_all_dbms_by_category():
                 # tmp_articles = self.__search_by_title(title, db_alias=dbms)
                 tmp_articles = self.get_articles(title__contains=title, page_num=page_num, page_size=page_size,
                                                  db_alias=dbms, **kwargs)
@@ -166,7 +166,7 @@ class ArticleService(object):
         article.text = text
         article.image = image
         article.video = video
-        article.update_time = datetime.datetime.utcnow()
+        article.update_time = get_timestamp()
         article.timestamp = timestamp or get_timestamp()
 
         if is_multi:
@@ -184,7 +184,7 @@ class ArticleService(object):
         be_read.aid = aid
         be_read.bid = bid
         be_read.timestamp = timestamp or get_timestamp()
-        be_read.last_update_time = datetime.datetime.utcnow()
+        be_read.last_update_time = get_timestamp()
         if is_multi:
             BeReadService().models[db_alias].append(be_read)
         else:
@@ -331,7 +331,7 @@ class ArticleService(object):
         for key, value in condition.items():
             if key not in forbid and hasattr(article, key):
                 setattr(article, key, value)
-        article.update_time = datetime.datetime.utcnow()
+        article.update_time = get_timestamp()
         article.save()
         article.reload()
         return article
@@ -355,7 +355,7 @@ class ArticleService(object):
             article.text = data['text']
             article.image = data['image']
             article.video = data['video']
-            article.update_time = datetime.datetime.utcnow()
+            article.update_time = get_timestamp()
             article.timestamp = int(data['timestamp'])
             self.models[dbms].append(article)
 
@@ -365,8 +365,9 @@ class ArticleService(object):
             be_read.aid = int(data['aid'])
             be_read.bid = int(data['aid'])
             be_read.timestamp = int(data['timestamp'])
-            be_read.last_update_time = datetime.datetime.utcnow()
-            BeReadService().models[dbms].append(be_read)
+            be_read.last_update_time = get_timestamp()
+            # 为所有文章创建be read记录，并且保存到models中
+            BeReadService().models[dbms][article.aid] = be_read
 
         pass
 

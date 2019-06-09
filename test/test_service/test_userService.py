@@ -72,14 +72,16 @@ class TestUserService(TestBase):
         # print(user)
 
     def test_login(self):
-        UserService().register('test1', 'password', 'male', 'asdf', 'asdfasdf', 'asdf', 'asdf', 'asdf',
-                               'Beijing', 'asdf', 'asdfas', '123')
+        user1 = UserService().register('test1', 'password', 'male', 'asdf', 'asdfasdf', 'asdf', 'asdf', 'asdf',
+                                       'Beijing', 'asdf', 'asdfas', '123')
+        print(user1)
+        # time.sleep(5)
         user = UserService().login('test1', 'password')
-        assert user is not None
         print(user)
+        assert user is not None
 
-        user = UserService().login('test1', 'qweqwe')
-        assert user is None
+        # user = UserService().login('test1', 'qweqwe')
+        # assert user is None
 
     def test_update(self):
         user = UserService().get_user_by_name('user4')
@@ -96,6 +98,6 @@ class TestUserService(TestBase):
         # user = UserService().get_user_by_uid(49)
         # assert user is None
 
-        UserService().del_user_by_name('gahon')
-        user = UserService().get_user_by_name('gahon')
+        UserService().del_user_by_name('user10')
+        user = UserService().get_user_by_name('user10')
         assert user is None

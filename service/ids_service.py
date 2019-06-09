@@ -6,11 +6,24 @@
 
 import logging
 
-from config import DBMS
+from config import DBMS, Config
 from model.ids import Ids
 from utils.func import check_alias, singleton
 
 logger = logging.getLogger('IdsService')
+
+ids = {
+    'uid': 0,
+    'aid': 0,
+    'bid': 0,
+    'rid': 0
+}
+
+
+def import_next_id(name):
+    _id = ids[name]
+    ids[name] += 1
+    return _id
 
 
 @singleton
@@ -40,15 +53,18 @@ class IdsService(object):
         return Model
 
     def next_id(self, name):
-        db_alias = DBMS.DBMS1
-        model = self.get_model(db_alias)
-        check_alias(db_alias)
-        kwargs = {
-            'inc__' + name: 1
-        }
-        ids = model.objects(ids=0).only(name).modify(upsert=True, **kwargs)
-        # logger.debug('set {}: {}'.format(name, getattr(ids, name)))
-        return getattr(ids, name)
+        if Config.is_import:
+            return import_next_id(name)
+        else:
+            db_alias = DBMS.DBMS1
+            model = self.get_model(db_alias)
+            check_alias(db_alias)
+            kwargs = {
+                'inc__' + name: 1
+            }
+            ids = model.objects(ids=0).only(name).modify(upsert=True, **kwargs)
+            # logger.debug('set {}: {}'.format(name, getattr(ids, name)))
+            return getattr(ids, name)
 
     def sync_id(self, name, value):
         logger.info("IDS 字段： {} 数据不同步, 同步数据中...".format(name))

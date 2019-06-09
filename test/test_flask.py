@@ -24,7 +24,7 @@ class TestFlask:
         # print("连接数据库")
         Config.redis_enable = False
         Config.log_in_file = False
-        # DBMS.db_name = 'test'
+        # DBMS().db_name = 'test'
         init()
 
         # app.testing = True
@@ -41,10 +41,10 @@ class TestFlask:
         print(response.data)
 
     def test_users(self):
-        response = self.client.get('/api/users', query_string={'dbms': 'Beijing'})
+        response = self.client.get('/api/users', query_string={'dbms': 'Hong Kong'})
         # print(response.data)
         pretty_models(response.json['data']['list'], UserService.field_names)
-        assert len(response.json['data']['list']) == 20
+        assert len(response.json['data']['list']) <= 20
 
     def test_get_user(self):
         res = self.client.get('/api/users/1')

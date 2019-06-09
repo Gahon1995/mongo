@@ -36,7 +36,7 @@ class BeRead(BaseDB):
     shareNum = IntField(default=0)
     shareUidList = ListField(IntField(required=False), default=list())
     timestamp = IntField(required=True)
-    last_update_time = DateTimeField(required=True)
+    last_update_time = IntField(required=True)
 
     def to_dict(self, **kwargs):
         """
@@ -51,7 +51,7 @@ class BeRead(BaseDB):
         my_dict = super(BeRead, self).to_dict(**kwargs)
 
         if 'last_update_time' in my_dict.keys():
-            my_dict['last_update_time'] = self.last_update_time.strftime('%Y-%m-%d %H:%M:%S')
+            my_dict['last_update_time'] = timestamp_to_str(self.last_update_time)
 
         if 'timestamp' in my_dict.keys():
             my_dict['timestamp'] = timestamp_to_str(self.timestamp)

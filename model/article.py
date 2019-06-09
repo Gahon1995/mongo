@@ -16,7 +16,7 @@ class Article(BaseDB):
     text = StringField(required=True)
     image = StringField()
     video = StringField()
-    update_time = DateTimeField(required=True)
+    update_time = IntField(required=True)
     timestamp = IntField(required=True)
 
     meta = {
@@ -43,7 +43,7 @@ class Article(BaseDB):
         my_dict = super(Article, self).to_dict(**kwargs)
 
         if 'update_time' in my_dict.keys():
-            my_dict['update_time'] = self.update_time.strftime('%Y-%m-%d %H:%M:%S')
+            my_dict['update_time'] = timestamp_to_str(self.update_time)
 
         if 'timestamp' in my_dict.keys():
             my_dict['timestamp'] = timestamp_to_str(self.timestamp)

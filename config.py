@@ -3,17 +3,21 @@
 # @Time    : 2019-04-28 17:37
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
-
 import logging
 
+from utils.singleton import singleton
 
+
+@singleton
 class Config(object):
     # logging 配置
     debug_level = logging.DEBUG
     log_in_file = False
     log_file_name = './mongo.log'
 
-    redis_enable = True
+    is_import = False
+
+    redis_enable = False
     REDIS_DEBUG = False
 
     # WEB 配置
@@ -23,6 +27,7 @@ class Config(object):
     #  MongoDB 相关配置
 
 
+@singleton
 class DBMS:
     DBMS1 = 'Beijing'
     DBMS2 = 'Hong Kong'
@@ -30,7 +35,7 @@ class DBMS:
 
     all = [DBMS1, DBMS2]
 
-    db_name = 'mongo'
+    db_name = 'mongo-less'
 
     redis = {
         DBMS1: {
@@ -55,17 +60,39 @@ class DBMS:
 
     configs = {
         DBMS1: {
-            'host': '127.0.0.1',
-            'port': 27017
+            'replicaSet': 'rs1',
+            'hosts': [
+                {
+                    'host': '127.0.0.1',
+                    'port': 30021
+                },
+                {
+                    'host': '127.0.0.1',
+                    'port': 30022
+                },
+                {
+                    'host': '127.0.0.1',
+                    'port': 30023
+                }
+            ]
         },
         DBMS2: {
-            'host': '127.0.0.1',
-            'port': 27018
-        },
-        DBMS3: {
-            'host': '127.0.0.1',
-            'port': 27019
-        },
+            'replicaSet': 'rs2',
+            'hosts': [
+                {
+                    'host': '127.0.0.1',
+                    'port': 30011
+                },
+                {
+                    'host': '127.0.0.1',
+                    'port': 30012
+                },
+                {
+                    'host': '127.0.0.1',
+                    'port': 30013
+                }
+            ]
+        }
     }
 
     region = {
@@ -81,6 +108,15 @@ class DBMS:
         'science': [DBMS1, DBMS2],
         'technology': [DBMS2]
     }
+
+    def get_host(self):
+        for dbms, data in self.configs.items():
+            ips = ','.join((f"{d['host']}:{d['port']}" for d in data['hosts']))
+            host = f"mongodb://{ips}/{self.db_name}?replicaSet={data['replicaSet']}"
+            yield dbms, self.db_name, host
+
+    def get_default(self):
+        return next(self.get_host())
 
     def get_all_dbms_by_category(self):
         """

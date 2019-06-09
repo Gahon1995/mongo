@@ -3,6 +3,7 @@
 # @Time    : 2019-04-28 20:43
 # @Author  : Gahon
 # @Email   : Gahon1995@gmail.com
+from mongoengine import QuerySet
 
 from model.read import Read
 from service.be_read_service import BeReadService
@@ -38,18 +39,17 @@ class ReadService(object):
     def get_model(self, dbms):
         return self.classes[dbms]
 
-    def update_many(self, models=None, db_alias=None):
+    def update_many(self, db_alias=None):
 
         if db_alias is None:
             for dbms in DBMS.all:
-                self.update_many(models, db_alias=dbms)
+                self.update_many(db_alias=dbms)
         else:
-            if models is None:
-                models = self.models[db_alias]
-                if models is not None:
-                    self.get_model(db_alias).update_many(models)
-                    # del self.models[db_alias]
-                    self.models[db_alias] = list()
+            models = self.models[db_alias]
+            if models is not None:
+                self.get_model(db_alias).update_many(models)
+                # del self.models[db_alias]
+                self.models[db_alias] = list()
 
     @staticmethod
     def get_id():
@@ -80,12 +80,12 @@ class ReadService(object):
             count += self.count(db_alias=dbms, **kwargs)
         return count
 
-    def get_by_uid_and_aid(self, uid, aid, db_alias=None, **kwargs) -> list:
+    def get_by_uid_and_aid(self, uid, aid, db_alias=None, **kwargs) -> QuerySet:
 
         if db_alias is None:
-            for dbms in DBMS.all:
+            for dbms in DBMS().get_all_dbms_by_region():
                 reads = self.get_by_uid_and_aid(uid, aid, db_alias=dbms, **kwargs)
-                if reads is not None or reads != []:
+                if len(reads) > 0:
                     return reads
         else:
             return self.get_model(db_alias).get_all(uid=uid, aid=aid, **kwargs)
@@ -131,25 +131,24 @@ class ReadService(object):
             user = UserService().get_user_by_uid(uid, only=['region'])
             if user is None:
                 return None
-            dbmses.append(get_dbms_by_region(user.region))
+            dbmses.extend(get_dbms_by_region(user.region))
         # read = ReadService().get_by_uid_and_aid(uid=uid, aid=aid, only=['rid'])
         # if read is not None:
         #     rid = read.rid
         # else:
-        rid = self.get_id()
 
         new_read = None
         # 根据用户的region去查询当前region对应的所有数据库
         for dbms in dbmses:
             # if read is None:
-            new_read = self.new_record(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot,
+            new_read = self.new_record(aid, uid, None, readOrNot, readTimeLength, readSequence, commentOrNot,
                                        commentDetail, agreeOrNot, shareOrNot, timestamp, db_alias=dbms,
                                        is_multi=is_multi)
             # else:
             #     new_read = self.update(rid, aid, uid, readOrNot, readTimeLength, readSequence, commentOrNot,
             #                            commentDetail, agreeOrNot, shareOrNot, db_alias=dbms)
             if new_read is None:
-                break
+                return None
 
         # 待修改
         BeReadService().add_one(aid, uid, readOrNot, commentOrNot, agreeOrNot, shareOrNot, timestamp,
@@ -394,10 +393,10 @@ class ReadService(object):
     def pretty_reads(reads):
         pretty_models(reads, ReadService.field_names)
 
-    def import_from_dict(self, data):
-        user = UserService().get_user_by_uid(data['uid'], only=['region'])
+    def import_from_dict(self, data, region, category):
+        # user = UserService().get_user_by_uid(data['uid'], only=['region'])
 
-        for db_alias in get_dbms_by_region(user.region):
+        for db_alias in get_dbms_by_region(region):
             new_read = self.get_model(db_alias)()
             new_read.rid = int(data['rid'])
             new_read.aid = int(data['aid'])
@@ -413,8 +412,8 @@ class ReadService(object):
 
             self.models[db_alias].append(new_read)
 
-            BeReadService().add_one(int(data['aid']), int(data['uid']), int(data['readOrNot']),
-                                    int(data['commentOrNot']),
-                                    int(data['agreeOrNot']), int(data['shareOrNot']), data['timestamp'],
-                                    is_multi=True)
+            BeReadService().import_from_dict(int(data['aid']), int(data['uid']), int(data['readOrNot']),
+                                             int(data['commentOrNot']),
+                                             int(data['agreeOrNot']), int(data['shareOrNot']), data['timestamp'],
+                                             is_multi=True, category=category)
         pass

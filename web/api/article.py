@@ -1,4 +1,3 @@
-import datetime
 import logging
 
 from flask import request, Blueprint
@@ -179,7 +178,7 @@ def update_article(aid):
         if key not in ArticleService.field_names or key in ArticleService.update_forbid:
             data.pop(key)
 
-    data['update_time'] = datetime.datetime.now()
+    data['update_time'] = get_timestamp()
 
     # print(data)
     _REDIS_KEY_ = f"{ARTICLES_ITEM}:{aid}"

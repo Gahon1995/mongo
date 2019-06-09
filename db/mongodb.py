@@ -1,9 +1,11 @@
 import functools
 import logging
 
-from mongoengine import Document, connect, register_connection, DoesNotExist, ValidationError
+from mongoengine import Document, connect, DoesNotExist, ValidationError, QuerySet
 from mongoengine.context_managers import switch_db
-from pymongo import UpdateOne
+from pymongo import UpdateOne, ReadPreference
+
+from utils.func import auto_reconnect
 
 logger = logging.getLogger('db')
 
@@ -60,7 +62,8 @@ class BaseDB(Document):
         return my_dict
 
     @classmethod
-    def get_all(cls, page_num=1, page_size=20, only: list = None, exclude: list = None, sort_by=None, **kwargs) -> list:
+    def get_all(cls, page_num=1, page_size=20, only: list = None, exclude: list = None, sort_by=None,
+                **kwargs) -> QuerySet:
         """
             分页数据查询
 
@@ -194,6 +197,7 @@ class BaseDB(Document):
             raise BaseException('data type error, should be a list')
 
     @classmethod
+    @auto_reconnect
     def update_many(cls, entities):
         bulk_operations = []
 
@@ -236,6 +240,8 @@ class BaseDB(Document):
 
 from config import DBMS
 
+dbs = {}
+
 
 def init_connect():
     """
@@ -246,12 +252,19 @@ def init_connect():
 
     # from utils.consts import DBMS
     # tz_aware=True 设置时区修正，mongoDB的时区默认为UTC0，需要加上这个加入时区信息
-    connect(DBMS.db_name, host=DBMS.configs[DBMS.DBMS1]['host'], port=DBMS.configs[DBMS.DBMS1]['port'], tz_aware=True)
+    dbms, db_name, host = DBMS().get_default()
 
-    for dbms in DBMS.all:
-        register_connection(alias=dbms, db=DBMS.db_name, host=DBMS.configs[dbms]['host'],
-                            port=DBMS.configs[dbms]['port'],
-                            tz_aware=True)
+    connect(db=db_name, host=host, read_preference=ReadPreference.SECONDARY_PREFERRED)
+
+    for dbms, db_name, host in DBMS().get_host():
+        dbs[dbms] = connect(alias=dbms, db=db_name, host=host)
+
+    # connect(DBMS.db_name, host=DBMS.configs[DBMS.DBMS1]['host'], port=DBMS.configs[DBMS.DBMS1]['port'], tz_aware=True)
+
+    # for dbms in DBMS.all:
+    #     register_connection(alias=dbms, db=DBMS.db_name, host=DBMS.configs[dbms]['host'],
+    #                         port=DBMS.configs[dbms]['port'],
+    #                         tz_aware=True)
 
     # connect(Config.mongo_db_name)
     # register_connection(alias=DBMS.DBMS1, db=Config.mongo_db_name, host=Config.bj_mongo_host,

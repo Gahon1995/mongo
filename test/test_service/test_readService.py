@@ -108,14 +108,12 @@ class TestReadService(TestBase):
         print(reads)
 
     def test_get_by_uid_and_aid(self):
-        aid = ArticleService().get_articles_by_title('title5')[0].aid
+        aid = ArticleService().get_articles_by_title('title')[0].aid
         uid = UserService().get_user_by_name('user5').uid
         read1 = self.test_save_read(aid, uid)
-        read = self.readService.get_by_uid_and_aid(uid, aid)
-        assert read.aid == read1.aid and read.uid == read1.uid
-
-        read = self.readService.get_by_rid(read1.rid)
-        assert read.aid == read1.aid and read.uid == read1.uid
+        read = self.readService.get_by_uid_and_aid(uid=uid, aid=aid)
+        print(read)
+        assert read1.aid in read.item_frequencies('aid').keys() and read1.uid in read.item_frequencies('uid').keys()
 
     def test_read_twice(self):
         aid = ArticleService().get_articles_by_title('title2')[0].aid
@@ -127,7 +125,7 @@ class TestReadService(TestBase):
         read1.reload()
         assert read1.readSequence == read2.readSequence
 
-    def test_update_by_aid_uid(self):
-        aid = 1
-        uid = 1
-        readOrNot = 0
+    # def test_update_by_aid_uid(self):
+    #     aid = 1
+    #     uid = 1
+    #     readOrNot = 0
