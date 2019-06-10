@@ -141,7 +141,7 @@ def gen_articles():
         if (i + 1) % 50000 == 0:
             logger.info(f"saving articles, {i}")
             ArticleService().update_many()
-            logger.info(f"saving article's be read, {i}")
+            # logger.info(f"saving article's be read, {i}")
             # BeReadService().update_many()
     ArticleService().update_many()
     # BeReadService().update_many()

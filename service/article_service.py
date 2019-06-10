@@ -46,7 +46,7 @@ class ArticleService(object):
                 models = self.models[db_alias]
                 if models is not None:
                     self.get_model(db_alias).update_many(models)
-                    # del self.models[db_alias]
+                    del self.models[db_alias]
                     self.models[db_alias] = list()
 
     @staticmethod
