@@ -26,7 +26,7 @@ class Web:
     def __init__(self):
         self.session = Flask(__name__)
         self.log = logging.getLogger('werkzeug')
-        self.log.setLevel(logging.ERROR)
+        # self.log.setLevel(logging.ERROR)
 
         self.register_blueprint()
         self.session.config['JWT_SECRET_KEY'] = 'this is my key'  # 目前都是本地，暂不用放配置文件

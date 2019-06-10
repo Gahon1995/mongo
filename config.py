@@ -17,7 +17,7 @@ class Config(object):
 
     is_import = False
 
-    redis_enable = True
+    redis_enable = False
     REDIS_DEBUG = False
 
     # WEB 配置
