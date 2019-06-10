@@ -9,6 +9,7 @@ services:
       - 9000:9000
     volumes:
       - ./hadoop_namenode:/hadoop/dfs/name
+    hostname: namenode
     environment:
       - CLUSTER_NAME=test
     env_file:
@@ -21,6 +22,7 @@ services:
     #      - namenode
     volumes:
       - ./hadoop_datanode:/hadoop/dfs/data
+    hostname: datanode
     ports:
       - 9864:9864
     environment:
@@ -49,6 +51,7 @@ services:
     ports:
       - 8088:8088
       #      - datanode2
+    hostname: resourcemanager
     environment:
       SERVICE_PRECONDITION: "namenode:9870 datanode:9864"
     env_file:
@@ -63,6 +66,7 @@ services:
     #      - resourcemanager
     ports:
       - 8042:8042
+    hostname: nodemanager
     environment:
       SERVICE_PRECONDITION: "namenode:9870 datanode:9864 resourcemanager:8088"
     env_file:
@@ -71,6 +75,7 @@ services:
   historyserver:
     image: bde2020/hadoop-historyserver:2.0.0-hadoop3.1.1-java8
     container_name: historyserver
+    hostname: historyserver
     #    depends_on:
     #      - namenode
     #      - datanode
