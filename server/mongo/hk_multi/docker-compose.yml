@@ -51,7 +51,7 @@ services:
       - "mongo-2-1"
       - "mongo-2-2"
       - "mongo-2-3"
-      - "mongo-rs2-setup"
+      #- "mongo-rs2-setup"
     ports:
       - 8082:8081
     environment:
@@ -61,18 +61,18 @@ services:
       #    ME_CONFIG_MONGODB_ENABLE_ADMIN: 0
       # ME_CONFIG_MONGODB_AUTH_DATABASE: admin
 
-  mongo-rs2-setup:
-    container_name: "mongo-rs2-setup"
-    image: mongo:latest
-    depends_on:
-      - "mongo-2-1"
-      - "mongo-2-2"
-      - "mongo-2-3"
-    volumes:
-      - ../scripts:/scripts
-    environment:
-      - MONGO1=GahondeMBP.lan:30011
-      - MONGO2=GahondeMBP.lan:30012
-      - MONGO3=GahondeMBP.lan:30013
-      - RS=rs2
-    entrypoint: [ "/scripts/setup.sh" ]
+      #  mongo-rs2-setup:
+      #    container_name: "mongo-rs2-setup"
+      #    image: mongo:latest
+      #    depends_on:
+      #      - "mongo-2-1"
+      #      - "mongo-2-2"
+      #      - "mongo-2-3"
+      #    volumes:
+      #      - ../scripts:/scripts
+      #    environment:
+      #      - MONGO1=GahondeMBP.lan:30011
+      #      - MONGO2=GahondeMBP.lan:30012
+      #      - MONGO3=GahondeMBP.lan:30013
+      #      - RS=rs2
+      #    entrypoint: [ "/scripts/setup.sh" ]
