@@ -17,7 +17,7 @@ class Config(object):
 
     is_import = False
 
-    redis_enable = False
+    redis_enable = True
     REDIS_DEBUG = False
 
     # WEB 配置
@@ -35,7 +35,7 @@ class DBMS:
 
     all = [DBMS1, DBMS2]
 
-    db_name = 'mongo-less'
+    db_name = 'mongo'
 
     redis = {
         DBMS1: {

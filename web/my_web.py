@@ -95,5 +95,5 @@ if __name__ == '__main__':
 
     init()
 
-    RedisService().reset_redis()
+    # RedisService().reset_redis()
     Web.run()

@@ -52,9 +52,11 @@ def get_dashboard_info():
 
 
 def get_nodes(dbms):
+    from utils.status import check_mongodb
     from db.mongodb import dbs
     print(dbms)
 
-    node = dbs[dbms].nodes
-    print(node)
-    return list(n[1] for n in node)
+    data = check_mongodb(dbs[dbms])
+    print(data)
+    return data
+    # return list(n[1] for n in node)

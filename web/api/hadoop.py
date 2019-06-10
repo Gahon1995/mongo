@@ -6,12 +6,14 @@
 import base64
 import datetime
 import hashlib
+import io
 import logging
 import os
 import random
 import string
+from copy import copy
 
-from flask import Blueprint, request, make_response
+from flask import Blueprint, request, make_response, send_file, Response
 from flask_jwt_extended import jwt_required, current_user
 
 from service.hdfs_service import HDFSService
@@ -30,23 +32,23 @@ def upload():
     if file:
         file_ext = get_file_ext(file.filename)
         file_category = set_type(file_ext)
-        hdfs_path = datetime.date.today().strftime("/%Y/%m/%d/")
+        hdfs_path = datetime.date.today().strftime("/%Y/%m/%d")
         hdfs_filename = get_hdfs_filename()
         user_id = current_user.id
 
-        img_path = f"{hdfs_path}/{file_category}/{user_id}_{hdfs_filename}"
+        img_path = f"{hdfs_path}/{file_category}/{user_id}_{hdfs_filename}.{file_ext}"
 
-        # try:
-        #     HDFSService().upload(path=img_path", data=file)
-        # except Exception as err:
-        #     logger.info(f'error: {err}')
-        #     return Result.gen_failed(5000, msg='上传出现错误')
+        try:
+            HDFSService().upload(path=img_path, data=file)
+        except Exception as err:
+            logger.info(f'error: {err}')
+            return Result.gen_failed(5000, msg='上传出现错误')
 
-        data = base64.b64encode(file.stream.read()).decode('ascii')
         # print(data)
+
+        print(file)
         return Result.gen_success(
             data={
-                'base64': u"data:image/jpg;base64," + data,
                 'img_path': img_path
             })
 
@@ -55,18 +57,32 @@ def upload():
         # return response
 
 
-@hadoop.route('download/<string:path>', methods=['GET'])
-@jwt_required
-def download(path):
-    if path is not None and path != '':
+@hadoop.route('download', methods=['GET'])
+# @jwt_required
+def download():
+    path = request.args.get('path', None)
+    logger.info(f'Download File {path}')
+    if path is not None and path != '' and '/2019' in path:
+        # path = HDFSService().base_path + path
+        # with HDFSService().hdfs.read(path) as reader:
+        #     buf = reader.read()
         buf = HDFSService().download(path=path)
-        filename = get_hdfs_filename()
-        response = make_response(buf)
-        try:
-            response.headers.add('Content-Disposition', 'attachment', filename=filename.encode())
-        except Exception as err:
-            raise (err)
-        return response
+        # base = base64.b64encode(buf).decode('ascii')
+        # return send_file(u"data:image/jpg;base64," + base, mimetype='image/png')
+
+        # response = make_response(buf)
+        # response.headers['Content-Type'] = 'image/png'
+        # return
+        # print(buf)
+        return Response(buf, mimetype='image/png')
+        # return send_file(io.BytesIO(reader.read()), mimetype='image/png')
+    # filename = get_hdfs_filename()
+    # response = make_response(buf)
+    # try:
+    #     response.headers.add('Content-Disposition', 'attachment', filename=filename.encode())
+    # except Exception as err:
+    #     raise (err)
+    # return response
 
 
 def get_md5(md5_str):
@@ -93,7 +109,7 @@ def set_type(file_ext):
 
 
 def get_file_ext(filename):
-    temp_name, file_ext = os.path.splitext(filename)
+    file_ext = os.path.splitext(filename)[-1]
     return file_ext[1:]
 
 

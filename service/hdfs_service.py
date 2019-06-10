@@ -39,6 +39,9 @@ class HDFSService(object):
         pass
 
     def download(self, path):
-        with self.read(path) as reader:
+        path = self.base_path + path
+        with self.hdfs.read(path) as reader:
+            print(path)
             buf = reader.read()
+        print(len(buf))
         return buf
