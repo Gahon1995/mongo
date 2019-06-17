@@ -96,3 +96,35 @@ def check_mongodb(client):
             }
         }
         return data
+
+
+def mongo_rep(client):
+    try:
+        data = client.admin.command('replSetGetStatus')
+        serverStatus = client.admin.command(bson.son.SON([('serverStatus', 1), ('repl', 2)]))
+        connections_current = serverStatus['connections']['current']
+
+        hosts = []
+        for item in data['members']:
+            hosts.append(
+                {
+                    'id': item['_id'],
+                    'name': item['name'],
+                    'state': item['state'],
+                    'health': item['health'],
+                    'stateStr': item['stateStr']
+                }
+            )
+
+        data = {
+            'connections_current': connections_current,
+            'replica': hosts
+        }
+
+        return data
+    except Exception:
+        data = {
+            'connections_current': 0,
+            'replica': []
+        }
+        return data

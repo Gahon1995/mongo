@@ -74,6 +74,7 @@ class Web:
         @self.session.before_request
         def cors():
             if request.method == 'OPTIONS':
+                self.log.info('options ,return ')
                 return
 
         @self.jwt.user_loader_callback_loader

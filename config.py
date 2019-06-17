@@ -60,40 +60,50 @@ class DBMS:
 
     configs = {
         DBMS1: {
-            'replicaSet': 'rs1',
-            'hosts': [
-                {
-                    'host': '127.0.0.1',
-                    'port': 30021
-                },
-                {
-                    'host': '127.0.0.1',
-                    'port': 30022
-                },
-                {
-                    'host': '127.0.0.1',
-                    'port': 30023
-                }
-            ]
+            'host': '192.168.81.129',
+            'port': 27017
         },
         DBMS2: {
-            'replicaSet': 'rs2',
-            'hosts': [
-                {
-                    'host': '127.0.0.1',
-                    'port': 30011
-                },
-                {
-                    'host': '127.0.0.1',
-                    'port': 30012
-                },
-                {
-                    'host': '127.0.0.1',
-                    'port': 30013
-                }
-            ]
+            'host': '192.168.81.129',
+            'port': 27018
         }
     }
+    # configs = {
+    #     DBMS1: {
+    #         'replicaSet': 'rs1',
+    #         'hosts': [
+    #             {
+    #                 'host': '127.0.0.1',
+    #                 'port': 30021
+    #             },
+    #             {
+    #                 'host': '127.0.0.1',
+    #                 'port': 30022
+    #             },
+    #             {
+    #                 'host': '127.0.0.1',
+    #                 'port': 30023
+    #             }
+    #         ]
+    #     },
+    #     DBMS2: {
+    #         'replicaSet': 'rs2',
+    #         'hosts': [
+    #             {
+    #                 'host': '127.0.0.1',
+    #                 'port': 30011
+    #             },
+    #             {
+    #                 'host': '127.0.0.1',
+    #                 'port': 30012
+    #             },
+    #             {
+    #                 'host': '127.0.0.1',
+    #                 'port': 30013
+    #             }
+    #         ]
+    #     }
+    # }
 
     region = {
         # 第一个地区为偶数， 第二个地区为奇数
@@ -111,9 +121,10 @@ class DBMS:
 
     def get_host(self):
         for dbms, data in self.configs.items():
-            ips = ','.join((f"{d['host']}:{d['port']}" for d in data['hosts']))
-            host = f"mongodb://{ips}/{self.db_name}?replicaSet={data['replicaSet']}"
-            yield dbms, self.db_name, host
+            ips = f"mongodb://{data['host']}:{data['port']}/{self.db_name}"
+            # ips = ','.join((f"{d['host']}:{d['port']}" for d in data['hosts']))
+            # host = f"mongodb://{ips}/{self.db_name}?replicaSet={data['replicaSet']}"
+            yield dbms, self.db_name, ips
 
     def get_default(self):
         return next(self.get_host())

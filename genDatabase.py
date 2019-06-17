@@ -5,9 +5,9 @@ from config import DBMS
 from utils.func import timestamp_to_datetime, print_run_time
 
 logger = logging.getLogger('gen')
-USERS_NUM = 10000
-ARTICLES_NUM = 200000
-READS_NUM = 1000000
+USERS_NUM = 1000
+ARTICLES_NUM = 2000
+READS_NUM = 10000
 
 # USERS_NUM = 1000
 # ARTICLES_NUM = 2000

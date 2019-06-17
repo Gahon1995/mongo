@@ -7,6 +7,8 @@ from flask import request, Blueprint
 
 from web.result import Result
 
+import datetime
+
 dashboard = Blueprint('dashboard', __name__)
 
 
@@ -17,10 +19,17 @@ def get_dashboard_info():
     from service.article_service import ArticleService
     from service.read_service import ReadService
     from service.popular_service import PopularService
+    from service.redis_service import RedisService
     dbms = request.args.get('dbms')
+    print('get info start time: {}'.format(datetime.datetime.now()))
 
     if dbms not in DBMS().all:
         return Result.gen_failed(code=500, msg='dbms error')
+
+    _KEY_ = "DASHBOARD"
+    data = RedisService().get_dict(dbms, _KEY_)
+    if data is not None and data != {}:
+        return Result.gen_success(data=data)
 
     nums = {
         'users': UserService().count(db_alias=dbms),
@@ -37,26 +46,43 @@ def get_dashboard_info():
     }
 
     for dbms1 in DBMS().get_all_dbms_by_region():
-        charts['users'].append({'name': dbms1, 'value': UserService().count(db_alias=dbms1)})
-        charts['articles'].append({'name': dbms1, 'value': ArticleService().count(db_alias=dbms1)})
-        charts['reads'].append({'name': dbms1, 'value': ReadService().count(db_alias=dbms1)})
+        if dbms1 == dbms:
+            charts['users'].append(
+                {'name': dbms1, 'value': nums['users']})
+            charts['articles'].append(
+                {'name': dbms1, 'value':  nums['articles']})
+            charts['reads'].append(
+                {'name': dbms1, 'value': nums['reads']})
+        else:
+            charts['users'].append(
+                {'name': dbms1, 'value': UserService().count(db_alias=dbms1)})
+            charts['articles'].append(
+                {'name': dbms1, 'value': ArticleService().count(db_alias=dbms1)})
+            charts['reads'].append(
+                {'name': dbms1, 'value': ReadService().count(db_alias=dbms1)})
 
     data = {
         'nums': nums,
         'charts': charts,
         'nodes': nodes
     }
+    print('end info start time: {}'.format(datetime.datetime.now()))
 
+    RedisService().set_dict(dbms, _KEY_, data)
     return Result.gen_success(data=data)
     pass
 
 
 def get_nodes(dbms):
-    from utils.status import check_mongodb
-    from db.mongodb import dbs
-    print(dbms)
+    # from utils.status import mongo_rep
+    # from db.mongodb import dbs
+    # print(dbms)
 
-    data = check_mongodb(dbs[dbms])
-    print(data)
+    # data = mongo_rep(dbs[dbms])
+    # print(data)
+    data = {
+        'connections_current': 0,
+        'replica': []
+    }
     return data
     # return list(n[1] for n in node)

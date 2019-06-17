@@ -5,7 +5,7 @@ from flask import request, Blueprint
 from config import DBMS
 from service.article_service import ArticleService
 from service.redis_service import RedisService
-from utils.func import get_best_dbms_by_category, check_alias, DbmsAliasError
+from utils.func import get_best_dbms_by_category, check_alias, DbmsAliasError, get_timestamp
 from web.result import Result
 
 articles = Blueprint('articles', __name__)
