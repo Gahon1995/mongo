@@ -31,7 +31,6 @@ class Config(object):
 class DBMS:
     DBMS1 = 'Beijing'
     DBMS2 = 'Hong Kong'
-    DBMS3 = 'DBMS3'
 
     all = [DBMS1, DBMS2]
 
@@ -49,15 +48,9 @@ class DBMS:
             'port': 6380,
             'redis_password': '',
             'enable': Config.redis_enable
-        },
-        DBMS3: {
-            'host': '127.0.0.1',
-            'port': 6381,
-            'redis_password': '',
-            'enable': Config.redis_enable
         }
     }
-
+# 使用单节点时用的配置文件
     configs = {
         DBMS1: {
             'host': '192.168.81.129',
@@ -68,6 +61,7 @@ class DBMS:
             'port': 27018
         }
     }
+    # 使用多节点时使用的配置，使用多节点时同时需要更改下方gethost方法
     # configs = {
     #     DBMS1: {
     #         'replicaSet': 'rs1',
@@ -121,7 +115,9 @@ class DBMS:
 
     def get_host(self):
         for dbms, data in self.configs.items():
+            # 单节点配置
             ips = f"mongodb://{data['host']}:{data['port']}/{self.db_name}"
+            # 多节点配置
             # ips = ','.join((f"{d['host']}:{d['port']}" for d in data['hosts']))
             # host = f"mongodb://{ips}/{self.db_name}?replicaSet={data['replicaSet']}"
             yield dbms, self.db_name, ips
